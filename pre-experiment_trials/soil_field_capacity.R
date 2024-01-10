@@ -14,14 +14,31 @@ calcSE<-function(x){
   sd(x2)/sqrt(length(x2))
 }
 
+## read in data ####
+## specify dropbox pathway 
+if(file.exists("/Users/carme/Dropbox (University of Oregon)/Facilitation_GH/Trials/")){
+  # Carmen
+  lead <- "/Users/carme/Dropbox (University of Oregon)/Facilitation_GH/Trials/"
+  
+} else {
+  # Marina
+  lead <- ""
+} 
+
+
 ## read in data
 ## soil dry weights
-dry <- read.csv("soil_dry_weight.csv")
+dry <- read.csv(paste0(lead, "soil_dry_weight.csv"))
+
+## perlite dry weight
+perdry <- read.csv(paste0(lead, "perlite_dry_weights.csv"))
 
 ## field capacity trials
-trials <- read.csv("soil_water_trials.csv") %>%
+trials <- read.csv(paste0(lead, "soil_water_trials.csv")) %>%
   filter(water.saturation == 100.00) %>%
   mutate(water.saturation = 1)
+
+pertrials <- read.csv(paste0(lead, "perlite_setup.csv"))
 
 
 # Calculate #### 
@@ -33,6 +50,10 @@ dry2 <- dry %>%
   group_by(material) %>%
   summarise(mean.prop.weight = mean(prop.weight))
 
+perdry2 <- perdry %>%
+  mutate(prop.weight = perlite_dry_weight/air_dry_weight_g) %>%
+  group_by(material) %>%
+  summarise(mean.prop.weight = mean(prop.weight))
 
 ## calculate field capacity & prep for graphing
 trials2$soil_sand_ratio <- as.factor(trials2$soil_sand_ratio) ## change soil:sand ratio to factor
@@ -57,6 +78,13 @@ trials_sum <- trials2 %>%
             mean.water.to.soil.prop.FC = mean(water.to.soil.prop.FC), se.water.to.soil.prop.FC = calcSE(water.to.soil.prop.FC))
 
 
+pertrials2 <- pertrials  %>%
+  mutate(dry.weight.mix = soil_amount_g*dry2[dry2$material == "field soil",]$mean.prop.weight + sand_amount_g*dry2[dry2$material == "sand",]$mean.prop.weight + perlite_amount_g*perdry2[perdry2$material == "perlite",]$mean.prop.weight, ## calculate the soil dry weight using prop of dry soil from trials
+         
+         field.cap = total_pot_weight.1 - dry.weight.mix - empty_pot_weight_g,## water amount in g in the soil at field capacity
+         
+         water.to.soil.prop.FC = field.cap/dry.weight.mix)
+  
 # Visualize ####
 ggplot(trials_sum, aes(x=soil_sand_ratio, y=mean.field.cap)) +
   geom_point(size = 3) +
