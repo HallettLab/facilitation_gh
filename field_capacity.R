@@ -47,7 +47,7 @@ trials2 <- trials %>%
          
          ## calculate the soil/sand dry weights using prop of dry soil from trials
          
-         field.cap = pot_weight_24_hours - dry.weight.mix - empty_pot_weight_g,
+         field.cap = pot_weight_48_hours - dry.weight.mix - empty_pot_weight_g,
   
         ## water amount in g in the soil at field capacity
          

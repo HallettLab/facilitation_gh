@@ -1,6 +1,6 @@
 
 ## read in data
-source(field_capacity.R)
+source("field_capacity.R")
 
 ## soil dry weights
 water_lev <- read.csv(paste0(lead, "water_level_pots.csv"))
