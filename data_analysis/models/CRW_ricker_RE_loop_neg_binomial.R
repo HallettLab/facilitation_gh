@@ -1,23 +1,24 @@
 ## Model 
 
-date <- 20241216
-
+## load packages
 library(tidyverse)
 library(bayesplot)
 library(rstan)
+library(here)
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
-library(here)
+## set date
+date <- 20241217
 
-species <- c("ACAM", "BRHO")
+#species <- c("ACAM", "BRHO")
 
-model.output <- list()
-warnings <- list()
+#model.output <- list()
+#warnings <- list()
 
 #for(i in species){
 
-  dat <- brho.model
+  dat <- brho.all
   
 ## create vectors of the various data inputs
   Fecundity <- as.integer(round(dat$seeds.out)) ## seeds out
@@ -29,7 +30,7 @@ warnings <- list()
 
 ## stems data
   acam <- as.integer(dat$num.bg.indiv)
-  brho <- as.integer(dat$num.focal.indiv)
+  #brho <- as.integer(dat$num.focal.indiv)
  
 ## make a vector of data inputs to model
 
@@ -43,8 +44,8 @@ warnings <- list()
   #initials1<- list(initials, initials, initials)
 
 # Model ####
-  brho_ricker_alphaf <- stan(file = 'data_analysis/models/CRW_ricker_RE_neg_binomial.stan', 
-                  data = data_vec, iter = 10000, chains = 4, thin = 2, 
+  brho_ricker_alphaf = stan(file = 'data_analysis/models/ricker_neg_binom_static_alpha.stan', 
+                  data = data_vec, iter = 3000, chains = 4, thin = 2, 
                   control = list(adapt_delta = 0.95, max_treedepth = 15)) 
 
   ## first run of the alpha_f model didn't look good at all; try more iterations
@@ -53,6 +54,6 @@ warnings <- list()
   #PrelimFit <- model.output[[paste0("ricker_",i)]] 
 
 ## save model output
-  save(brho_ricker, file = paste0("data_analysis/models/output/ricker_brho_m1w1", date, ".rdata"))
+  save(brho_ricker_alphaf, file = paste0("data_analysis/models/output/ricker_brho_m1w1", date, ".rdata"))
 
 #}
