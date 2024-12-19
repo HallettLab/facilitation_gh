@@ -22,9 +22,6 @@ data{
 
 parameters{
 
-  // dispersion deviation parameter 
-  real<lower=0> disp_dev; 
-
   // lambda
   real<lower = 0, upper = 10000> lambda;
   //real lambda_dev;
@@ -49,14 +46,23 @@ model{
   //vector[N] F_hat2;
   
   // set priors
-  lambda ~ exponential(0.0009); // exponential distrib prior
-  alpha_brho ~ normal(0, 5);
+  lambda ~ normal(201, 53); 
+  // mean of lambda for BRHO from mega-comp is 201; sd = 53
+  // no moment matching required as using normal distribution currently
+  
+  
+  alpha_brho ~ normal(0.057, 0.011);
+  // prior taken from mega-comp posterior distributions
 
   alpha_initial ~ normal(0, 0.1);
   alpha_slope ~ normal(-0.2, 0.2);
   c ~ normal(0, 0.1);
   
-  N_opt ~ normal(3300, 1); // max fecundity of BRHO
+  N_opt ~ normal(5, 1); 
+  // N_opt = the optimal density of ACAM that maximizes fecundity of BRHO
+  // previous prior on this was pretty stupid (normal(3300, 1))
+  // perhaps this contributed to poor model fit
+  // planted densities 3 and 6 were the highest RII values; choose between this to be the prior estimated N_opt
   
   
   // Biological model
@@ -68,13 +74,13 @@ model{
     
     //F_hat2[i] = F_hat[i]*epsilon[Blocks[i]]; // effect of block 
     
-    F_hat[i] = N_i[i] * (lambda) * exp( -N_i[i] * (alpha_brho) ) * exp( -acam[i] * (alpha_acam[i]) ) ;
+    F_hat[i] = N_i[i] * (lambda) * exp( (-N_i[i] * (alpha_brho))  - (acam[i] * (alpha_acam[i]) )) ;
     
     
   }
   
   // calculate the likelihood
- Fecundity ~ neg_binomial_2(F_hat, disp_dev);
+ Fecundity ~ poisson(F_hat);
   // likelihood outside of for-loop
   // could think of this as observation error term
   

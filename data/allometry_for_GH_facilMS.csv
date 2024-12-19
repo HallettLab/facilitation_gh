@@ -1,0 +1,3 @@
+"","Species","intercept","intercept_pval","intercept_se","slope","slope_pval","slope_se","seeds_C","seeds_C_se","seeds_D","seeds_D_se","viability_C","viability_C_se","viability_D","viability_D_se"
+"total.biomass.g","ACAM",0,NA,NA,34.9341448598145,1.37169284877885e-28,1.12661922472175,1.66666666666667,0.232310684145723,0.916666666666667,0.204609577891846,NA,NA,NA,NA
+"total.biomass.g1","BRHO",0,NA,NA,388.248152948055,4.19245291961554e-28,12.9095778408899,NA,NA,NA,NA,NA,NA,NA,NA
