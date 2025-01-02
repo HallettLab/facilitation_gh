@@ -25,6 +25,8 @@ bbkgrd = read.csv(paste0(file_loc, "BRHO_bkgrd_sample_processing_20241117.csv"))
 acam = read.csv(paste0(file_loc, "ACAM_focal_individual_processing_20240903.csv"))
 abkgrd = read.csv(paste0(file_loc, "ACAM_bkgrd_sample_processing_20240903.csv"))
 
+## allometry data from mega-comp
+allo = read.csv("data/allometry_for_GH_facilMS.csv")
 
 # Clean Data ####
 ## brho ####
@@ -33,6 +35,7 @@ abkgrd.join = abkgrd %>%
   select(unique.ID, water, microbe, rep, num.bg.indiv, num.dead.bg.indiv, num.resprouted.BRHO.focals)
 
 brho_clean = brho %>%
+  mutate(unique.ID = X0) %>%
   select(-X0) %>%
   left_join(abkgrd.join, by = c("unique.ID", "water", "microbe", "rep"))
 
@@ -44,12 +47,13 @@ brho_clean = brho %>%
 ## num.bg.indiv
 
 ## select necessary columns; translate biomass to seeds out
+alloB = allo[allo$Species == "BRHO",]$slope ## get slope of allo relationship
+
 binter = brho_clean %>%
   select(unique.ID, block, water, microbe, rep, num.focal.indiv, total.biomass.g, num.bg.indiv) %>%
   mutate(num.bg.indiv = ifelse(is.na(num.bg.indiv), 0, num.bg.indiv)) %>%
   filter(!is.na(total.biomass.g)) %>% ## there is one NA value, remove & figure out why it is missing later!
-  mutate(seeds.out = total.biomass.g*388.25)
-## 388.25 slope of BRHO allo b/w total bio and seeds out
+  mutate(seeds.out = total.biomass.g*alloB)
 
 ggplot(binter, aes(x=seeds.out)) +
   geom_histogram(bins = 100)
@@ -58,7 +62,7 @@ ggplot(binter, aes(x=seeds.out)) +
 bintra = bbkgrd %>%
   filter(!is.na(num.bg.indiv), num.bg.indiv != 0) %>% ## get rid of 0 brho backgrounds
   select(unique.ID, block, water, microbe, rep, num.bg.indiv, total.biomass.g, num.focal.indiv) %>%
-  mutate(seeds.out = total.biomass.g*388.25)
+  mutate(seeds.out = total.biomass.g*alloB)
 
 ## change col names
 names(bintra) = c("unique.ID", "block", "water", "microbe", "rep", "num.focal.indiv", "total.biomass.g", "num.bg.indiv", "seeds.out")
@@ -78,34 +82,39 @@ names(acam)
 ## total.biomass.g
 ## num.bg.indiv
 
-acam.model = acam %>%
+## select necessary columns; translate biomass to seeds out
+alloAf = allo[allo$Species == "ACAM",]$slope
+alloAsC = allo[allo$Species == "ACAM",]$seeds_C
+alloAsD = allo[allo$Species == "ACAM",]$seeds_D
+
+ainter = acam %>%
   select(unique.ID, block, water, microbe, rep, num.focal.indiv, total.biomass.g, num.bg.indiv) %>%
   mutate(num.bg.indiv = ifelse(is.na(num.bg.indiv), 0, num.bg.indiv)) %>%
-  ## filter(water == 1, microbe == 1) %>%
   filter(!is.na(total.biomass.g))  %>% ## there is one NA value, remove & figure out why it is missing later!
-  mutate(flowers.out = total.biomass.g*34.9341448598145, 
-         seeds.out = flowers.out * 1.66666666666667) 
+  mutate(flowers.out = total.biomass.g*alloAf, 
+         seeds.out = ifelse(water %in% c(0.75, 1), flowers.out*alloAsC, flowers.out*alloAsD)) %>%
+  select(-flowers.out)
 
-ggplot(acam.model, aes(x=seeds.out)) +
-  geom_histogram(bins = 100)
+ggplot(ainter, aes(x=seeds.out)) +
+  geom_histogram(bins = 50)
 
+## change acam bkgrd data to use as intraspecific acam data
 names(abkgrd)
 
 aintra = abkgrd %>%
-  filter(!is.na(num.bg.indiv), num.bg.indiv != 0) %>%
+  filter(!is.na(num.bg.indiv), num.bg.indiv != 0, num.bg.indiv != 1) %>%
   select(unique.ID, block, water, microbe, rep, num.bg.indiv, total.biomass.g) %>%
-  mutate(flowers.out = total.biomass.g*34.9341448598145, 
-         seeds.out = flowers.out * 1.66666666666667) %>%
-  filter(seeds.out > 550) %>% ## remove the one crazy big observation; look into later 
-  select(-flowers.out)
+  mutate(flowers.out = total.biomass.g*alloAf, 
+         seeds.out = ifelse(water %in% c(0.75, 1), flowers.out*alloAsC, flowers.out*alloAsD)) %>%
+  filter(seeds.out < 550) %>% ## remove the one crazy big observation; look into later 
+  select(-flowers.out) %>%
+  left_join(binter[ , -c(7,9)], by = c("unique.ID", "block", "water", "microbe", "rep", "num.bg.indiv"))
 
-names(aintra) = c("unique.ID", "block", "water", "microbe", "rep", "num.focal.indiv", "total.biomass.g", "seeds.out")
+names(aintra) = c("unique.ID", "block", "water", "microbe", "rep", "num.focal.indiv", "total.biomass.g", "seeds.out", "num.bg.indiv")
 
-names(brho.model)
+names(ainter)
 
-brho.all = rbind(brho.model, bintra)
-
-
+acam.model = rbind(ainter, aintra)
 
 # clean env ####
-rm()
+rm(abkgrd, abkgrd.join, acam, aintra, ainter, allo, bbkgrd, binter, bintra, brho, brho_clean, alloB, alloAf, alloAsC, alloAsD)
