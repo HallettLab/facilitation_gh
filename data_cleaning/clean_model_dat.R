@@ -49,10 +49,15 @@ brho_clean = brho %>%
 ## select necessary columns; translate biomass to seeds out
 alloB = allo[allo$Species == "BRHO",]$slope ## get slope of allo relationship
 
+## contaminated samples to remove
+rm.contaminated = c(15, 25, 85, 114)
+    ## some contamination info in the nodule counts data sheet
+    ## some in the experimental design spreadsheet still located in the google drive
+
 binter = brho_clean %>%
   select(unique.ID, block, water, microbe, rep, num.focal.indiv, total.biomass.g, num.bg.indiv) %>%
   mutate(num.bg.indiv = ifelse(is.na(num.bg.indiv), 0, num.bg.indiv)) %>%
-  filter(!is.na(total.biomass.g)) %>% ## there is one NA value, remove & figure out why it is missing later!
+  filter(!is.na(total.biomass.g), !unique.ID %in% rm.contaminated) %>% ## there is one NA value, remove & figure out why it is missing later!
   mutate(seeds.out = total.biomass.g*alloB)
 
 ggplot(binter, aes(x=seeds.out)) +

@@ -53,13 +53,16 @@ controls = brho_clean %>%
   group_by(water, microbe) %>%
   summarise(mean.control = mean(tot.bio.percap))
 
+rm.contaminated = c(15, 25, 85)
+
 ## calculate RII comparing 0 background to all other densities
 brho_RII = left_join(brho_clean, controls, by = c("water", "microbe")) %>%
   mutate(RII = (tot.bio.percap - mean.control) / (mean.control + tot.bio.percap),
          microbe = ifelse(microbe == 0, "Sterilized Soil", "Live Soil"), 
          water = ifelse(water == 1, "High",
                         ifelse(water == 0.75, "Intermediate",
-                               "Low")))
+                               "Low"))) %>%
+  filter(!unique.ID %in% rm.contaminated)
 
 
 ## acam focal ####
@@ -161,8 +164,18 @@ ggsave("figures/MS_version1/meanRII_planted_dens.png", width = 8, height = 4.5)
 #008080,#70a494,#b4c8a8,#f6edbd,#edbb8a,#de8a5a,#ca562c
 
 
-
-
+brho_RII %>%
+  filter(ACAM != 0) %>%
+  ggplot(aes(x=num.bg.indiv, y=RII, color = water)) +
+  geom_point() +
+  #geom_smooth()+
+  geom_hline(yintercept = 0, linetype = 'dashed') +
+  facet_wrap(~microbe) +
+  ylab("Relative Interaction Intensity") +
+  xlab("Final Legume Density") +
+  theme(text = element_text(size = 15)) +
+  scale_color_manual(values = c("#008080", "#f6edbd", "#de8a5a"))
+  
 
 
 
