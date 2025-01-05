@@ -1,43 +1,86 @@
 
+# Set up ####
+## read in data
+source("data_cleaning/clean_model_dat.R")
 
+## binter is the correct data frame to use in these analyses; it contains only BRHO focal data
+## brho.model also contains BRHO bkgrd data reformatted to be intraspecific focal data, which is not appropriate in calculating the RII here
+
+# Calc RII ####
 ## calculate mean control biomass for use in RII calcs
-controls = brho.model %>%
-  filter(num.bg.indiv == 0) %>%
+controls = binter %>%
+  filter(ACAM == 0) %>% ## only want planted 0's
   mutate(seeds.percap = seeds.out/num.focal.indiv) %>%
   group_by(water, microbe) %>%
   summarise(mean.control = mean(seeds.percap))
 
+w1 = binter %>%
+  filter(num.bg.indiv == 0, water == 1, microbe == 1) %>%
+  mutate(seeds.percap = seeds.out/num.focal.indiv) %>%
+  mutate(RII = (seeds.percap - 788.7261)/(788.7261 + seeds.percap))
+ 
+w1$RII
+mean(w1$seeds.percap) ## 788.7261
+mean(w1$RII) ## -0.03844226
+## this is different from what is being calculated in the figure below..... this number seems more correct
+
+## there is one value here that is not in the below df; why is it being removed??
+## 292 is being removed
+
+w1$unique.ID
+
+test = brho_RII %>%
+  group_by(ACAM, water, microbe) %>%
+  summarise(mean.RII = mean(RII, na.rm = T),
+            se.RII = calcSE(RII)) 
+
+ggplot(brho_RII, aes(x=water, y=mean.control)) +
+  geom_point() +
+  facet_wrap(~microbe)
+
+
 ## calculate RII comparing 0 background to all other densities
-brho_RII = left_join(brho.model, controls, by = c("water", "microbe")) %>%
-  filter(num.focal.indiv < 5) %>%
+brho_RII = left_join(binter, controls, by = c("water", "microbe")) %>%
+
   mutate(seeds.percap = seeds.out/num.focal.indiv) %>%
   
   mutate(RII = (seeds.percap - mean.control) / (mean.control + seeds.percap),
+         
          microbe = ifelse(microbe == 0, "Sterilized Soil", "Live Soil"), 
          water = ifelse(water == 1, "High",
                         ifelse(water == 0.75, "Intermediate",
                                "Low"))) %>%
   filter(!unique.ID %in% rm.contaminated)
 
+test2 = brho_RII %>%
+  filter(water == "High", microbe == "Live Soil", ACAM == 0)
+
+test2$unique.ID
+
+test2$RII
+
+# Plot ####
 ## RII by final density
 brho_RII %>%
   filter(num.bg.indiv != 0) %>%
   ggplot(aes(x=num.bg.indiv, y=RII, color = water)) +
-  geom_point() +
+  geom_point(aes(fill = water), colour = "black", pch = 21, size = 2.5) +
   #geom_smooth()+
   geom_hline(yintercept = 0, linetype = 'dashed') +
   facet_wrap(~microbe) +
   ylab("Relative Interaction Intensity") +
   xlab("Final Legume Density") +
   theme(text = element_text(size = 15)) +
-  scale_color_manual(values = c("#008080", "#f6edbd", "#de8a5a"))
+  scale_fill_manual(values = c("#008080", "#f6edbd", "#de8a5a")) +
+  labs(fill = "Water")
+# ggsave("figures/MS_version1/FigS2_RII_num_bg.png", width = 8, height = 3.5)
 
 ## RII by planted density
 brho_RII %>%
   group_by(ACAM, water, microbe) %>%
   summarise(mean.RII = mean(RII, na.rm = T),
             se.RII = calcSE(RII)) %>%
-  
+
   ggplot(aes(x=ACAM, y=mean.RII, fill = water)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_errorbar(aes(ymin = mean.RII - se.RII, ymax = mean.RII + se.RII)) +
@@ -50,6 +93,16 @@ brho_RII %>%
   labs(fill = "Water") +
   theme(text = element_text(size = 15)) +
   theme(legend.position = "bottom")
+# ggsave("figures/MS_version1/Fig2_meanRII_planted_dens.png", width = 7, height = 4)
+
+
+## planted vs. final density
+ggplot(brho_RII, aes(x=ACAM, y=num.bg.indiv)) +
+  geom_point() +
+  facet_grid(water~microbe) +
+  xlab("Planted Legume Density") +
+  ylab("Final Legume Density")
+## ggsave("figures/MS_version1/FigS3_planted_v_final_dens.png", width = 8, height = 7)
 
 ## Seed output by final density
 ggplot(brho_RII, aes(x=num.bg.indiv, y=seeds.percap, fill = water)) +

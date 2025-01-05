@@ -1,6 +1,8 @@
 ## Header ##
 ## 
-## Clean Focal species data ##
+## Clean Focal species data 
+##
+## Purpose: clean biomass data, calculate seed output from allometric relationship, put in correct format for population models; also create a df for use in calculating RII later on
 ## 
 ## Author: Carmen Watkins
 
@@ -14,7 +16,7 @@ calcSE<-function(x){
   sd(x2)/sqrt(length(x2))
 }
 
-## Read in data
+## Read in data ####
 file_loc = "/Users/carme/University of Oregon Dropbox/Carmen Watkins/Facilitation_GH/data/biomass/Adult/"
 
 ## for BRHO models
@@ -42,6 +44,7 @@ brho_clean = brho %>%
 ## Necessary columns
 ## unique.ID
 ## block, water, microbe, rep, 
+## ACAM - the planted density
 ## num.focal.indiv
 ## total.biomass.g
 ## num.bg.indiv
@@ -53,27 +56,34 @@ alloB = allo[allo$Species == "BRHO",]$slope ## get slope of allo relationship
 rm.contaminated = c(15, 25, 85, 114)
     ## some contamination info in the nodule counts data sheet
     ## some in the experimental design spreadsheet still located in the google drive
+    ## this will eventually be updated when nodule counts are finished
 
 binter = brho_clean %>%
-  select(unique.ID, block, water, microbe, rep, num.focal.indiv, total.biomass.g, num.bg.indiv) %>%
+  select(unique.ID, block, water, microbe, rep, num.focal.indiv, total.biomass.g, num.bg.indiv, ACAM) %>%
   mutate(num.bg.indiv = ifelse(is.na(num.bg.indiv), 0, num.bg.indiv)) %>%
   filter(!is.na(total.biomass.g), !unique.ID %in% rm.contaminated) %>% ## there is one NA value, remove & figure out why it is missing later!
   mutate(seeds.out = total.biomass.g*alloB)
 
+## plot distribution of seeds out
 ggplot(binter, aes(x=seeds.out)) +
+  geom_histogram(bins = 100)
+
+## take the log of seeds out
+ggplot(binter, aes(x=log(seeds.out))) +
   geom_histogram(bins = 100)
 
 ## change brho bkgrd data to use as intraspecific brho data
 bintra = bbkgrd %>%
   filter(!is.na(num.bg.indiv), num.bg.indiv != 0) %>% ## get rid of 0 brho backgrounds
-  select(unique.ID, block, water, microbe, rep, num.bg.indiv, total.biomass.g, num.focal.indiv) %>%
+  select(unique.ID, block, water, microbe, rep, num.bg.indiv, total.biomass.g, num.focal.indiv, ACAM) %>%
   mutate(seeds.out = total.biomass.g*alloB)
 
 ## change col names
-names(bintra) = c("unique.ID", "block", "water", "microbe", "rep", "num.focal.indiv", "total.biomass.g", "num.bg.indiv", "seeds.out")
+names(bintra) = c("unique.ID", "block", "water", "microbe", "rep", "num.focal.indiv", "total.biomass.g", "num.bg.indiv", "seeds.out", "ACAM")
 
 ## join brho focal and brho bkgrd data
-brho.model = rbind(binter, bintra)
+brho.model = rbind(binter, bintra) %>%
+  select(-ACAM) ## this col is only needed for analyses with RII not for pop models; although potentially we want to use seeds in??
 
 ## acam ####
 names(abkgrd)
@@ -113,7 +123,7 @@ aintra = abkgrd %>%
          seeds.out = ifelse(water %in% c(0.75, 1), flowers.out*alloAsC, flowers.out*alloAsD)) %>%
   filter(seeds.out < 550) %>% ## remove the one crazy big observation; look into later 
   select(-flowers.out) %>%
-  left_join(binter[ , -c(7,9)], by = c("unique.ID", "block", "water", "microbe", "rep", "num.bg.indiv"))
+  left_join(binter[ , -c(7,9,10)], by = c("unique.ID", "block", "water", "microbe", "rep", "num.bg.indiv"))
 
 names(aintra) = c("unique.ID", "block", "water", "microbe", "rep", "num.focal.indiv", "total.biomass.g", "seeds.out", "num.bg.indiv")
 
@@ -122,4 +132,4 @@ names(ainter)
 acam.model = rbind(ainter, aintra)
 
 # clean env ####
-rm(abkgrd, abkgrd.join, acam, aintra, ainter, allo, bbkgrd, binter, bintra, brho, brho_clean, alloB, alloAf, alloAsC, alloAsD)
+rm(abkgrd, abkgrd.join, acam, aintra, ainter, allo, bbkgrd, bintra, brho, brho_clean, alloB, alloAf, alloAsC, alloAsD)
