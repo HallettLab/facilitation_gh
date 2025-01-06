@@ -9,9 +9,108 @@ library(emmeans)
 library(car)
 
 ## read in data
-source("data_analysis/explore_focal_density_patterns.R")
+source("data_analysis/RII_figures.R")
 
 # Live Soil Model ####
+## final dens ####
+mfd.re = lmer(RII ~ num.bg.indiv*water + (1|block), data = brho_RII[brho_RII$microbe == "Live Soil",])
+
+check_model(mfd.re)
+## num bg indiv * water and water both have moderate VIF which is not ideal
+
+summary(mfd.re)
+Anova(mfd.re, type = 3, test.statistic = "F")
+## all 3 are signif
+
+summary(glht(mfd.re, linfct=mcp(water="Tukey")))
+
+## planted dens ####
+mpd.re = lmer(RII ~ ACAM*water + (1|block), data = brho_RII[brho_RII$microbe == "Live Soil",])
+
+check_model(mpd.re)
+## ACAM*water has moderate VIF, but water is ok
+
+## use type III when want to account for interactions
+summary(mpd.re)
+Anova(mpd.re, type = 3, test.statistic = "F")
+## all 3 are signif
+
+# Sterilized Soil Model ####
+## final dens ####
+mfds.re = lmer(RII ~ num.bg.indiv*water + (1|block), data = brho_RII[brho_RII$microbe == "Sterilized Soil",])
+
+check_model(mfds.re)
+## num bg indiv * water and water both have moderate VIF which is not ideal
+
+summary(mfds.re)
+Anova(mfds.re, type = 3, test.statistic = "F")
+## all 3 are signif
+
+
+## planted dens ####
+mpds.re = lmer(RII ~ ACAM*water + (1|block), data = brho_RII[brho_RII$microbe == "Sterilized Soil",])
+
+check_model(mpds.re)
+## ACAM*water has moderate VIF, but water is ok
+
+## use type III when want to account for interactions
+summary(mpds.re)
+Anova(mpds.re, type = 3, test.statistic = "F")
+## all 3 are signif
+
+# Within water treatments ####
+## Live Soil ####
+m1L = lm(RII ~ as.factor(ACAM), data = brho_RII[brho_RII$microbe == "Live Soil" & brho_RII$water == "High",])
+
+summary(m1L)
+
+TukeyHSD(aov(m1L))
+
+m0.75L = lm(RII ~ as.factor(ACAM), data = brho_RII[brho_RII$microbe == "Live Soil" & brho_RII$water == "Intermediate",])
+
+summary(m0.75L)
+
+TukeyHSD(aov(m0.75L))
+
+m0.6L = lm(RII ~ as.factor(ACAM), data = brho_RII[brho_RII$microbe == "Live Soil" & brho_RII$water == "Low",])
+
+summary(m0.6L)
+
+TukeyHSD(aov(m0.6L))
+
+
+## Sterilized Soil ####
+m1 = lm(RII ~ as.factor(ACAM), data = brho_RII[brho_RII$microbe == "Sterilized Soil" & brho_RII$water == "High",])
+
+summary(m1)
+
+TukeyHSD(aov(m1))
+
+m0.75 = lm(RII ~ as.factor(ACAM), data = brho_RII[brho_RII$microbe == "Sterilized Soil" & brho_RII$water == "Intermediate",])
+
+summary(m0.75)
+
+TukeyHSD(aov(m0.75))
+
+m0.6 = lm(RII ~ as.factor(ACAM), data = brho_RII[brho_RII$microbe == "Sterilized Soil" & brho_RII$water == "Low",])
+
+summary(m0.6)
+
+TukeyHSD(aov(m0.6))
+
+
+
+
+
+unique(brho_RII$microbe)
+
+
+
+
+
+
+
+
 ## check first whether random effect is necessary
 ## check also whether interaction is needed
 

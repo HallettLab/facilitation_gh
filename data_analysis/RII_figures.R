@@ -14,31 +14,6 @@ controls = binter %>%
   group_by(water, microbe) %>%
   summarise(mean.control = mean(seeds.percap))
 
-w1 = binter %>%
-  filter(num.bg.indiv == 0, water == 1, microbe == 1) %>%
-  mutate(seeds.percap = seeds.out/num.focal.indiv) %>%
-  mutate(RII = (seeds.percap - 788.7261)/(788.7261 + seeds.percap))
- 
-w1$RII
-mean(w1$seeds.percap) ## 788.7261
-mean(w1$RII) ## -0.03844226
-## this is different from what is being calculated in the figure below..... this number seems more correct
-
-## there is one value here that is not in the below df; why is it being removed??
-## 292 is being removed
-
-w1$unique.ID
-
-test = brho_RII %>%
-  group_by(ACAM, water, microbe) %>%
-  summarise(mean.RII = mean(RII, na.rm = T),
-            se.RII = calcSE(RII)) 
-
-ggplot(brho_RII, aes(x=water, y=mean.control)) +
-  geom_point() +
-  facet_wrap(~microbe)
-
-
 ## calculate RII comparing 0 background to all other densities
 brho_RII = left_join(binter, controls, by = c("water", "microbe")) %>%
 
@@ -51,13 +26,6 @@ brho_RII = left_join(binter, controls, by = c("water", "microbe")) %>%
                         ifelse(water == 0.75, "Intermediate",
                                "Low"))) %>%
   filter(!unique.ID %in% rm.contaminated)
-
-test2 = brho_RII %>%
-  filter(water == "High", microbe == "Live Soil", ACAM == 0)
-
-test2$unique.ID
-
-test2$RII
 
 # Plot ####
 ## RII by final density
@@ -124,6 +92,36 @@ ggsave("figures/MS_version1/FigS1_seedsout_num_bg.png", width = 9, height = 3.5)
 ## Seed output by planted density
 
 
+# ACAM ####
+controls = acam.model %>%
+  filter(num.bg.indiv == 0) %>% ## only want planted 0's
+  mutate(seeds.percap = seeds.out/num.focal.indiv) %>%
+  group_by(water) %>%
+  summarise(mean.control = mean(seeds.percap))
+
+## calculate RII comparing 0 background to all other densities
+acam_RII = left_join(acam.model, controls, by = c("water")) %>%
+  
+  filter(num.bg.indiv > 9) %>% ## go back to be more careful with this filtering later
+  
+  mutate(seeds.percap = seeds.out/num.focal.indiv) %>%
+  
+  mutate(RII = (seeds.percap - mean.control) / (mean.control + seeds.percap),
+         
+         microbe = ifelse(microbe == 0, "Sterilized Soil", "Live Soil"), 
+         water = ifelse(water == 1, "High",
+                        ifelse(water == 0.75, "Intermediate",
+                               "Low"))) #%>%
+  #filter(!unique.ID %in% rm.contaminated)
 
 
+ggplot(acam_RII, aes(x=num.bg.indiv, y=RII, fill = water)) +
+  geom_point(aes(fill = water), colour = "black", pch = 21, size = 3) +
+  scale_fill_manual(values = c("#008080", "#f6edbd", "#de8a5a")) +
+  xlab("Final Grass Density") +
+  ylab("Relative Interaction Intensity") +
+  labs(fill = "Water")
+
+ggsave("figures/MS_version1/FigS4_acamRII.png", width = 5, height = 3.5)
+  
 
