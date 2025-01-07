@@ -1,5 +1,8 @@
+
+## load packages
 library(ggpubr)
 
+## load models
 load("data_analysis/models/output/brho_ricker_poiss_sigmoidal_m1_w1_20250106.rdata")
 w1 = brho_ricker_poiss_alpha_sig2
 
