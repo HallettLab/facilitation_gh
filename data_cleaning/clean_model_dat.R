@@ -78,8 +78,9 @@ bintra = bbkgrd %>%
   select(unique.ID, block, water, microbe, rep, num.bg.indiv, total.biomass.g, num.focal.indiv, ACAM) %>%
   mutate(seeds.out = total.biomass.g*alloB)
 
+names(bintra)
 ## change col names
-names(bintra) = c("unique.ID", "block", "water", "microbe", "rep", "num.focal.indiv", "total.biomass.g", "num.bg.indiv", "seeds.out", "ACAM")
+names(bintra) = c("unique.ID", "block", "water", "microbe", "rep", "num.focal.indiv", "total.biomass.g", "num.bg.indiv", "ACAM", "seeds.out")
 
 ## join brho focal and brho bkgrd data
 brho.model = rbind(binter, bintra) %>%
