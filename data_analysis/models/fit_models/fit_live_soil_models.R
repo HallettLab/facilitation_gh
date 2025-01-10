@@ -16,7 +16,7 @@ options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
 ## set date
-date <- 20250107
+date <- 20250109
 
 ## read in data 
 source("data_cleaning/clean_model_dat.R")
