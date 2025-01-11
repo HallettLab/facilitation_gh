@@ -1,4 +1,8 @@
 
+library(tidyverse)
+
+theme_set(theme_classic())
+
 ## create alpha function
 alpha_function4  <- function(Amin, Aslopes,c,N,N0){
   
@@ -49,8 +53,12 @@ w0.6plotdat = data.frame(density = c(0:80), alpha = alpha_function4(Aminw0.6, As
 plotdat = rbind(w1plotdat, w0.75plotdat, w0.6plotdat)
 
 ggplot(plotdat, aes(x=density, y=alpha, color = water)) +
-  geom_point() +
-  coord_cartesian(xlim = c(0,10))
+  geom_point(aes(fill = water), colour = "black", pch = 21, size = 3.5) +
+  coord_cartesian(xlim = c(0,10)) +
+  scale_fill_manual(values = c("#008080", "#f6edbd", "#de8a5a")) +
+  xlab("Density") +
+  ylab("Alpha value") +
+  labs(fill = "Water")
 
 
 

@@ -8,6 +8,13 @@ sum_params = mc_params %>%
   group_by(species) %>%
   summarise_all(.funs = c("mean", "sd"))
 
+hist(rcauchy(10000, 0, 1))
+## seems centered on 0 and almost all obs are very close to this however, there are a few that are super far out. This could potentially be concerning? Leave for now, but good to know
+
+hist(rcauchy(100, 0, 1), breaks = 30)
+hist(rcauchy(50, 0, 1), breaks = 30)
+
+
 ## brho lambda
 sum_params[sum_params$species == "BRHO",]$lambda_c_mean
 sum_params[sum_params$species == "BRHO",]$lambda_c_sd

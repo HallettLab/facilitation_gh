@@ -1,8 +1,21 @@
+## Header ##
+## 
+## Script Name: Model Diagnostics
+##
+## Purpose: calculate Rhat values and check traceplots, and pairs plots for models
+## 
+## Author: Carmen Watkins
 
+# Set up ####
 ## load packages
 library(ggpubr)
+library(bayesplot)
 
-## load models
+## save output file location
+output_loc = "data_analysis/models/evaluate/diagnostics/"
+
+# Load models ####
+## sigmoidal ####
 load("data_analysis/models/output/brho_ricker_poiss_sigmoidal_m1_w1_20250106.rdata")
 w1 = brho_ricker_poiss_alpha_sig2
 
@@ -12,212 +25,53 @@ w0.75 = brho_ricker_poiss_alpha_sig2
 load("data_analysis/models/output/brho_ricker_poiss_sigmoidal_m1_w0.6_20250106.rdata")
 w0.6 = brho_ricker_poiss_alpha_sig2
 
-load("data_analysis/models/output/brho_ricker_nb_static_alpha_m1_w1_20250109.rdata")
-w1stat = mfit
-
-load("data_analysis/models/output/brho_ricker_nb_static_alpha_m1_w0.75_20250109.rdata")
-w75stat = mfit
-
-load("data_analysis/models/output/brho_ricker_nb_static_alpha_m1_w0.6_20250109.rdata")
-w60stat = mfit
-
-## eval models 
-### Rhat
-print(w1)
-print(w0.75)
-print(w0.6)
-
-print(w1stat)
-print(w75stat)
-print(w60stat)
-
-### traceplot
-traceplot(w1, inc_warmup = TRUE)
-traceplot(w0.75)
-traceplot(w0.6)
-
-traceplot(w1stat)
-traceplot(w75stat)
-traceplot(w60stat)
-
-### pairs plots
-pairs(w1)
-pairs(w0.75)
-pairs(w0.6)
-
-pairs(w1stat)
-pairs(w75stat)
-pairs(w60stat)
-
-# Visualize ####
-post_w1 <- as.matrix(w1)
-post_w0.75 <- as.matrix(w0.75)
-post_w0.6 <- as.matrix(w0.6)
-
-
-
-post_w1 <- as.matrix(w1stat)
-post_w0.75 <- as.matrix(w75stat)
-post_w0.6 <- as.matrix(w60stat)
-
-## Static ####
-mcmc_areas(post_w1,
-           pars = c("F_sim[2]"),
-           prob = 0.8) +
-  ggtitle("High")
-
-L1 = mcmc_areas(post_w1,
-           pars = c("lambda"),
-           prob = 0.8) +
-  ggtitle("High")
-
-L0.75 = mcmc_areas(post_w0.75,
-           pars = c("lambda"),
-           prob = 0.8) +
-  ggtitle("Intermediate")
-
-L0.6 =  mcmc_areas(post_w0.6,
-           pars = c("lambda"),
-           prob = 0.8) +
-  ggtitle("Low")
-
-ggarrange(L0.6, L0.75, L1,  ncol = 3, nrow = 1)
-
-ggsave("figures/MS_version1/model_output/lambda_staticmodels_20250109models.png", width = 8, height = 3.5)
-
-
-ab1 = mcmc_areas(post_w1,
-                pars = c("alpha_brho"),
-                prob = 0.8) +
-  ggtitle("High")
-
-ab0.75 = mcmc_areas(post_w0.75,
-                   pars = c("alpha_brho"),
-                   prob = 0.8) +
-  ggtitle("Intermediate")
-
-ab0.6 =  mcmc_areas(post_w0.6,
-                   pars = c("alpha_brho"),
-                   prob = 0.8) +
-  ggtitle("Low")
-
-ggarrange(ab0.6, ab0.75, ab1, ncol = 3, nrow = 1)
-ggsave("figures/MS_version1/model_output/alpha_brho_staticmodels_20250109models.png", width = 8, height = 3.5)
-
-aa1 = mcmc_areas(post_w1,
-                 pars = c("alpha_acam"),
-                 prob = 0.8) +
-  ggtitle("High")
-
-aa0.75 = mcmc_areas(post_w0.75,
-                    pars = c("alpha_acam"),
-                    prob = 0.8) +
-  ggtitle("Intermediate")
-
-aa0.6 =  mcmc_areas(post_w0.6,
-                    pars = c("alpha_acam"),
-                    prob = 0.8) +
-  ggtitle("Low")
-
-ggarrange(aa0.6, aa0.75, aa1, ncol = 3, nrow = 1)
-ggsave("figures/MS_version1/model_output/alpha_acam_staticmodels_20250109models.png", width = 8, height = 3.5)
-
-
-
-
-
-
-## Sigmoidal ####
-hist(brho.model$seeds.out/brho.model$num.focal.indiv)
-
-
-as1 = mcmc_areas(post_w1,
-                 pars = c("alpha_slope"),
-                 prob = 0.8) +
-  ggtitle("High")
-
-as0.75 = mcmc_areas(post_w0.75,
-                    pars = c("alpha_slope"),
-                    prob = 0.8) +
-  ggtitle("Intermediate")
-
-as0.6 =  mcmc_areas(post_w0.6,
-                    pars = c("alpha_slope"),
-                    prob = 0.8) +
-  ggtitle("Low")
-
-ggarrange(as1, as0.75, as0.6, ncol = 3, nrow = 1)
-ggsave("figures/MS_version1/model_output/alpha_slope.png", width = 8, height = 3.5)
-
-
-ai1 = mcmc_areas(post_w1,
-                 pars = c("alpha_initial"),
-                 prob = 0.8) +
-  ggtitle("High")
-
-ai0.75 = mcmc_areas(post_w0.75,
-                    pars = c("alpha_initial"),
-                    prob = 0.8) +
-  ggtitle("Intermediate")
-
-ai0.6 =  mcmc_areas(post_w0.6,
-                    pars = c("alpha_initial"),
-                    prob = 0.8) +
-  ggtitle("Low")
-
-ggarrange(ai1, ai0.75, ai0.6, ncol = 3, nrow = 1)
-ggsave("figures/MS_version1/model_output/alpha_initial.png", width = 8, height = 3.5)
-
-
-
-N01 = mcmc_areas(post_w1,
-                 pars = c("N_opt"),
-                 prob = 0.8) +
-  ggtitle("High")
-
-N00.75 = mcmc_areas(post_w0.75,
-                    pars = c("N_opt"),
-                    prob = 0.8) +
-  ggtitle("Intermediate")
-
-N00.6 =  mcmc_areas(post_w0.6,
-                    pars = c("N_opt"),
-                    prob = 0.8) +
-  ggtitle("Low")
-
-ggarrange(N01, N00.75, N00.6, ncol = 3, nrow = 1)
-ggsave("figures/MS_version1/model_output/N_opt.png", width = 8, height = 3.5)
-
-
-
-
-
-
-
-
-
-
-b = mcmc_areas(posterior,
-           pars = c("alpha_brho"),
-           prob = 0.8)
-
-c = mcmc_areas(posterior,
-           pars = c("alpha_initial"),
-           prob = 0.8)
-
-d = mcmc_areas(posterior,
-           pars = c("alpha_slope"),
-           prob = 0.8, scales = "free") 
-
-e = mcmc_areas(posterior,
-           pars = c("N_opt"),
-           prob = 0.8) 
-
-f = mcmc_areas(posterior,
-           pars = c("c"),
-           prob = 0.8)
-
-library(ggpubr)
-ggarrange(a, b, c, d,e,f, ncol = 1, nrow = 6)
-
-ggsave("figures/MS_version1/model_posteriors_brhom1w1_ricker_poiss_sigmoidal.png", height = 8, width = 3.5)
+## static ####
+rain = c(1, 0.75, 0.6)
+microbe = c(0, 1)
+date = 20250110
+brho_stat_posts = list()
+
+## create empty df for diagnostics
+diagnostics = data.frame(model.name = NA, Rhat = NA, Neff = NA)
+
+for(i in rain){
+  for(j in microbe) {
+  
+    ## load non-constrained models
+    load(paste0("data_analysis/models/output/static/brho_nb_static_m",j, "_w", i, "_", date, ".rdata"))
+    
+    ## print model to keep track of progress during loop
+    print(paste0("m", j, "_w", i))
+    
+    ## extract model info
+    tmp <- rstan::extract(PrelimFit)
+    
+    ## save posterior distributions
+    brho_stat_posts[[paste0("brho_m", j, "_w", i)]] <- tmp
+    
+    ## save Rhat & Neff vals
+    Rhat = max(summary(PrelimFit)$summary[,"Rhat"],na.rm =T)
+    Neff = min(summary(PrelimFit)$summary[,"n_eff"],na.rm = T)
+    
+    ## put in df
+    tmp2 = data.frame(model.name = paste0("brho_m", j, "_w", i), Rhat = Rhat, Neff = Neff)
+    
+    ## append to main df
+    diagnostics = rbind(diagnostics, tmp2)
+    
+    ## create traceplot for the model
+    traceplot(PrelimFit, pars = c("disp", "lambda", "alpha_acam", "alpha_brho"))
+    
+    ## save traceplot
+    ggsave(paste0(output_loc, "static/", date, "/traceplot_mainparams_brho_m", j, "_w", i, ".png"), width = 6, height = 5)
+ 
+  }
+  
+}
+
+## remove NA
+diagnostics = diagnostics %>%
+  filter(!is.na(model.name))
+
+## save output
+write.csv(diagnostics, paste0(output_loc, "static/", date, "/rhat_neff_brho_nb_stat_", date, ".csv"))

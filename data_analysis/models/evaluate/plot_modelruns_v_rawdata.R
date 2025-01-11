@@ -1,92 +1,63 @@
+## Header ##
+## 
+## Script Name: Plot Model Runs vs. Raw Data
+##
+## Purpose: predict seed output using the Fhat and phi values from every model run. Plot the distribution of seed output along with raw data for all models.
+## 
+## Author: Carmen Watkins; Code adapted from Lisa Buche
 
-
-
-
+# Set up ####
+## load packages
 library(loo)
 library(wesanderson)
 
-stan_post_pred_check_all <- function(post.draws,
-                                     var_name = 'mu',
-                                     stan.data,
-                                     main,
-                                     col1,
-                                     col2,
-                                     value.se,
-                                     ...) {
-  
-  # currently using the loo package, can switch to rethinking
-  
-  
-  ggplot(brho.model, aes(x=seeds.out)) +
-    geom_density() +
-    ggtitle("Seed output data")
-  
-  
-  # phi is the overdispersion parameter for the neg binom model
-  # mu is the mean for predicted seed number 
-  
-  ## extract model parameters
-  FinalPosteriors <- rstan::extract(w1stat)
-  
-  Fec_df <- data.frame(Obs = 1:get(paste0("Fsim_",Code.focal,"_function_",function.int))[["DataVec"]]$N,
-                       Fec =get(paste0("Fsim_",Code.focal,"_function_",function.int))[["DataVec"]]$Fecundity)
-  
-  
-  
-  
-  # extract mu and phi
-  mu <- FinalPosteriors[[F_hat]] # matrix with nrow = draws and ncol = observations
-  
-  ## FinalPosteriors[[F_hat]] ## didn't work
-  
-  mu = FinalPosteriors$F_hat
-  disp <- FinalPosteriors$disp
-  phi <- (disp^2)^(-1)
-  
-  
-  # generating posterior predictions
-  seed_pred <- matrix(nrow = dim(mu)[1], ncol = dim(mu)[2])
-  for (i in 1:dim(mu)[1]) {     # for each posterior draw
-    for (j in 1:dim(mu)[2]) {    # for each observation 
-      # draw from the predicted distribution
-      seed_pred[i, j] <- rnbinom(1, mu = mu[i, j], size = phi[i])  
+fig_loc = "data_analysis/models/evaluate/plot_with_data/"
+date = 20250110
+
+## plot 
+for(i in rain){
+  for(j in microbe){
+    
+    # extract mu and phi
+    mu = brho_stat_posts[[paste0("brho_m", j, "_w", i)]]$F_hat
+    disp = brho_stat_posts[[paste0("brho_m", j, "_w", i)]]$disp
+    phi = (disp^2)^(-1)
+    
+    # generating posterior predictions
+    seed_pred <- matrix(nrow = dim(mu)[1], ncol = dim(mu)[2])
+    
+    for (r in 1:dim(mu)[1]) {     # for each posterior draw
+      for (c in 1:dim(mu)[2]) {    # for each observation 
+        # draw from the predicted distribution
+        seed_pred[r, c] <- rnbinom(1, mu = mu[r, c], size = phi[r])  
+      }
     }
+   
+    # get maximum density for plot limits
+    max.density <- max(c(apply(seed_pred, 1, function(x) {max(density(x)$y)}), 
+                         max(density(seed_pred)$y)))
+    
+    # dev.new(noRStudioGD = T)
+    # start a plot with the first draw 
+    col2 = wes_palette("FantasticFox1", n = 5)
+    
+    png(paste0(fig_loc, "static/", date, "/pred_seed_density_m", j, "_w", i, ".png"), width = 5, height = 4, units = "in", res = 250)
+    
+    plot(density(seed_pred[1, ]), ylim = c(0,max.density), 
+                     col = col2,
+                     ylab = 'Density',
+                     xlab="Seed Output",
+                    main = paste0("brho_m", j, "_w", i)) 
+    
+    for (r in 2:dim(seed_pred)[1]) {
+      # add a line for each draw
+      lines(density(seed_pred[r, ]), col = col2)
+    }
+    
+    lines(density(brho.model[brho.model$water == i & brho.model$microbe == j,]$seeds.out), col = "black")
+    
+    dev.off()
+    
   }
   
-  # get maximum density for plot limits
-  max.density <- max(c(apply(seed_pred, 1, function(x) {max(density(x)$y)}), 
-                       max(density(stan.data)$y)))
-  
-  # dev.new(noRStudioGD = T)
-  # start a plot with the first draw 
-  col2 <- wes_palette("FantasticFox1", n = 5)
-  
-  ppc.plot <- plot(density(seed_pred[1, ]), ylim = c(0, 0.0009), 
-                   col = col2,
-                   ylab = 'Seed density',
-                   xlab="" ) #,
-                   #main = main) 
-  for (i in 2:dim(seed_pred)[1]) {
-    # add a line for each draw
-    ppc.plot <- lines(density(seed_pred[i, ]), col = col2)
-  }
-  
-  
-  lines(density(brho.model$seeds.out), col = "black")
-  
-  print(ppc.plot)
-  
-  ggplot(brho.model, aes(x=seeds.out)) +
-    geom_density() +
-    ggtitle("Seed output data")
-  
- # ggsave("pred_seed_density.png", width = 5, height = 3)
-  
-  # add the actual data
-  ppc.plot <- lines(density(stan.data), col = col1, lwd = 2)  
-  ppc.plot <- text(labels = value.se, 
-                   y= 0.04,#max.density - max.density/10,
-                   x=50, #max(stan.data)- max(stan.data)/10,
-                   cex=1, pos=3,col="black")
-  print(ppc.plot)
 }

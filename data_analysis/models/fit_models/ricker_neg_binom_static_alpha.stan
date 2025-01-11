@@ -24,7 +24,6 @@ parameters{
 
 }
 
-// including parameters in here will allow 
 // calc additional parameters based on the sampled param values without effecting the sampling itself
 transformed parameters{
   
@@ -44,6 +43,7 @@ transformed parameters{
 model{
   
   // priors
+  // lambda & alpha priors all come from mega-comp values
   lambda ~ normal(200, 50);
   alpha_acam ~ normal(-0.09875605, 0.25);
   alpha_brho ~ normal(0.05728218, 0.25);
