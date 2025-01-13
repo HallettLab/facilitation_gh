@@ -16,7 +16,7 @@ options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
 ## set date
-date <- 20250110
+date <- 20250113
 
 ## read in data 
 source("data_cleaning/clean_model_dat.R")
@@ -28,9 +28,8 @@ set.seed(14)
 rainfall = c(1, 0.75, 0.6)
 microbe = c(0,1)
 
-rainfall = c(0.75)
-microbe = c(0)
-
+rainfall = 0.6
+microbe = 1
 
 ## make a list for model output
 model.output <- list()
@@ -76,77 +75,64 @@ for(i in rainfall){
   
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Sigmoidal ####
+
+## make a list for model output
+sigmoidal.output <- list()
+rainfall = c(1)
+microbe = c(1)
+
 for(i in rainfall){
+  for(j in microbe){
+  
+    ## select data 
+    dat = brho.model[brho.model$water == i & brho.model$microbe == j,] %>%
+      filter(!is.na(num.focal.indiv))
+    ## currently ID 79 doesn't have a focal # entered
+  
+    ## print model to keep track of progress during loop
+    print(paste0("m", j, "_w", i))
+    
+    ## create vectors of data inputs
+    Fecundity = as.integer(round(dat$seeds.out)) ## seeds out
+    N = as.integer(length(Fecundity)) ## number of observations
+    N_i = as.integer(dat$num.focal.indiv) ## stem # of focal species
+    acam <- as.integer(dat$num.bg.indiv) ## background stem # data
 
-## select data 
-dat = brho.model[brho.model$water == i & brho.model$microbe == 1,]
-
-## create vectors of data inputs
-Fecundity = as.integer(round(dat$seeds.out)) ## seeds out
-N = as.integer(length(Fecundity)) ## number of observations
-N_i = as.integer(dat$num.focal.indiv) ## stem # of focal species
-acam <- as.integer(dat$num.bg.indiv) ## background stem # data
-
-## make a vector of data inputs to model
-data_vec <- c("N", "Fecundity", "N_i", "acam")
-
-## set initial values 
-initials1 <- list(lambda=200, N_opt = 1, c = -0.5, alpha_slope = -0.8, alpha_initial = 0.1, alpha_brho = 0.08)
-initials2 <- list(lambda=250, N_opt = 2, c = -0.5, alpha_slope = -0.7, alpha_initial = 0.1, alpha_brho = 0.08)
-initials3 <- list(lambda=600, N_opt = 5, c = -0.2, alpha_slope = -0.4, alpha_initial = -0.1, alpha_brho = 0.04)
-initials4 <- list(lambda=300, N_opt = 4, c = 0, alpha_slope = -0.2, alpha_initial = 0.5, alpha_brho = 0.01)
-
-initialsall<- list(initials1, initials2, initials3, initials4)
-
-brho_ricker_poiss_alpha_sig2 = stan(file = 'data_analysis/models/ricker_poisson_sigmoidal_alpha_v2.stan', 
-                                    data = data_vec, init = initialsall, iter = 5000, chains = 4, thin = 2, 
-                                    control = list(adapt_delta = 0.9, max_treedepth = 18))
-
-## save model output
-save(brho_ricker_poiss_alpha_sig2, file = paste0("data_analysis/models/output/brho_ricker_poiss_sigmoidal_m1_w", i, "_", date, ".rdata"))
-
+    ## make a vector of data inputs to model
+    data_vec <- c("N", "Fecundity", "N_i", "acam")
+  
+    ## set initial values 
+    initials1 <- list(lambda=200, N_opt = 1, c = -0.5, alpha_slope = -0.8, alpha_initial = 0.1, alpha_brho = 0.08)
+    initials2 <- list(lambda=600, N_opt = 2, c = -0.6, alpha_slope = -0.7, alpha_initial = 0.2, alpha_brho = 0.06)
+    initials3 <- list(lambda=800, N_opt = 5, c = -0.2, alpha_slope = -0.4, alpha_initial = -0.1, alpha_brho = 0.04)
+    initials4 <- list(lambda=100, N_opt = 4, c = 0, alpha_slope = -0.2, alpha_initial = 0.5, alpha_brho = 0.01)
+  
+    initialsall<- list(initials1, initials2, initials3, initials4)
+  
+    ## run the model
+    sigmoidal.output[[paste0("brho_m", j, "_w", i)]] = stan(file = 'data_analysis/models/fit_models/ricker_nb_sigmoidal.stan', data = data_vec, init = initialsall, iter = 8000, chains = 4, thin = 2, control = list(adapt_delta = 0.95, max_treedepth = 18))
+    
+    ## adjusted iter from 5000 -> 8000 and adapt_delta from 0.9 -> 0.95 on 1/13
+    ## running just for m1_w0.6
+    
+    ## max Rhat = 1.06 (not the worst); need to run for more iterations - bump from 5000 to 10000? 
+    ## Neff is low in some cases; need to run for more iterations - bump from 5000 to 10000?
+    ## 149 divergent transitions- this part is concerning
+    ## some chains had errors, consider specifying chains = 1 to debug ; should definitely try this
+    ## look at pairs plot to see sampling problems
+    
+    
+    PrelimFit <- sigmoidal.output[[paste0("brho_m", j, "_w", i)]]
+    
+    ## save model output
+    save(PrelimFit, file = paste0("data_analysis/models/output/static/brho_nb_sigmoidal_m", j, "_w", i, "_", date, ".rdata"))
+    
+  }
 }
+
+pairs(PrelimFit, pars = c("lambda", "disp", "alpha_brho", "N_opt", "c", "alpha_slope", "alpha_initial"))
+
+traceplot(PrelimFit, pars = c("lambda", "disp", "alpha_brho", "N_opt", "c", "alpha_slope", "alpha_initial"))
+
+## C parameter really seems to be the one screwing with this in both pairs plot and traceplots

@@ -6,7 +6,7 @@ data{
   int<lower = 1> N; // number of observations
   int Fecundity[N]; // observed fecundity count at time t+1
   vector[N] N_i; // population size of species i at time t
-  vector[N] acam; // population sizes of interacting species at time t
+  vector[N] acam; // population size of interacting species at time t
 
 }
 
@@ -16,7 +16,7 @@ parameters{
   real<lower=0> disp; 
 
   // lambda
-  real<lower = 0, upper = 10000> lambda;
+  real<lower = 0, upper = 8000> lambda;
 
   // all the alphas
    real alpha_acam; 

@@ -8,6 +8,9 @@ sum_params = mc_params %>%
   group_by(species) %>%
   summarise_all(.funs = c("mean", "sd"))
 
+hist(runif(10000, min = -1, max = 0))
+hist(rnorm(10000, 0, 0.1))
+
 hist(rcauchy(10000, 0, 1))
 ## seems centered on 0 and almost all obs are very close to this however, there are a few that are super far out. This could potentially be concerning? Leave for now, but good to know
 
