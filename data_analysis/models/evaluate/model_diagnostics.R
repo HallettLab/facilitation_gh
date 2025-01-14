@@ -57,7 +57,7 @@ for(i in rain){
     traceplot(PrelimFit, pars = c("disp", "lambda", "alpha_brho", "alpha_initial", "alpha_slope", "c", "N_opt"), inc_warmup = TRUE)
     
     ## save traceplot
-    ggsave(paste0(output_loc, "sigmoidal/", date, "/traceplot_mainparams_brho_m", j, "_w", i, ".png"), width = 10, height = 8)
+    ggsave(paste0(output_loc, "sigmoidal/", date, "/traceplot_mainparams_brho_m", j, "_w", i, "_UNboundedalphaslope_c.png"), width = 10, height = 8)
     
   }
   

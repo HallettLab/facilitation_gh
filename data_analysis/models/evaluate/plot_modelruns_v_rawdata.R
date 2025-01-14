@@ -12,15 +12,15 @@ library(loo)
 library(wesanderson)
 
 fig_loc = "data_analysis/models/evaluate/plot_with_data/"
-date = 20250110
+date = 20250113
 
 ## plot 
 for(i in rain){
   for(j in microbe){
     
     # extract mu and phi
-    mu = brho_stat_posts[[paste0("brho_m", j, "_w", i)]]$F_hat
-    disp = brho_stat_posts[[paste0("brho_m", j, "_w", i)]]$disp
+    mu = brho_sig_posts[[paste0("brho_m", j, "_w", i)]]$F_hat
+    disp = brho_sig_posts[[paste0("brho_m", j, "_w", i)]]$disp
     phi = (disp^2)^(-1)
     
     # generating posterior predictions
@@ -41,7 +41,7 @@ for(i in rain){
     # start a plot with the first draw 
     col2 = wes_palette("FantasticFox1", n = 5)
     
-    png(paste0(fig_loc, "static/", date, "/pred_seed_density_m", j, "_w", i, ".png"), width = 5, height = 4, units = "in", res = 250)
+    png(paste0(fig_loc, "sigmoidal/", date, "/pred_seed_density_m", j, "_w", i, "_UNbounded_alpha_slope_c.png"), width = 5, height = 4, units = "in", res = 250)
     
     plot(density(seed_pred[1, ]), ylim = c(0,max.density), 
                      col = col2,

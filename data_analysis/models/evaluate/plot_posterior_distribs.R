@@ -7,7 +7,7 @@ for(i in rainfall) {
 post_w0.6 <- as.matrix(PrelimFit)
 
 
-pdf("data_analysis/models/evaluate/plot_posteriors/sigmoidal/posts_m", j, "_w", i, date, ".pdf")
+pdf(file = paste0("data_analysis/models/evaluate/plot_posteriors/sigmoidal/posts_m", j, "_w", i, date, "_UNbounded_alphaslope_c.pdf"))
 
 mcmc_areas(post_w0.6,
                  pars = c("c"),
@@ -34,6 +34,8 @@ mcmc_areas(post_w0.6,
 mcmc_areas(post_w0.6,
            pars = c("disp"),
            prob = 0.8)
+
+dev.off()
 
   }
 }

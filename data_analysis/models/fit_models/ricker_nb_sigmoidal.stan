@@ -23,10 +23,13 @@ parameters{
 
   // params for sigmoidal alpha function: 
   real<lower = 0> N_opt; //optimal density of ACAM that maximizes BRHO fecundity
-  real<lower = -1, upper = 0> c; //vertical stretching parameter
+  real<lower = -1, upper = 1> c; //vertical stretching parameter
+  // allowing this to go to 1 because it seems like this could aid in helping fit lines that look exponential. Also, if the alpha_slope is near 0, this value doesn't really matter
   
-  real<lower = -1, upper = 0> alpha_slope; // density-dependent parameter
+  real<lower = -1, upper = 1> alpha_slope; // density-dependent parameter
   // not fully clear why alpha_slope is bounded by -1 - 0; models show it bumping up against the -1 boundary; leave as is for now
+  
+  // take away upper 0 bound and see how this effects model fit
   
   real alpha_initial; //density-independent effect of j on i
 
@@ -38,22 +41,15 @@ transformed parameters{
   
   // create vector of predictions
   vector<lower=0>[N] F_hat;
-  //vector[N] alpha_acam;
+  vector[N] alpha_acam;
 
   // Biological model
   for(i in 1:N){
+    
+    alpha_acam[i] = alpha_initial + ( c*(1 - exp(alpha_slope*(acam[i] - N_opt))) / (1 + exp(alpha_slope * (acam[i] - N_opt))) ) ;
 
-    F_hat[i] = N_i[i] * (lambda) * 
-    
-    exp( (-N_i[i] * (alpha_brho)) // intrasp
-    
-    - (acam[i] * 
-    
-    
-    (alpha_initial + ( (c * (1 - exp(alpha_slope * (acam[i] - N_opt)) ))))) 
-    
-    
-    / (1 + exp(alpha_slope * (acam[i] - N_opt))) ) )) ;
+
+    F_hat[i] = N_i[i] * (lambda) * exp( (-N_i[i] * (alpha_brho)) - (acam[i] * alpha_acam[i])) ; //intersp
     
     // the biological model is not correct yet; hvae questions for Lisa on it!
     
@@ -74,8 +70,12 @@ model{
   alpha_initial ~ normal(0, 0.1);
   
   //try flat priors on these parameters, esp since bounding b/w 0-1
-  alpha_slope ~ uniform(-1, 0);
-  c ~ uniform(-1, 0);
+  // model had trouble predicting both alpha_slope and c; both of which had a uniform prior put on them. Do they improve with a more specific prior?
+  //alpha_slope ~ uniform(-1, 0);
+  //c ~ uniform(-1, 0);
+  
+  alpha_slope ~ normal(-0.2, 0.2); // using priors from Lisa's model
+  c ~ normal(0, 0.1);
   
   N_opt ~ normal(5, 1); 
   // N_opt = the optimal density of ACAM that maximizes fecundity of BRHO
