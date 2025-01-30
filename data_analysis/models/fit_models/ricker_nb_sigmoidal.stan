@@ -81,9 +81,11 @@ model{
   alpha_slope ~ normal(-0.2, 0.2); // using priors from Lisa's model
   c ~ normal(0, 0.1);
   
-  N_opt ~ normal(5, 1); 
+  N_opt ~ normal(0, 5); 
   // N_opt = the optimal density of ACAM that maximizes fecundity of BRHO
   // planted densities 3 and 6 were the highest RII values; choose between this to be the prior estimated N_opt
+  
+  // it's possible that this was too specific; for 1/24/25 models it was normal(5,1)
   
   
    // calculate the likelihood

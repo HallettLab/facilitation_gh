@@ -36,7 +36,7 @@ for(i in rain){
     print(paste0("m", j, "_w", i))
     
     ## extract model info
-    tmp <- rstan::extract(PrelimFit)
+    tmp <- rstan::extract(PrelimFit, inc_warmup = FALSE)
     
     ## save posterior distributions
     brho_sig_posts[[paste0("brho_m", j, "_w", i)]] <- tmp

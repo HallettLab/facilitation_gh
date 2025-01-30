@@ -1,41 +1,49 @@
+
+
+ppd_fig_loc = "data_analysis/models/evaluate/plot_posteriors/"
+
 ## plot posterior distributions
 
-for(i in rainfall) {
+for(i in rain) {
   
   for(j in microbe){
+    
+    ## filter out specific treat
+    tmp_df = sig_posteriors %>%
+      filter(water == i, microbe == j)
+    
+    ## turn into matrix
+    tmp_mat = as.matrix(tmp_df)
 
-post_w0.6 <- as.matrix(PrelimFit)
-
-
-pdf(file = paste0("data_analysis/models/evaluate/plot_posteriors/sigmoidal/posts_m", j, "_w", i, date, "_bounded_alphaslope_c.pdf"))
-
-mcmc_areas(post_w0.6,
+    ## save file
+    pdf(file = paste0(ppd_fig_loc, "sigmoidal/", date, "/posts_m", j, "_w", i, date, ".pdf"))
+    
+    ## plot all the posteriors
+    print(mcmc_areas(tmp_mat,
                  pars = c("c"),
-                 prob = 0.8)
-## c doesn't seem to like the bound it is given, it looks like it wants to possibly be greater than 1
+                 prob = 0.8))
 
-mcmc_areas(post_w0.6,
-           pars = c("alpha_slope"),
-           prob = 0.8)
-## this posterior looks particularly bad...
-
-mcmc_areas(post_w0.6,
-           pars = c("alpha_initial"),
-           prob = 0.8)
-
-mcmc_areas(post_w0.6,
-           pars = c("N_opt"),
-           prob = 0.8)
-
-mcmc_areas(post_w0.6,
-           pars = c("lambda"),
-           prob = 0.8)
-
-mcmc_areas(post_w0.6,
-           pars = c("disp"),
-           prob = 0.8)
-
-dev.off()
+    print(mcmc_areas(tmp_mat,
+               pars = c("alpha_slope"),
+               prob = 0.8))
+    
+    print(mcmc_areas(tmp_mat,
+               pars = c("alpha_initial"),
+               prob = 0.8))
+    
+    print(mcmc_areas(tmp_mat,
+               pars = c("N_opt"),
+               prob = 0.8))
+    
+    print(mcmc_areas(tmp_mat,
+               pars = c("lambda"),
+               prob = 0.8))
+    
+    print(mcmc_areas(tmp_mat,
+               pars = c("disp"),
+               prob = 0.8))
+    
+    dev.off()
 
   }
 }

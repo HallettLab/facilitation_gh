@@ -11,16 +11,25 @@
 library(loo)
 library(wesanderson)
 
+## read in models
+source("data_analysis/models/evaluate/load_models.R")
+
+## read in raw data
+source("data_cleaning/clean_model_dat.R")
+
+## set fig location
 fig_loc = "data_analysis/models/evaluate/plot_with_data/"
-date = 20250113
+date = 20250124
 
 ## plot 
 for(i in rain){
   for(j in microbe){
     
+    ## take last 10000 rows of each param; if everything happened as I think it should have, the first 10000 should be warmup and should not be included.
+    
     # extract mu and phi
-    mu = brho_sig_posts[[paste0("brho_m", j, "_w", i)]]$F_hat
-    disp = brho_sig_posts[[paste0("brho_m", j, "_w", i)]]$disp
+    mu = brho_sig_posts[[paste0("brho_m", j, "_w", i)]]$F_hat[10001:20000,]
+    disp = brho_sig_posts[[paste0("brho_m", j, "_w", i)]]$disp[10001:20000]
     phi = (disp^2)^(-1)
     
     # generating posterior predictions

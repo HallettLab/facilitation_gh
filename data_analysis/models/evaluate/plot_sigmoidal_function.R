@@ -10,20 +10,15 @@
 ## load packages
 library(tidyverse)
 
+## read in models
+source("data_analysis/models/evaluate/load_models.R")
+
+## set fig location
+fig_loc = "data_analysis/models/evaluate/plot_alpha_fecundity/"
+
 theme_set(theme_classic())
 
-## create alpha function
-#alpha_function4_wnegs  <- function(Amin, Aslopes,c,N,N0){
-  
- # e = exp(Aslopes*(N-N0)) # c is stretching the graph horizontally 
-  #a = c*(1-e) #stretching the graph vertically
-  #d = Amin
-  #alpha = (-a/(1 + e)) - d
-  
-  #return(alpha)
-  
-#}
-
+## create sigmoidal alpha function
 alpha_function4  <- function(Amin, Aslopes,c,N,N0){
   
   e = exp(Aslopes*(N-N0)) # c is stretching the graph horizontally 
@@ -49,123 +44,51 @@ fec_function = function(lambda, Amin, Aslopes, c, N_acam, N0, N_brho, alpha_brho
   
 }
 
-#fec_function_swapsigns = function(lambda, Amin, Aslopes, c, N_acam, N0, N_brho, alpha_brho) {
-  
- # e = exp(Aslopes*(N_acam-N0)) # c is stretching the graph horizontally 
- # a = c*(1-e) #stretching the graph vertically
-#  d = Amin
-#  alpha_acam = (-a/(1 + e)) - d
-  
- # fecundity = N_brho*lambda * exp(-(N_brho*alpha_brho) + (N_acam*alpha_acam))
-  
-#  return(fecundity)
-  
-#}
+rain = c(1, 0.75, 0.6)
+microbe = c(0, 1)
+sig_alpha_dat = data.frame(water = NA, microbe = NA, density = NA, alpha = NA)
 
-
-
+## use mean of posteriors to get data using functions
 for(i in rain) {
   for(j in microbe){
     
-    
-    test = as.data.frame(brho_sig_posts["brho_m0_w1"])
-    
+    temp = sig_posteriors %>%
+      filter(water == i, microbe == j)
+
+    #[10001:20000,]
     ## these seem like they are including warmups...
+  
+    ## set variables
+    Amin = median(temp$alpha_initial)
+    Aslopes = median(temp$alpha_slope)
+    c = median(temp$c)
+    N0 = median(temp$N_opt)
     
+    ## run alpha function and save in df
+    tmp_alpha = data.frame(water = rep(paste0(i), 81), microbe = rep(paste0(j), 81), density = c(0:80), alpha = alpha_function4(Amin, Aslopes, c, N = c(0:80), N0))
     
-    
+    ## append
+    sig_alpha_dat = rbind(sig_alpha_dat, tmp_alpha) %>%
+      filter(!is.na(water))
     
   }
   
 }
 
-
-
-## high water
-postw1df = as.data.frame(post_w1)
-
-Aminw1 = median(postw1df$alpha_initial)
-Aslopesw1 = median(postw1df$alpha_slope)
-cw1 = median(postw1df$c)
-N0w1 = median(postw1df$N_opt)
-
-w1plotdat = data.frame(density = c(0:80), alpha = alpha_function4(Aminw1, Aslopesw1, cw1, N = c(0:80), N0w1), water = "High")
-
-
-## intermediate water
-postw0.75df = as.data.frame(post_w0.75)
-
-Aminw0.75 = median(postw0.75df$alpha_initial)
-Aslopesw0.75 = median(postw0.75df$alpha_slope)
-cw0.75 = median(postw0.75df$c)
-N0w0.75 = median(postw0.75df$N_opt)
-
-w0.75plotdat = data.frame(density = c(0:80), alpha = alpha_function4(Aminw0.75, Aslopesw0.75, cw0.75, N = c(0:80), N0w0.75), water = "Intermediate")
-
-## low water
-postw0.6df = as.data.frame(post_w0.6)
-
-Aminw0.6 = median(postw0.6df$alpha_initial)
-Aslopesw0.6 = median(postw0.6df$alpha_slope)
-cw0.6 = median(postw0.6df$c)
-N0w0.6 = median(postw0.6df$N_opt)
-lambdaw0.6 = median(postw0.6df$lambda)
-alpha_brhow0.6 = median(postw0.6df$alpha_brho)
-
-## as normal
-w0.6plotdat = data.frame(density = c(0:80), alpha = alpha_function4(Aminw0.6, Aslopesw0.6, cw0.6, N = c(0:80), N0w0.6), water = "Low")
-
-ggplot(w0.6plotdat, aes(x=density, y=alpha, color = water)) +
-  geom_point(aes(fill = water), colour = "black", pch = 21, size = 3.5) +
-  coord_cartesian(xlim = c(0,80)) +
-  scale_fill_manual(values = c("#de8a5a")) +
+# Plot ####
+sig_alpha_dat %>%
+  mutate(microbe = ifelse(microbe == 0, "Sterilized Soil", "Live Soil")) %>%
+ggplot(aes(x=density, y=alpha, fill = water)) +
+  geom_line() +
+  geom_point(aes(fill = water), colour = "black", pch = 21, size = 2.5) +
+  coord_cartesian(xlim = c(0,30)) +
+  facet_wrap(~microbe) +
   xlab("Density") +
   ylab("Alpha value") +
   labs(fill = "Water") +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  ggtitle("Signs normal")
+  scale_fill_manual(values = c("#de8a5a", "#f6edbd", "#008080"))
 
-ggsave("data_analysis/models/evaluate/plot_alpha_fecundity/sigmoidal/20250124/alpha_normal_v_density.png", width = 5, height = 3.5)
-
-## with negatives
-w0.6plotdat_negs = data.frame(density = c(0:80), alpha = alpha_function4_wnegs(Aminw0.6, Aslopesw0.6, cw0.6, N = c(0:80), N0w0.6), water = "Low")
-
-ggplot(w0.6plotdat_negs, aes(x=density, y=alpha, color = water)) +
-  geom_point(aes(fill = water), colour = "black", pch = 21, size = 3.5) +
-  coord_cartesian(xlim = c(0,80)) +
-  scale_fill_manual(values = c("#de8a5a")) +
-  xlab("Density") +
-  ylab("Alpha value") +
-  labs(fill = "Water") +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  ggtitle("Signs Reversed")
-
-ggsave("data_analysis/models/evaluate/plot_alpha_fecundity/sigmoidal/20250113/alpha_w_negs_v_density.png", width = 5, height = 3.5) 
-
-plotdat = rbind(w1plotdat, w0.75plotdat, w0.6plotdat)
-
-
-w0.6plotdat = data.frame(density = c(0:70), fecundity = fec_function(lambda = lambdaw0.6, Amin = Aminw0.6, Aslopes = Aslopesw0.6, c = cw0.6, N_acam = c(0:70), N0 = N0w0.6, N_brho = 4, alpha_brho = alpha_brhow0.6), water = "Low")
-
-ggplot(w0.6plotdat, aes(x=density, y=fecundity, color = water)) +
-  geom_point(aes(fill = water), colour = "black", pch = 21, size = 3.5) +
-  coord_cartesian(xlim = c(0,70)) +
-  scale_fill_manual(values = c("#de8a5a")) +
-  xlab("Density") +
-  ylab("Fecundity") +
-  labs(fill = "Water") +
-  geom_hline(yintercept = 0, linetype = "dashed")
-
-
-w0.6plotdat_signswap = data.frame(density = c(0:70), fecundity = fec_function_swapsigns(lambda = lambdaw0.6, Amin = Aminw0.6, Aslopes = Aslopesw0.6, c = cw0.6, N_acam = c(0:70), N0 = N0w0.6, N_brho = 4, alpha_brho = alpha_brhow0.6), water = "Low")
-
-ggplot(w0.6plotdat_signswap, aes(x=density, y=fecundity, color = water)) +
-  geom_point(aes(fill = water), colour = "black", pch = 21, size = 3.5) +
-  coord_cartesian(xlim = c(0,70)) +
-  scale_fill_manual(values = c("#de8a5a")) +
-  xlab("Density") +
-  ylab("Fecundity") +
-  labs(fill = "Water") +
-  geom_hline(yintercept = 0, linetype = "dashed")
+ggsave(paste0(fig_loc, "sigmoidal/20250124/alpha_v_density_80.png"), width = 7, height = 3.5)
 
 
