@@ -13,16 +13,16 @@ library(tidyverse)
 theme_set(theme_classic())
 
 ## create alpha function
-alpha_function4_wnegs  <- function(Amin, Aslopes,c,N,N0){
+#alpha_function4_wnegs  <- function(Amin, Aslopes,c,N,N0){
   
-  e = exp(Aslopes*(N-N0)) # c is stretching the graph horizontally 
-  a = c*(1-e) #stretching the graph vertically
-  d = Amin
-  alpha = (-a/(1 + e)) - d
+ # e = exp(Aslopes*(N-N0)) # c is stretching the graph horizontally 
+  #a = c*(1-e) #stretching the graph vertically
+  #d = Amin
+  #alpha = (-a/(1 + e)) - d
   
-  return(alpha)
+  #return(alpha)
   
-}
+#}
 
 alpha_function4  <- function(Amin, Aslopes,c,N,N0){
   
@@ -49,23 +49,29 @@ fec_function = function(lambda, Amin, Aslopes, c, N_acam, N0, N_brho, alpha_brho
   
 }
 
-fec_function_swapsigns = function(lambda, Amin, Aslopes, c, N_acam, N0, N_brho, alpha_brho) {
+#fec_function_swapsigns = function(lambda, Amin, Aslopes, c, N_acam, N0, N_brho, alpha_brho) {
   
-  e = exp(Aslopes*(N_acam-N0)) # c is stretching the graph horizontally 
-  a = c*(1-e) #stretching the graph vertically
-  d = Amin
-  alpha_acam = (-a/(1 + e)) - d
+ # e = exp(Aslopes*(N_acam-N0)) # c is stretching the graph horizontally 
+ # a = c*(1-e) #stretching the graph vertically
+#  d = Amin
+#  alpha_acam = (-a/(1 + e)) - d
   
-  fecundity = N_brho*lambda * exp(-(N_brho*alpha_brho) + (N_acam*alpha_acam))
+ # fecundity = N_brho*lambda * exp(-(N_brho*alpha_brho) + (N_acam*alpha_acam))
   
-  return(fecundity)
+#  return(fecundity)
   
-}
+#}
 
 
 
 for(i in rain) {
   for(j in microbe){
+    
+    
+    test = as.data.frame(brho_sig_posts["brho_m0_w1"])
+    
+    ## these seem like they are including warmups...
+    
     
     
     
@@ -119,7 +125,7 @@ ggplot(w0.6plotdat, aes(x=density, y=alpha, color = water)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   ggtitle("Signs normal")
 
-ggsave("data_analysis/models/evaluate/plot_alpha_fecundity/sigmoidal/20250113/alpha_normal_v_density.png", width = 5, height = 3.5)
+ggsave("data_analysis/models/evaluate/plot_alpha_fecundity/sigmoidal/20250124/alpha_normal_v_density.png", width = 5, height = 3.5)
 
 ## with negatives
 w0.6plotdat_negs = data.frame(density = c(0:80), alpha = alpha_function4_wnegs(Aminw0.6, Aslopesw0.6, cw0.6, N = c(0:80), N0w0.6), water = "Low")

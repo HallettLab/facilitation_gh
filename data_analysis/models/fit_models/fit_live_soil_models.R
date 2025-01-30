@@ -6,6 +6,11 @@
 ## 
 ## Author: Carmen Watkins
 
+# Notes ####
+## Feedback from Lisa
+    ## increase the number of iterations to get better alpha_slope estimate
+    ## do the two peaks in the data mean anything?
+
 # Set up ####
 ## load packages
 library(tidyverse)
@@ -16,20 +21,20 @@ options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
 ## set date
-date <- 20250113
+date <- 20250124
 
 ## read in data 
 source("data_cleaning/clean_model_dat.R")
 
 ## set seed
-set.seed(14)
+set.seed(25)
 
 ## make treatment vectors
 rainfall = c(1, 0.75, 0.6)
 microbe = c(0,1)
 
-rainfall = 0.6
-microbe = 1
+#rainfall = 0.6
+#microbe = 1
 
 ## make a list for model output
 model.output <- list()
@@ -79,8 +84,8 @@ for(i in rainfall){
 
 ## make a list for model output
 sigmoidal.output <- list()
-rainfall = c(0.6)
-microbe = c(1)
+#rainfall = c(0.6)
+#microbe = c(1)
 
 for(i in rainfall){
   for(j in microbe){
@@ -106,21 +111,27 @@ for(i in rainfall){
     initials1 <- list(lambda=200, N_opt = 1, c = -0.5, alpha_slope = -0.8, alpha_initial = 0.1, alpha_brho = 0.08)
     initials2 <- list(lambda=600, N_opt = 2, c = -0.6, alpha_slope = -0.7, alpha_initial = 0.2, alpha_brho = 0.06)
     initials3 <- list(lambda=800, N_opt = 5, c = -0.2, alpha_slope = -0.4, alpha_initial = -0.1, alpha_brho = 0.04)
-    initials4 <- list(lambda=400, N_opt = 4, c = 0, alpha_slope = -0.2, alpha_initial = 0.3, alpha_brho = 0.01)
+    initials4 <- list(lambda=400, N_opt = 4, c = -0.3, alpha_slope = -0.2, alpha_initial = 0.3, alpha_brho = 0.01)
     
     ## issues with chain 4 initial values; changed lambda from 100->400 and alpha_initial from 0.5 to 0.3
+    ## chain 4 initial values having issues again... 
+    ## changed c from 0 -> -0.3; see if this helps? 
   
     initialsall<- list(initials1, initials2, initials3, initials4)
   
     ## run the model
-    sigmoidal.output[[paste0("brho_m", j, "_w", i)]] = stan(file = 'data_analysis/models/fit_models/ricker_nb_sigmoidal.stan', data = data_vec, init = initialsall, iter = 10000, chains = 4, thin = 2, control = list(adapt_delta = 0.95, max_treedepth = 18))
+    sigmoidal.output[[paste0("brho_m", j, "_w", i)]] = stan(file = 'data_analysis/models/fit_models/ricker_nb_sigmoidal.stan', data = data_vec, init = initialsall, iter = 20000, chains = 4, thin = 2, control = list(adapt_delta = 0.95, max_treedepth = 18))
     
     ## adjusted iter from 5000 -> 8000 and adapt_delta from 0.9 -> 0.95 on 1/13
     ## running just for m1_w0.6
     
+    ## changed from 8000 -> 10000 iterations, just to give model more time to better estimate alpha_slope and c, which it is having trouble with
+    
+    ## adjusted iter from 10000 -> 15000 on 1/22/25 to see if this provides a better estimate of alpha_slope, which the model was initially giving fairly wide estimates to.
+    
     ## the divergence issues went away; still not estimating things quite well for c an dalpha_slope; try removing bound of 0 on both parameters
     
-    ## changed from 8000 -> 10000 iterations, just to give model more time to better estimate alpha_slope and c, which it is having trouble with
+    
     
     ## max Rhat = 1.06 (not the worst); need to run for more iterations - bump from 5000 to 10000? 
     ## Neff is low in some cases; need to run for more iterations - bump from 5000 to 10000?
@@ -132,13 +143,13 @@ for(i in rainfall){
     PrelimFit <- sigmoidal.output[[paste0("brho_m", j, "_w", i)]]
     
     ## save model output
-    save(PrelimFit, file = paste0("data_analysis/models/output/static/brho_nb_sigmoidal_m", j, "_w", i, "_", date, "_v2.rdata"))
+    save(PrelimFit, file = paste0("data_analysis/models/output/sigmoidal/brho_nb_sigmoidal_m", j, "_w", i, "_", date, ".rdata"))
     
   }
 }
 
 pairs(PrelimFit, pars = c("lambda", "disp", "alpha_brho", "N_opt", "c", "alpha_slope", "alpha_initial"))
 
-traceplot(PrelimFit, pars = c("lambda", "disp", "alpha_brho", "N_opt", "c", "alpha_slope", "alpha_initial"))
+traceplot(PrelimFit, pars = c("lambda", "disp", "alpha_brho", "N_opt", "c", "alpha_slope", "alpha_initial"), inc_warmup = T)
 
 ## C parameter really seems to be the one screwing with this in both pairs plot and traceplots

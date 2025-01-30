@@ -1,6 +1,9 @@
 // Ricker growth model
 // Model as a negative binomial
 
+// update model to incorporate negative signs into alpha coefficients so that a positive coefficient = facilitation and a negative coefficient = competition; 
+// changing to this to mirror Lisa's approach and to ensure that no small sign mistakes are made that mess up interpretation.
+
 data{
   
   int<lower = 1> N; // number of observations
@@ -23,10 +26,11 @@ parameters{
 
   // params for sigmoidal alpha function: 
   real<lower = 0> N_opt; //optimal density of ACAM that maximizes BRHO fecundity
-  real<lower = -1, upper = 1> c; //vertical stretching parameter
+  real<upper = 0> c; //vertical stretching parameter
   // allowing this to go to 1 because it seems like this could aid in helping fit lines that look exponential. Also, if the alpha_slope is near 0, this value doesn't really matter
+  // changing bound to just upper = 0, based on what Lisa does in her code
   
-  real<lower = -1, upper = 1> alpha_slope; // density-dependent parameter
+  real<lower = -1, upper = 0> alpha_slope; // density-dependent parameter
   // not fully clear why alpha_slope is bounded by -1 - 0; models show it bumping up against the -1 boundary; leave as is for now
   
   // take away upper 0 bound and see how this effects model fit
@@ -49,7 +53,7 @@ transformed parameters{
     alpha_acam[i] = alpha_initial + ( c*(1 - exp(alpha_slope*(acam[i] - N_opt))) / (1 + exp(alpha_slope * (acam[i] - N_opt))) ) ;
 
 
-    F_hat[i] = N_i[i] * (lambda) * exp( (-N_i[i] * (alpha_brho)) - (acam[i] * alpha_acam[i])) ; //intersp
+    F_hat[i] = N_i[i] * (lambda) * exp( (N_i[i] * (alpha_brho)) + (acam[i] * alpha_acam[i])) ; //intersp
     
     // the biological model is not correct yet; hvae questions for Lisa on it!
     

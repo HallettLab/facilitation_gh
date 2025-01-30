@@ -20,7 +20,7 @@ output_loc = "data_analysis/models/evaluate/diagnostics/"
 ## sigmoidal ####
 rain = c(1, 0.75, 0.6)
 microbe = c(0, 1)
-date = 20250110
+date = 20250124
 brho_sig_posts = list()
 
 ## create empty df for diagnostics
@@ -57,7 +57,7 @@ for(i in rain){
     traceplot(PrelimFit, pars = c("disp", "lambda", "alpha_brho", "alpha_initial", "alpha_slope", "c", "N_opt"), inc_warmup = TRUE)
     
     ## save traceplot
-    ggsave(paste0(output_loc, "sigmoidal/", date, "/traceplot_mainparams_brho_m", j, "_w", i, "_UNboundedalphaslope_c.png"), width = 10, height = 8)
+    ggsave(paste0(output_loc, "sigmoidal/", date, "/traceplot_mainparams_brho_m", j, "_w", i, "_boundedalphaslope_c.png"), width = 10, height = 8)
     
   }
   

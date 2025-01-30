@@ -1,6 +1,6 @@
 
 
-lambda, Amin, Aslopes, c, N_acam, N0, N_brho, alpha_brho
+## lambda, Amin, Aslopes, c, N_acam, N0, N_brho, alpha_brho
 
 lambda = 350
 alpha_brho = -0.05
