@@ -90,5 +90,3 @@ ggplot(aes(x=density, y=alpha, fill = water)) +
   scale_fill_manual(values = c("#de8a5a", "#f6edbd", "#008080"))
 
 ggsave(paste0(fig_loc, "sigmoidal/20250124/alpha_v_density_80.png"), width = 7, height = 3.5)
-
-
