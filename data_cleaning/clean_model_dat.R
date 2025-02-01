@@ -111,8 +111,9 @@ ainter = acam %>%
          seeds.out = ifelse(water %in% c(0.75, 1), flowers.out*alloAsC, flowers.out*alloAsD)) %>%
   select(-flowers.out)
 
-ggplot(ainter, aes(x=seeds.out)) +
-  geom_histogram(bins = 50)
+ggplot(ainter, aes(x=seeds.out, fill = as.factor(water))) +
+  geom_histogram(bins = 50) +
+  facet_wrap(~water)
 
 ## change acam bkgrd data to use as intraspecific acam data
 names(abkgrd)
@@ -120,11 +121,15 @@ names(abkgrd)
 aintra = abkgrd %>%
   filter(!is.na(num.bg.indiv), num.bg.indiv != 0, num.bg.indiv != 1) %>%
   select(unique.ID, block, water, microbe, rep, num.bg.indiv, total.biomass.g) %>%
-  mutate(flowers.out = total.biomass.g*alloAf, 
+  mutate(total.biomass.g = ifelse(unique.ID == 250, 3.662, total.biomass.g), ## fix a value missing a decimal place
+         flowers.out = total.biomass.g*alloAf, 
          seeds.out = ifelse(water %in% c(0.75, 1), flowers.out*alloAsC, flowers.out*alloAsD)) %>%
-  filter(seeds.out < 550) %>% ## remove the one crazy big observation; look into later 
+  #filter(seeds.out < 550) %>% ## remove the one crazy big observation; look into later 
   select(-flowers.out) %>%
-  left_join(binter[ , -c(7,9,10)], by = c("unique.ID", "block", "water", "microbe", "rep", "num.bg.indiv"))
+  ## join with binter to get number of focal individuals
+  left_join(binter[ , -c(7,9,10)], by = c("unique.ID", "block", "water", "microbe", "rep", "num.bg.indiv")) 
+
+## there are a number of these with missing # focal individuals
 
 names(aintra) = c("unique.ID", "block", "water", "microbe", "rep", "num.focal.indiv", "total.biomass.g", "seeds.out", "num.bg.indiv")
 

@@ -24,7 +24,7 @@ parameters{
 
 }
 
-// calc additional parameters based on the sampled param values without effecting the sampling itself
+// calc additional parameters based on the sampled param values without affecting the sampling itself
 transformed parameters{
   
   // create vector of predictions

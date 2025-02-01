@@ -17,7 +17,8 @@ library(tidyverse)
 output_loc = "data_analysis/models/evaluate/diagnostics/"
 
 # Load models ####
-## sigmoidal ####
+## BRHO ####
+### sigmoidal ####
 rain = c(1, 0.75, 0.6)
 microbe = c(0, 1)
 date = 20250124
@@ -70,7 +71,7 @@ sig_diagnostics = sig_diagnostics %>%
 ## save output
 write.csv(sig_diagnostics, paste0(output_loc, "sigmoidal/", date, "/rhat_neff_brho_nb_sigmoidal_", date, ".csv"))
 
-## static ####
+### static ####
 date = 20250110
 brho_stat_posts = list()
 
@@ -118,3 +119,55 @@ stat_diagnostics = stat_diagnostics %>%
 
 ## save output
 write.csv(stat_diagnostics, paste0(output_loc, "static/", date, "/rhat_neff_brho_nb_stat_", date, ".csv"))
+
+## ACAM ####
+### sigmoidal ####
+### static ####
+rain = c(1, 0.75, 0.6)
+date = 20250131
+acam_stat_posts = list()
+
+## create empty df for diagnostics
+acam_stat_diagnostics = data.frame(model.name = NA, Rhat = NA, Neff = NA)
+
+for(i in rain){
+#  for(j in microbe) {
+    
+    ## load non-constrained models
+    load(paste0("data_analysis/models/output/static/acam_nb_static_w", i, "_", date, ".rdata"))
+    
+    ## print model to keep track of progress during loop
+    print(paste0("w", i))
+    
+    ## extract model info
+    tmp <- rstan::extract(PrelimFit)
+    
+    ## save posterior distributions
+    acam_stat_posts[[paste0("acam_w", i)]] <- tmp
+    
+    ## save Rhat & Neff vals
+    Rhat = max(summary(PrelimFit)$summary[,"Rhat"],na.rm =T)
+    Neff = min(summary(PrelimFit)$summary[,"n_eff"],na.rm = T)
+    
+    ## put in df
+    tmp2 = data.frame(model.name = paste0("acam_w", i), Rhat = Rhat, Neff = Neff)
+    
+    ## append to main df
+    acam_stat_diagnostics = rbind(acam_stat_diagnostics, tmp2)
+    
+    ## create traceplot for the model
+    traceplot(PrelimFit, pars = c("disp", "lambda", "alpha_acam", "alpha_brho"))
+    
+    ## save traceplot
+    ggsave(paste0(output_loc, "static/", date, "/traceplot_mainparams_acam_w", i, ".png"), width = 6, height = 5)
+    
+ # }
+  
+}
+
+## remove NA
+acam_stat_diagnostics = acam_stat_diagnostics %>%
+  filter(!is.na(model.name))
+
+## save output
+write.csv(acam_stat_diagnostics, paste0(output_loc, "static/", date, "/rhat_neff_acam_nb_stat_", date, ".csv"))
