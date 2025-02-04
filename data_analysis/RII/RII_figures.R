@@ -61,7 +61,7 @@ brho_RII %>%
   labs(fill = "Water") +
   theme(text = element_text(size = 15)) +
   theme(legend.position = "bottom")
-# ggsave("figures/MS_version1/Fig2_meanRII_planted_dens.png", width = 7, height = 4)
+# ggsave("figures/MS_draft2/Fig2_meanRII_planted_dens.png", width = 7, height = 4)
 
 
 ## planted vs. final density

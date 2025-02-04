@@ -37,8 +37,8 @@ abkgrd.join = abkgrd %>%
   select(unique.ID, water, microbe, rep, num.bg.indiv, num.dead.bg.indiv, num.resprouted.BRHO.focals)
 
 brho_clean = brho %>%
-  mutate(unique.ID = X0) %>%
-  select(-X0) %>%
+  #mutate(unique.ID = X0) %>%
+  #select(-X0) %>%
   left_join(abkgrd.join, by = c("unique.ID", "water", "microbe", "rep"))
 
 ## Necessary columns
