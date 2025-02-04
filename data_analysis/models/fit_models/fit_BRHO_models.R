@@ -1,8 +1,8 @@
 ## Header ##
 ## 
-## Fit Live Soil Models
+## Fit BRHO Models
 ##
-## Purpose: run Stan code to fit bayesian models for all 3 water conditions and both soil conditions with both static alphas and sigmoidal alphas
+## Purpose: run Stan code to fit bayesian models for all 3 water conditions with both static alphas and sigmoidal alphas
 ## 
 ## Author: Carmen Watkins
 
@@ -10,6 +10,11 @@
 ## Feedback from Lisa
     ## increase the number of iterations to get better alpha_slope estimate
     ## do the two peaks in the data mean anything?
+
+## 2/3/25 realization
+    ## BRHO sterilized soil models give really odd alpha_brho outputs 
+    ## because they do NOT have enough data
+    ## should NOT model these data any longer; just fit live soil models.
 
 # Set up ####
 ## load packages
@@ -31,25 +36,20 @@ set.seed(25)
 
 ## make treatment vectors
 rainfall = c(1, 0.75, 0.6)
-microbe = c(0,1)
-
-#rainfall = 0.6
-#microbe = 1
 
 ## make a list for model output
 model.output <- list()
 
 # Static Fit ####
 for(i in rainfall){
-  for(j in microbe){
   
     ## select data 
-    dat = brho.model[brho.model$water == i & brho.model$microbe == j,] %>%
+    dat = brho.model[brho.model$water == i,] %>%
       filter(!is.na(num.focal.indiv))
     ## currently ID 79 doesn't have a focal # entered
   
     ## print model to keep track of progress during loop
-    print(paste0("m", j, "_w", i))
+    print(paste0("brho_w", i))
     
     ## create vectors of data inputs
     Fecundity = as.integer(round(dat$seeds.out)) ## seeds out
@@ -69,14 +69,14 @@ for(i in rainfall){
     initialsall<- list(initials1, initials2, initials3, initials4)
     
     ## run the model
-    model.output[[paste0("brho_m", j, "_w", i)]] = stan(file = 'data_analysis/models/fit_models/ricker_neg_binom_static_alpha.stan', data = data_vec, init = initialsall, iter = 5000, chains = 4, thin = 2, control = list(adapt_delta = 0.9, max_treedepth = 18))
+    model.output[[paste0("brho_w", i)]] = stan(file = 'data_analysis/models/fit_models/ricker_neg_binom_static_alpha.stan', data = data_vec, init = initialsall, iter = 5000, chains = 4, thin = 2, control = list(adapt_delta = 0.9, max_treedepth = 18))
     
-    PrelimFit <- model.output[[paste0("brho_m", j, "_w", i)]]
+    PrelimFit <- model.output[[paste0("brho_w", i)]]
     
     ## save model output
-    save(PrelimFit, file = paste0("data_analysis/models/output/static/brho_nb_static_m", j, "_w", i, "_", date, ".rdata"))
+    save(PrelimFit, file = paste0("data_analysis/models/output/static/brho_nb_static_w", i, "_", date, ".rdata"))
     
-  }
+#  }
   
 }
 

@@ -84,7 +84,9 @@ names(bintra) = c("unique.ID", "block", "water", "microbe", "rep", "num.focal.in
 
 ## join brho focal and brho bkgrd data
 brho.model = rbind(binter, bintra) %>%
-  select(-ACAM) ## this col is only needed for analyses with RII not for pop models; although potentially we want to use seeds in??
+  select(-ACAM) %>% ## this col is only needed for analyses with RII not for pop models; although potentially we want to use seeds in??
+  filter(microbe == 1)
+    ## filter microbe == 1, because should NOT model with microbe == 0 data
 
 ## acam ####
 names(abkgrd)
