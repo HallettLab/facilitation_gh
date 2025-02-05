@@ -20,27 +20,26 @@ output_loc = "data_analysis/models/evaluate/diagnostics/"
 ## BRHO ####
 ### sigmoidal ####
 rain = c(1, 0.75, 0.6)
-microbe = c(0, 1)
-date = 20250124
+#microbe = c(0, 1)
+date = 20250204
 brho_sig_posts = list()
 
 ## create empty df for diagnostics
 sig_diagnostics = data.frame(model.name = NA, Rhat = NA, Neff = NA)
 
 for(i in rain){
-  for(j in microbe) {
     
-    ## load non-constrained models
-    load(paste0("data_analysis/models/output/sigmoidal/brho_nb_sigmoidal_m",j, "_w", i, "_", date, ".rdata"))
+    ## load models
+    load(paste0("data_analysis/models/output/sigmoidal/", date, "/brho_nb_sigmoidal_w", i, "_2_", date, ".rdata"))
     
     ## print model to keep track of progress during loop
-    print(paste0("m", j, "_w", i))
+    print(paste0("w", i))
     
     ## extract model info
     tmp <- rstan::extract(PrelimFit, inc_warmup = FALSE)
     
     ## save posterior distributions
-    brho_sig_posts[[paste0("brho_m", j, "_w", i)]] <- tmp
+    #brho_sig_posts[[paste0("brho_m", j, "_w", i)]] <- tmp
     
     print(PrelimFit)
     
@@ -49,7 +48,7 @@ for(i in rain){
     Neff = min(summary(PrelimFit)$summary[,"n_eff"],na.rm = T)
     
     ## put in df
-    tmp2 = data.frame(model.name = paste0("brho_m", j, "_w", i), Rhat = Rhat, Neff = Neff)
+    tmp2 = data.frame(model.name = paste0("brho_w", i), Rhat = Rhat, Neff = Neff)
     
     ## append to main df
     sig_diagnostics = rbind(sig_diagnostics, tmp2)
@@ -58,10 +57,8 @@ for(i in rain){
     traceplot(PrelimFit, pars = c("disp", "lambda", "alpha_brho", "alpha_initial", "alpha_slope", "c", "N_opt"), inc_warmup = TRUE)
     
     ## save traceplot
-    ggsave(paste0(output_loc, "sigmoidal/", date, "/traceplot_mainparams_brho_m", j, "_w", i, "_boundedalphaslope_c.png"), width = 10, height = 8)
+    ggsave(paste0(output_loc, "sigmoidal/", date, "/traceplot_mainparams_brho_w", i, "_2.png"), width = 10, height = 8)
     
-  }
-  
 }
 
 ## remove NA
@@ -69,7 +66,7 @@ sig_diagnostics = sig_diagnostics %>%
   filter(!is.na(model.name))
 
 ## save output
-write.csv(sig_diagnostics, paste0(output_loc, "sigmoidal/", date, "/rhat_neff_brho_nb_sigmoidal_", date, ".csv"))
+write.csv(sig_diagnostics, paste0(output_loc, "sigmoidal/", date, "/rhat_neff_brho_nb_sigmoidal_", date, "_2.csv"))
 
 ### static ####
 date = 20250110

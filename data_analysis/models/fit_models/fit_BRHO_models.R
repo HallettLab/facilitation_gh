@@ -26,7 +26,7 @@ options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
 ## set date
-date <- 20250124
+date <- 20250204
 
 ## read in data 
 source("data_cleaning/clean_model_dat.R")
@@ -74,32 +74,27 @@ for(i in rainfall){
     PrelimFit <- model.output[[paste0("brho_w", i)]]
     
     ## save model output
-    save(PrelimFit, file = paste0("data_analysis/models/output/static/brho_nb_static_w", i, "_", date, ".rdata"))
+    save(PrelimFit, file = paste0("data_analysis/models/output/static/", date, "/brho_nb_static_w", i, "_", date, ".rdata"))
     
-#  }
-  
 }
 
 # Sigmoidal ####
 
 ## make a list for model output
 sigmoidal.output <- list()
-#rainfall = c(0.6)
-#microbe = c(1)
 
 for(i in rainfall){
-  for(j in microbe){
   
     ## select data 
-    dat = brho.model[brho.model$water == i & brho.model$microbe == j,] %>%
+    dat = brho.model[brho.model$water == i,] %>%
       filter(!is.na(num.focal.indiv))
     ## currently ID 79 doesn't have a focal # entered
   
     ## print model to keep track of progress during loop
-    print(paste0("m", j, "_w", i))
+    print(paste0("w", i))
     
     ## create vectors of data inputs
-    Fecundity = as.integer(round(dat$seeds.out)) ## seeds out
+    Fecundity = as.integer(round(dat$seeds.out.percap)) ## seeds out
     N = as.integer(length(Fecundity)) ## number of observations
     N_i = as.integer(dat$num.focal.indiv) ## stem # of focal species
     acam <- as.integer(dat$num.bg.indiv) ## background stem # data
@@ -120,7 +115,7 @@ for(i in rainfall){
     initialsall<- list(initials1, initials2, initials3, initials4)
   
     ## run the model
-    sigmoidal.output[[paste0("brho_m", j, "_w", i)]] = stan(file = 'data_analysis/models/fit_models/ricker_nb_sigmoidal.stan', data = data_vec, init = initialsall, iter = 20000, warmup = 10000, chains = 4, thin = 2, control = list(adapt_delta = 0.95, max_treedepth = 18))
+    sigmoidal.output[[paste0("brho_w", i)]] = stan(file = 'data_analysis/models/fit_models/ricker_nb_sigmoidal.stan', data = data_vec, init = initialsall, iter = 20000, warmup = 6000, chains = 4, thin = 2, control = list(adapt_delta = 0.99, max_treedepth = 18))
     
     ## adjusted iter from 5000 -> 8000 and adapt_delta from 0.9 -> 0.95 on 1/13
     ## running just for m1_w0.6
@@ -129,9 +124,7 @@ for(i in rainfall){
     
     ## adjusted iter from 10000 -> 15000 on 1/22/25 to see if this provides a better estimate of alpha_slope, which the model was initially giving fairly wide estimates to.
     
-    ## the divergence issues went away; still not estimating things quite well for c an dalpha_slope; try removing bound of 0 on both parameters
-    
-    
+    ## the divergence issues went away; still not estimating things quite well for c and alpha_slope; try removing bound of 0 on both parameters
     
     ## max Rhat = 1.06 (not the worst); need to run for more iterations - bump from 5000 to 10000? 
     ## Neff is low in some cases; need to run for more iterations - bump from 5000 to 10000?
@@ -140,16 +133,9 @@ for(i in rainfall){
     ## look at pairs plot to see sampling problems
     
     
-    PrelimFit <- sigmoidal.output[[paste0("brho_m", j, "_w", i)]]
+    PrelimFit <- sigmoidal.output[[paste0("brho_w", i)]]
     
     ## save model output
-    save(PrelimFit, file = paste0("data_analysis/models/output/sigmoidal/brho_nb_sigmoidal_m", j, "_w", i, "_", date, ".rdata"))
+    save(PrelimFit, file = paste0("data_analysis/models/output/sigmoidal/", date, "/brho_nb_sigmoidal_w", i, "_2_", date, ".rdata"))
     
-  }
 }
-
-pairs(PrelimFit, pars = c("lambda", "disp", "alpha_brho", "N_opt", "c", "alpha_slope", "alpha_initial"))
-
-traceplot(PrelimFit, pars = c("lambda", "disp", "alpha_brho", "N_opt", "c", "alpha_slope", "alpha_initial"), inc_warmup = T)
-
-## C parameter really seems to be the one screwing with this in both pairs plot and traceplots

@@ -30,63 +30,60 @@ alpha_function4  <- function(Amin, Aslopes,c,N,N0){
   
 }
 
-## create function for fecundity
-fec_function = function(lambda, Amin, Aslopes, c, N_acam, N0, N_brho, alpha_brho) {
-  
-  e = exp(Aslopes*(N_acam-N0)) # c is stretching the graph horizontally 
-  a = c*(1-e) #stretching the graph vertically
-  d = Amin
-  alpha_acam = (a/(1 + e)) + d
-  
-  fecundity = N_brho*lambda * exp(-(N_brho*alpha_brho) - (N_acam*alpha_acam))
-  
-  return(fecundity)
-  
-}
-
 rain = c(1, 0.75, 0.6)
-microbe = c(0, 1)
-sig_alpha_dat = data.frame(water = NA, microbe = NA, density = NA, alpha = NA)
+sig_alpha_dat = data.frame(water = NA, density = NA, alpha = NA, fecundity = NA)
 
 ## use mean of posteriors to get data using functions
 for(i in rain) {
-  for(j in microbe){
-    
-    temp = sig_posteriors %>%
-      filter(water == i, microbe == j)
-
-    #[10001:20000,]
-    ## these seem like they are including warmups...
   
+    temp = sig_posteriors %>%
+      filter(water == i)
+    
     ## set variables
     Amin = median(temp$alpha_initial)
     Aslopes = median(temp$alpha_slope)
     c = median(temp$c)
     N0 = median(temp$N_opt)
+    lambda = median(temp$lambda)
     
     ## run alpha function and save in df
-    tmp_alpha = data.frame(water = rep(paste0(i), 81), microbe = rep(paste0(j), 81), density = c(0:80), alpha = alpha_function4(Amin, Aslopes, c, N = c(0:80), N0))
-    
+    tmp_alpha = data.frame(water = rep(paste0(i), 51), density = c(0:50), alpha = alpha_function4(Amin, Aslopes, c, N = c(0:50), N0))
+    tmp_alpha2 = tmp_alpha %>%
+      mutate(fecundity = lambda*exp(alpha*density))
+                           
     ## append
-    sig_alpha_dat = rbind(sig_alpha_dat, tmp_alpha) %>%
+    sig_alpha_dat = rbind(sig_alpha_dat, tmp_alpha2) %>%
       filter(!is.na(water))
-    
-  }
-  
+
 }
 
 # Plot ####
-sig_alpha_dat %>%
-  mutate(microbe = ifelse(microbe == 0, "Sterilized Soil", "Live Soil")) %>%
+alpha = sig_alpha_dat %>%
+  mutate(water = ifelse(water == 1, "High", 
+                        ifelse(water == 0.75, "Intermediate", "Low"))) %>%
 ggplot(aes(x=density, y=alpha, fill = water)) +
   geom_line() +
   geom_point(aes(fill = water), colour = "black", pch = 21, size = 2.5) +
-  coord_cartesian(xlim = c(0,30)) +
-  facet_wrap(~microbe) +
+  coord_cartesian(xlim = c(0,50)) +
   xlab("Density") +
   ylab("Alpha value") +
   labs(fill = "Water") +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  scale_fill_manual(values = c("#de8a5a", "#f6edbd", "#008080"))
+  scale_fill_manual(values = c("#008080", "#f6edbd", "#de8a5a"))
 
-ggsave(paste0(fig_loc, "sigmoidal/20250124/alpha_v_density_80.png"), width = 7, height = 3.5)
+fec = sig_alpha_dat %>%
+  mutate(water = ifelse(water == 1, "High", 
+                        ifelse(water == 0.75, "Intermediate", "Low"))) %>%
+  ggplot(aes(x=density, y=fecundity, fill = water)) +
+  geom_line() +
+  geom_point(aes(fill = water), colour = "black", pch = 21, size = 2.5) +
+  coord_cartesian(xlim = c(0,50)) +
+  xlab("Density") +
+  ylab("Fecundity") +
+  labs(fill = "Water") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  scale_fill_manual(values = c("#008080", "#f6edbd", "#de8a5a"))
+
+ggarrange(alpha, fec, common.legend = TRUE, legend = "bottom", labels = "AUTO")
+
+ggsave(paste0(fig_loc, "sigmoidal/", date, "/alpha_&_fec_v_density_50.png"), width = 8, height = 4)

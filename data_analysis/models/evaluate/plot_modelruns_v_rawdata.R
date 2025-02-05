@@ -19,17 +19,17 @@ source("data_cleaning/clean_model_dat.R")
 
 ## set fig location
 fig_loc = "data_analysis/models/evaluate/plot_with_data/"
-date = 20250124
+date = 20250204
 
 ## plot 
 for(i in rain){
-  for(j in microbe){
+#  for(j in microbe){
     
     ## take last 10000 rows of each param; if everything happened as I think it should have, the first 10000 should be warmup and should not be included.
     
     # extract mu and phi
-    mu = brho_sig_posts[[paste0("brho_m", j, "_w", i)]]$F_hat[10001:20000,]
-    disp = brho_sig_posts[[paste0("brho_m", j, "_w", i)]]$disp[10001:20000]
+    mu = brho_sig_posts[[paste0("brho_w", i)]]$F_hat[10001:20000,]
+    disp = brho_sig_posts[[paste0("brho_w", i)]]$disp[10001:20000]
     phi = (disp^2)^(-1)
     
     # generating posterior predictions
@@ -50,23 +50,21 @@ for(i in rain){
     # start a plot with the first draw 
     col2 = wes_palette("FantasticFox1", n = 5)
     
-    png(paste0(fig_loc, "sigmoidal/", date, "/pred_seed_density_m", j, "_w", i, "_UNbounded_alpha_slope_c.png"), width = 5, height = 4, units = "in", res = 250)
+    png(paste0(fig_loc, "sigmoidal/", date, "/pred_seed_density_w", i, ".png"), width = 5, height = 4, units = "in", res = 250)
     
     plot(density(seed_pred[1, ]), ylim = c(0,max.density), 
                      col = col2,
                      ylab = 'Density',
                      xlab="Seed Output",
-                    main = paste0("brho_m", j, "_w", i)) 
+                    main = paste0("brho_w", i)) 
     
     for (r in 2:dim(seed_pred)[1]) {
       # add a line for each draw
       lines(density(seed_pred[r, ]), col = col2)
     }
     
-    lines(density(brho.model[brho.model$water == i & brho.model$microbe == j,]$seeds.out), col = "black")
+    lines(density(brho.model[brho.model$water == i,]$seeds.out.percap), col = "black")
     
     dev.off()
-    
-  }
   
 }
