@@ -87,6 +87,7 @@ comp_loo_model2 <- comp_loo_model %>%
   rownames_to_column(var="model") %>%
   mutate(model_type = ifelse(substr(model, start = 1, stop = 6) == "model1", "static", "sigmoidal"),
          model_date = ifelse(model_type == "static", date_stat, date)) %>%
-  select(model_type, model_date, water, elpd_diff, se_diff, elpd_loo, se_elpd_loo, p_loo, se_p_loo, looic, se_looic)
+  select(model_type, model_date, water, elpd_diff, se_diff, elpd_loo, se_elpd_loo, p_loo, se_p_loo, looic, se_looic) %>% 
+  mutate_if(is.numeric, round, digits = 3)
 
 write.csv(comp_loo_model2, "data_analysis/models/evaluate/log_likelihood_output/model_compare_stat_sig_20250204.csv")

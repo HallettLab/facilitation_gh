@@ -87,3 +87,61 @@ fec = sig_alpha_dat %>%
 ggarrange(alpha, fec, common.legend = TRUE, legend = "bottom", labels = "AUTO")
 
 ggsave(paste0(fig_loc, "sigmoidal/", date, "/alpha_&_fec_v_density_50.png"), width = 8, height = 4)
+
+
+## plot static fecundity ####
+rain = c(1, 0.75, 0.6)
+stat_alpha_dat = data.frame(water = NA, density = NA, alpha = NA, fecundity = NA)
+
+## use mean of posteriors to get data using functions
+for(i in rain) {
+  
+  temp = stat_posteriors %>%
+    filter(water == i)
+  
+  ## set variables
+  alpha_acam = median(temp$alpha_acam)
+  #N0 = median(temp$N_opt)
+  lambda = median(temp$lambda)
+  
+  ## run alpha function and save in df
+  tmp_alpha = data.frame(water = rep(paste0(i), 51), density = c(0:50), alpha = alpha_acam)
+  tmp_alpha2 = tmp_alpha %>%
+    mutate(fecundity = lambda*exp(alpha*density))
+  
+  ## append
+  stat_alpha_dat = rbind(stat_alpha_dat, tmp_alpha2) %>%
+    filter(!is.na(water))
+  
+}
+
+# Plot ####
+alphaST = stat_alpha_dat %>%
+  mutate(water = ifelse(water == 1, "High", 
+                        ifelse(water == 0.75, "Intermediate", "Low"))) %>%
+  ggplot(aes(x=density, y=alpha, fill = water)) +
+  geom_line() +
+  geom_point(aes(fill = water), colour = "black", pch = 21, size = 2.5) +
+  coord_cartesian(xlim = c(0,50)) +
+  xlab("Density") +
+  ylab("Alpha value") +
+  labs(fill = "Water") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  scale_fill_manual(values = c("#008080", "#f6edbd", "#de8a5a"))
+
+fecST = stat_alpha_dat %>%
+  mutate(water = ifelse(water == 1, "High", 
+                        ifelse(water == 0.75, "Intermediate", "Low"))) %>%
+  ggplot(aes(x=density, y=fecundity, fill = water)) +
+  geom_line() +
+  geom_point(aes(fill = water), colour = "black", pch = 21, size = 2.5) +
+  coord_cartesian(xlim = c(0,50)) +
+  xlab("Density") +
+  ylab("Fecundity") +
+  labs(fill = "Water") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  scale_fill_manual(values = c("#008080", "#f6edbd", "#de8a5a"))
+
+ggarrange(alphaST, fecST, common.legend = TRUE, legend = "bottom", labels = "AUTO")
+
+ggsave(paste0(fig_loc, "static/", date, "/stat_alpha_&_fec_v_density_50.png"), width = 8, height = 4)
