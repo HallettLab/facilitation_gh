@@ -21,12 +21,11 @@ source("data_cleaning/clean_model_dat.R")
 fig_loc = "data_analysis/models/evaluate/plot_with_data/"
 date = 20250204
 
+# BRHO ####
+## Sigmoidal ####
 ## plot 
 for(i in rain){
-#  for(j in microbe){
-    
-    ## take last 10000 rows of each param; if everything happened as I think it should have, the first 10000 should be warmup and should not be included.
-    
+
     # extract mu and phi
     mu = brho_sig_posts[[paste0("brho_w", i)]]$F_hat[10001:20000,]
     disp = brho_sig_posts[[paste0("brho_w", i)]]$disp[10001:20000]
@@ -66,5 +65,51 @@ for(i in rain){
     lines(density(brho.model[brho.model$water == i,]$seeds.out.percap), col = "black")
     
     dev.off()
+  
+}
+
+## Static ####
+## plot 
+for(i in rain){
+  
+  # extract mu and phi
+  mu = brho_stat_posts[[paste0("brho_w", i)]]$F_hat[2501:5000,]
+  disp = brho_stat_posts[[paste0("brho_w", i)]]$disp[2501:5000]
+  phi = (disp^2)^(-1)
+  
+  # generating posterior predictions
+  seed_pred <- matrix(nrow = dim(mu)[1], ncol = dim(mu)[2])
+  
+  for (r in 1:dim(mu)[1]) {     # for each posterior draw
+    for (c in 1:dim(mu)[2]) {    # for each observation 
+      # draw from the predicted distribution
+      seed_pred[r, c] <- rnbinom(1, mu = mu[r, c], size = phi[r])  
+    }
+  }
+  
+  # get maximum density for plot limits
+  max.density <- max(c(apply(seed_pred, 1, function(x) {max(density(x)$y)}), 
+                       max(density(seed_pred)$y)))
+  
+  # dev.new(noRStudioGD = T)
+  # start a plot with the first draw 
+  col2 = wes_palette("FantasticFox1", n = 5)[3]
+  
+  png(paste0(fig_loc, "static/", date, "/pred_seed_density_w", i, ".png"), width = 5, height = 4, units = "in", res = 250)
+  
+  plot(density(seed_pred[1, ]), ylim = c(0,max.density), 
+       col = col2,
+       ylab = 'Density',
+       xlab="Seed Output",
+       main = paste0("brho_w", i)) 
+  
+  for (r in 2:dim(seed_pred)[1]) {
+    # add a line for each draw
+    lines(density(seed_pred[r, ]), col = col2)
+  }
+  
+  lines(density(brho.model[brho.model$water == i,]$seeds.out.percap), col = "black")
+  
+  dev.off()
   
 }

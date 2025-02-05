@@ -69,33 +69,33 @@ sig_diagnostics = sig_diagnostics %>%
 write.csv(sig_diagnostics, paste0(output_loc, "sigmoidal/", date, "/rhat_neff_brho_nb_sigmoidal_", date, "_2.csv"))
 
 ### static ####
-date = 20250110
+rain = c(1, 0.75, 0.6)
+date = 20250204
 brho_stat_posts = list()
 
 ## create empty df for diagnostics
 stat_diagnostics = data.frame(model.name = NA, Rhat = NA, Neff = NA)
 
 for(i in rain){
-  for(j in microbe) {
   
-    ## load non-constrained models
-    load(paste0("data_analysis/models/output/static/brho_nb_static_m",j, "_w", i, "_", date, ".rdata"))
+    ## load models
+    load(paste0("data_analysis/models/output/static/", date, "/brho_nb_static_w", i, "_", date, ".rdata"))
     
     ## print model to keep track of progress during loop
-    print(paste0("m", j, "_w", i))
+    print(paste0("w", i))
     
     ## extract model info
     tmp <- rstan::extract(PrelimFit)
     
     ## save posterior distributions
-    brho_stat_posts[[paste0("brho_m", j, "_w", i)]] <- tmp
+    brho_stat_posts[[paste0("brho_w", i)]] <- tmp
     
     ## save Rhat & Neff vals
     Rhat = max(summary(PrelimFit)$summary[,"Rhat"],na.rm =T)
     Neff = min(summary(PrelimFit)$summary[,"n_eff"],na.rm = T)
     
     ## put in df
-    tmp2 = data.frame(model.name = paste0("brho_m", j, "_w", i), Rhat = Rhat, Neff = Neff)
+    tmp2 = data.frame(model.name = paste0("brho_w", i), Rhat = Rhat, Neff = Neff)
     
     ## append to main df
     stat_diagnostics = rbind(stat_diagnostics, tmp2)
@@ -104,9 +104,7 @@ for(i in rain){
     traceplot(PrelimFit, pars = c("disp", "lambda", "alpha_acam", "alpha_brho"))
     
     ## save traceplot
-    ggsave(paste0(output_loc, "static/", date, "/traceplot_mainparams_brho_m", j, "_w", i, ".png"), width = 6, height = 5)
- 
-  }
+    ggsave(paste0(output_loc, "static/", date, "/traceplot_mainparams_brho_w", i, ".png"), width = 6, height = 5)
   
 }
 

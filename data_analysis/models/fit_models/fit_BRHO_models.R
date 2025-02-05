@@ -38,7 +38,7 @@ set.seed(25)
 rainfall = c(1, 0.75, 0.6)
 
 ## make a list for model output
-model.output <- list()
+static.output <- list()
 
 # Static Fit ####
 for(i in rainfall){
@@ -52,7 +52,7 @@ for(i in rainfall){
     print(paste0("brho_w", i))
     
     ## create vectors of data inputs
-    Fecundity = as.integer(round(dat$seeds.out)) ## seeds out
+    Fecundity = as.integer(round(dat$seeds.out.percap)) ## seeds out
     N = as.integer(length(Fecundity)) ## number of observations
     N_i = as.integer(dat$num.focal.indiv) ## stem # of focal species
     acam <- as.integer(dat$num.bg.indiv) ## background stem # data
@@ -69,9 +69,9 @@ for(i in rainfall){
     initialsall<- list(initials1, initials2, initials3, initials4)
     
     ## run the model
-    model.output[[paste0("brho_w", i)]] = stan(file = 'data_analysis/models/fit_models/ricker_neg_binom_static_alpha.stan', data = data_vec, init = initialsall, iter = 5000, chains = 4, thin = 2, control = list(adapt_delta = 0.9, max_treedepth = 18))
+    static.output[[paste0("brho_w", i)]] = stan(file = 'data_analysis/models/fit_models/ricker_nb_static.stan', data = data_vec, init = initialsall, iter = 5000, chains = 4, thin = 2, control = list(adapt_delta = 0.9, max_treedepth = 18))
     
-    PrelimFit <- model.output[[paste0("brho_w", i)]]
+    PrelimFit <- static.output[[paste0("brho_w", i)]]
     
     ## save model output
     save(PrelimFit, file = paste0("data_analysis/models/output/static/", date, "/brho_nb_static_w", i, "_", date, ".rdata"))

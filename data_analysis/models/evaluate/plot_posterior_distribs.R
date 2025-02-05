@@ -235,17 +235,16 @@ ggsave(paste0(ppd_fig_loc, "sigmoidal/", date, "/c_posts_", date, ".png"), width
 ### Plot to PDF ####
 ## plot posterior distributions
 for(i in rain) {
-  for(j in microbe){
     
     ## filter out specific treat
     tmp_df = stat_posteriors %>%
-      filter(water == i, microbe == j)
+      filter(water == i)
     
     ## turn into matrix
     tmp_mat = as.matrix(tmp_df)
     
     ## save file
-    pdf(file = paste0(ppd_fig_loc, "static/", date, "/posts_m", j, "_w", i, date, ".pdf"))
+    pdf(file = paste0(ppd_fig_loc, "static/", date, "/posts_w", i, date, ".pdf"))
     
     ## plot all the posteriors
     print(mcmc_areas(tmp_mat,
@@ -266,167 +265,93 @@ for(i in rain) {
     
     dev.off()
     
-  }
-}
+    }
 
 ### Alpha BRHO ####
 ## compare alpha_brho values
 a = stat_posteriors %>%
-  filter(water == 1, microbe == 1) %>%
+  filter(water == 1) %>%
   as.matrix() %>%
   mcmc_areas(pars = c("alpha_brho"), prob = 0.8) + 
-  xlim(-0.8, 0.1) +
+  xlim(-0.07, -0.02) +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  xlab("High water, Live soil")
+  xlab("High water")
 
 b = stat_posteriors %>%
-  filter(water == 0.75, microbe == 1) %>%
+  filter(water == 0.75) %>%
   as.matrix() %>%
   mcmc_areas(pars = c("alpha_brho"), prob = 0.8) + 
-  xlim(-0.8, 0.1) +
+  xlim(-0.07, -0.02) +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  xlab("Int water, Live soil")
+  xlab("Int water")
 
 c = stat_posteriors %>%
-  filter(water == 0.6, microbe == 1) %>%
+  filter(water == 0.6) %>%
   as.matrix() %>%
   mcmc_areas(pars = c("alpha_brho"), prob = 0.8) + 
-  xlim(-0.8, 0.1) +
+  xlim(-0.07, -0.02) +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  xlab("Low water, Live soil")
+  xlab("Low water")
 
-d = stat_posteriors %>%
-  filter(water == 1, microbe == 0) %>%
-  as.matrix() %>%
-  mcmc_areas(pars = c("alpha_brho"), prob = 0.8) + 
-  xlim(-0.8, 0.1) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  xlab("High water, Sterilized soil")
+ggarrange(a, b, c, ncol = 1, nrow = 3)
 
-e = stat_posteriors %>%
-  filter(water == 0.75, microbe == 0) %>%
-  as.matrix() %>%
-  mcmc_areas(pars = c("alpha_brho"), prob = 0.8) + 
-  xlim(-0.8, 0.1) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  xlab("Int water, Sterilized soil") 
-
-f = stat_posteriors %>%
-  filter(water == 0.6, microbe == 0) %>%
-  as.matrix() %>%
-  mcmc_areas(pars = c("alpha_brho"), prob = 0.8)  + 
-  xlim(-0.8, 0.1) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  xlab("Low water, Sterilized soil")
-
-ggarrange(a, d, b, e, c, f, ncol = 2, nrow = 3)
-
-ggsave(paste0(ppd_fig_loc, "static/", date, "/alpha_brho_posts_m", j, "_w", i, date, ".png"), width = 6, height = 6)
-
+ggsave(paste0(ppd_fig_loc, "static/", date, "/alpha_brho_posts_", date, ".png"), width = 4, height = 5)
 
 ### Lambda ####
 ## compare lambda values
 a1 = stat_posteriors %>%
-  filter(water == 1, microbe == 1) %>%
+  filter(water == 1) %>%
   as.matrix() %>%
   mcmc_areas(pars = c("lambda"), prob = 0.8) + 
-  xlim(175, 600) +
+  xlim(300, 600) +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  xlab("High water, Live soil")
+  xlab("High water")
 
 b1 = stat_posteriors %>%
-  filter(water == 0.75, microbe == 1) %>%
+  filter(water == 0.75) %>%
   as.matrix() %>%
   mcmc_areas(pars = c("lambda"), prob = 0.8) + 
-  xlim(175, 600) +
+  xlim(300, 600) +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  xlab("Int water, Live soil")
+  xlab("Int water")
 
 c1 = stat_posteriors %>%
-  filter(water == 0.6, microbe == 1) %>%
+  filter(water == 0.6) %>%
   as.matrix() %>%
   mcmc_areas(pars = c("lambda"), prob = 0.8) + 
-  xlim(175, 600) +
+  xlim(300, 600) +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  xlab("Low water, Live soil")
+  xlab("Low water")
 
-d1 = stat_posteriors %>%
-  filter(water == 1, microbe == 0) %>%
-  as.matrix() %>%
-  mcmc_areas(pars = c("lambda"), prob = 0.8) + 
-  xlim(175, 600) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  xlab("High water, Sterilized soil")
+ggarrange(a1, b1, c1, ncol = 1, nrow = 3)
 
-e1 = stat_posteriors %>%
-  filter(water == 0.75, microbe == 0) %>%
-  as.matrix() %>%
-  mcmc_areas(pars = c("lambda"), prob = 0.8) + 
-  xlim(175, 600) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  xlab("Int water, Sterilized soil") 
-
-f1 = stat_posteriors %>%
-  filter(water == 0.6, microbe == 0) %>%
-  as.matrix() %>%
-  mcmc_areas(pars = c("lambda"), prob = 0.8)  + 
-  xlim(175, 600) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  xlab("Low water, Sterilized soil")
-
-ggarrange(a1, d1, b1, e1, c1, f1, ncol = 2, nrow = 3)
-
-ggsave(paste0(ppd_fig_loc, "static/", date, "/lambda_posts_m", j, "_w", i, date, ".png"), width = 6, height = 6)
+ggsave(paste0(ppd_fig_loc, "static/", date, "/lambda_posts_", date, ".png"), width = 4, height = 5)
 
 ### Alpha Acam ####
 a2 = stat_posteriors %>%
-  filter(water == 1, microbe == 1) %>%
+  filter(water == 1) %>%
   as.matrix() %>%
   mcmc_areas(pars = c("alpha_acam"), prob = 0.8) + 
-  xlim(-0.05, 0.05) +
+  xlim(-0.025, 0.035) +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  xlab("High water, Live soil")
+  xlab("High water")
 
 b2 = stat_posteriors %>%
-  filter(water == 0.75, microbe == 1) %>%
+  filter(water == 0.75) %>%
   as.matrix() %>%
   mcmc_areas(pars = c("alpha_acam"), prob = 0.8) + 
-  xlim(-0.05, 0.05) +
+  xlim(-0.025, 0.035) +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  xlab("Int water, Live soil")
+  xlab("Int water")
 
 c2 = stat_posteriors %>%
-  filter(water == 0.6, microbe == 1) %>%
+  filter(water == 0.6) %>%
   as.matrix() %>%
   mcmc_areas(pars = c("alpha_acam"), prob = 0.8) + 
-  xlim(-0.05, 0.05) +
+  xlim(-0.025, 0.035) +
   geom_vline(xintercept = 0, linetype = "dashed") +
-  xlab("Low water, Live soil")
+  xlab("Low water")
 
-d2 = stat_posteriors %>%
-  filter(water == 1, microbe == 0) %>%
-  as.matrix() %>%
-  mcmc_areas(pars = c("alpha_acam"), prob = 0.8) + 
-  xlim(-0.05, 0.05) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  xlab("High water, Sterilized soil")
+ggarrange(a2, b2, c2, ncol = 1, nrow = 3)
 
-e2 = stat_posteriors %>%
-  filter(water == 0.75, microbe == 0) %>%
-  as.matrix() %>%
-  mcmc_areas(pars = c("alpha_acam"), prob = 0.8) + 
-  xlim(-0.05, 0.05) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  xlab("Int water, Sterilized soil") 
-
-f2 = stat_posteriors %>%
-  filter(water == 0.6, microbe == 0) %>%
-  as.matrix() %>%
-  mcmc_areas(pars = c("alpha_acam"), prob = 0.8)  + 
-  xlim(-0.05, 0.05) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  xlab("Low water, Sterilized soil")
-
-ggarrange(a2, d2, b2, e2, c2, f2, ncol = 2, nrow = 3)
-
-ggsave(paste0(ppd_fig_loc, "static/", date, "/alpha_acam_posts_m", j, "_w", i, date, ".png"), width = 6, height = 6)
+ggsave(paste0(ppd_fig_loc, "static/", date, "/alpha_acam_posts_", date, ".png"), width = 4, height = 5)
