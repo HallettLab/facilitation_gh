@@ -201,7 +201,7 @@ aintra = abkgrd %>%
          flowers.out = total.biomass.g*alloAf,
          
          ## use allo to calc total num seeds
-         seeds.out = ifelse(water %in% c(0.75, 1), flowers.out*alloAsC, flowers.out*alloAsD)) %>%
+         seeds.out = flowers.out*alloAs) %>%
 
   ## get rid of flowers out column
   select(-flowers.out) %>%
