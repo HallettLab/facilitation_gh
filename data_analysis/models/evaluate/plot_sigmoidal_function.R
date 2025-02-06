@@ -36,7 +36,7 @@ sig_alpha_dat = data.frame(water = NA, density = NA, alpha = NA, fecundity = NA)
 ## use mean of posteriors to get data using functions
 for(i in rain) {
   
-    temp = sig_posteriors %>%
+    temp = acam_sig_posteriors %>%
       filter(water == i)
     
     ## set variables
@@ -86,7 +86,7 @@ fec = sig_alpha_dat %>%
 
 ggarrange(alpha, fec, common.legend = TRUE, legend = "bottom", labels = "AUTO")
 
-ggsave(paste0(fig_loc, "sigmoidal/", date, "/alpha_&_fec_v_density_50.png"), width = 8, height = 4)
+ggsave(paste0(fig_loc, "sigmoidal/", date, "/alpha_&_fec_v_density_50_ACAM_model.png"), width = 8, height = 4)
 
 
 ## plot static fecundity ####

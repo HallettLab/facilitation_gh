@@ -68,12 +68,14 @@ model{
 
   alpha_initial ~ normal(0, 0.2);
   
-  alpha_slope ~ normal(0, 0.2); // using priors from Lisa's model
-  // I wonder about flatter priors for this?
-  c ~ normal(0, 0.2);
+  alpha_slope ~ normal(-0.5, 0.2);
+  // try this as prior; aim for middle of possible values
+
+  c ~ normal(-0.2, 0.2);
+  // this seems like a reasonable place to start
   
-  N_opt ~ normal(0, 3); 
-  //N_opt ~ exponential(0.2); 
+  //N_opt ~ normal(1, 3); 
+  N_opt ~ exponential(0.5); 
   // N_opt = the optimal density of BRHO that maximizes fecundity of ACAM
   
    // calculate the likelihood
