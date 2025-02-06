@@ -153,17 +153,29 @@ names(acam)
 
 ## select necessary columns; translate biomass to seeds out
 alloAf = allo[allo$Species == "ACAM",]$slope
-alloAsC = allo[allo$Species == "ACAM",]$seeds_C
-alloAsD = allo[allo$Species == "ACAM",]$seeds_D
+alloAs = allo[allo$Species == "ACAM",]$seeds_C
+#alloAsD = allo[allo$Species == "ACAM",]$seeds_D
 
 ### ainter for model ####
 ainter = acam %>%
+  
+  ## select needed columns
   select(unique.ID, block, water, microbe, rep, num.focal.indiv, total.biomass.g, num.bg.indiv) %>%
+  
+  ## change NA's to 0 in bg indiv column
   mutate(num.bg.indiv = ifelse(is.na(num.bg.indiv), 0, num.bg.indiv)) %>%
-  filter(!is.na(total.biomass.g))  %>% ## there is one NA value, remove & figure out why it is missing later!
+  
+  ## remove missing samples
+  filter(!is.na(total.biomass.g))  %>% 
+  
+  ## calc seed output with allo relationships
   mutate(flowers.out = total.biomass.g*alloAf, 
-         seeds.out = ifelse(water %in% c(0.75, 1), flowers.out*alloAsC, flowers.out*alloAsD),
+         seeds.out = flowers.out*alloAs,
+         
+         ## calc seeds out per-capita
          seeds.out.percap = seeds.out / num.focal.indiv) %>%
+  
+  ## remove unnecessary columns
   select(-flowers.out, -total.biomass.g)
 
 ggplot(ainter, aes(x=seeds.out, fill = as.factor(water))) +

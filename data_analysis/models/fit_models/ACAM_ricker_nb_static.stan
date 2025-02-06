@@ -33,7 +33,7 @@ transformed parameters{
   // Biological model
   for(i in 1:N){
 
-    F_hat[i] = N_i[i] * (lambda) * exp((N_i[i]*(alpha_acam)) + (brho[i]*(alpha_brho)));
+    F_hat[i] = (lambda) * exp((N_i[i]*(alpha_acam)) + (brho[i]*(alpha_brho)));
     
     // have changed signs so that facil = positive; comp = negative
     
