@@ -119,7 +119,7 @@ write.csv(stat_diagnostics, paste0(output_loc, "static/", date, "/rhat_neff_brho
 ### sigmoidal ####
 ### static ####
 rain = c(1, 0.75, 0.6)
-date = 20250131
+date = 20250205
 acam_stat_posts = list()
 
 ## create empty df for diagnostics
@@ -129,7 +129,7 @@ for(i in rain){
 #  for(j in microbe) {
     
     ## load non-constrained models
-    load(paste0("data_analysis/models/output/static/acam_nb_static_w", i, "_", date, ".rdata"))
+    load(paste0("data_analysis/models/output/static/", date, "/acam_nb_static_w", i, "_", date, ".rdata"))
     
     ## print model to keep track of progress during loop
     print(paste0("w", i))

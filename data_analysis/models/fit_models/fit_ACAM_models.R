@@ -21,7 +21,7 @@ options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
 ## set date
-date <- 20250131
+date <- 20250205
 
 ## read in data 
 source("data_cleaning/clean_model_dat.R")
@@ -37,8 +37,7 @@ model.output <- list()
 
 # Static Fit ####
 for(i in rainfall){
-  #for(j in microbe){
-  
+
     ## select data 
     dat = acam.model[acam.model$water == i,] %>%
       filter(!is.na(num.focal.indiv),
@@ -50,7 +49,7 @@ for(i in rainfall){
     print(paste0("w", i))
     
     ## create vectors of data inputs
-    Fecundity = as.integer(round(dat$seeds.out)) ## seeds out
+    Fecundity = as.integer(round(dat$seeds.out.percap)) ## seeds out
     N = as.integer(length(Fecundity)) ## number of observations
     N_i = as.integer(dat$num.focal.indiv) ## stem # of focal species
     brho <- as.integer(dat$num.bg.indiv) ## background stem # data
@@ -59,20 +58,20 @@ for(i in rainfall){
     data_vec <- c("N", "Fecundity", "N_i", "brho")
     
     ## set initial values 
-    initials1 <- list(lambda=10, alpha_brho = 0.08, alpha_acam = -0.1)
-    initials2 <- list(lambda=150, alpha_brho = 0.15, alpha_acam = -0.01)
-    initials3 <- list(lambda=75, alpha_brho = 0.25, alpha_acam = 0.1)
-    initials4 <- list(lambda=200, alpha_brho = -0.01, alpha_acam = -0.2)
+    initials1 <- list(lambda=10, alpha_brho = -0.08, alpha_acam = 0.1)
+    initials2 <- list(lambda=150, alpha_brho = -0.15, alpha_acam = -0.01)
+    initials3 <- list(lambda=75, alpha_brho = -0.25, alpha_acam = 0.1)
+    initials4 <- list(lambda=200, alpha_brho = 0.1, alpha_acam = 0.2)
     
     initialsall<- list(initials1, initials2, initials3, initials4)
     
     ## run the model
-    model.output[[paste0("acam_w", i)]] = stan(file = 'data_analysis/models/fit_models/ACAM_ricker_neg_binom_static_alpha.stan', data = data_vec, init = initialsall, iter = 5000, chains = 4, thin = 2, control = list(adapt_delta = 0.9, max_treedepth = 18))
+    model.output[[paste0("acam_w", i)]] = stan(file = 'data_analysis/models/fit_models/ACAM_ricker_nb_static.stan', data = data_vec, init = initialsall, iter = 5000, chains = 4, thin = 2, control = list(adapt_delta = 0.9, max_treedepth = 18))
     
     PrelimFit <- model.output[[paste0("acam_w", i)]]
     
     ## save model output
-    save(PrelimFit, file = paste0("data_analysis/models/output/static/acam_nb_static_w", i, "_", date, ".rdata"))
+    save(PrelimFit, file = paste0("data_analysis/models/output/static/", date, "/acam_nb_static_w", i, "_", date, ".rdata"))
 
 }
 
