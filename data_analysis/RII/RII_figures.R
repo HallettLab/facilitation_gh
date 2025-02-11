@@ -3,23 +3,20 @@
 ## read in data
 source("data_cleaning/clean_model_dat.R")
 
-## binter is the correct data frame to use in these analyses; it contains only BRHO focal data
+## binter_for_RII_seed_analyses is the correct data frame to use in these analyses; it contains only BRHO focal data
 ## brho.model also contains BRHO bkgrd data reformatted to be intraspecific focal data, which is not appropriate in calculating the RII here
 
-# Calc RII ####
+# BRHO ####
+## Calc RII ####
 ## calculate mean control biomass for use in RII calcs
-controls = binter %>%
+controls = binter_for_RII_seed_analyses %>%
   filter(ACAM == 0) %>% ## only want planted 0's
-  mutate(seeds.percap = seeds.out/num.focal.indiv) %>%
   group_by(water, microbe) %>%
-  summarise(mean.control = mean(seeds.percap))
+  summarise(mean.control = mean(seeds.out.percap))
 
 ## calculate RII comparing 0 background to all other densities
-brho_RII = left_join(binter, controls, by = c("water", "microbe")) %>%
-
-  mutate(seeds.percap = seeds.out/num.focal.indiv) %>%
-  
-  mutate(RII = (seeds.percap - mean.control) / (mean.control + seeds.percap),
+brho_RII = left_join(binter_for_RII_seed_analyses, controls, by = c("water", "microbe")) %>%
+  mutate(RII = (seeds.out.percap - mean.control) / (mean.control + seeds.out.percap),
          
          microbe = ifelse(microbe == 0, "Sterilized Soil", "Live Soil"), 
          water = ifelse(water == 1, "High",
@@ -27,22 +24,7 @@ brho_RII = left_join(binter, controls, by = c("water", "microbe")) %>%
                                "Low"))) %>%
   filter(!unique.ID %in% rm.contaminated)
 
-# Plot ####
-## RII by final density
-brho_RII %>%
-  filter(num.bg.indiv != 0) %>%
-  ggplot(aes(x=num.bg.indiv, y=RII, color = water)) +
-  geom_point(aes(fill = water), colour = "black", pch = 21, size = 2.5) +
-  #geom_smooth()+
-  geom_hline(yintercept = 0, linetype = 'dashed') +
-  facet_wrap(~microbe) +
-  ylab("Relative Interaction Intensity") +
-  xlab("Final Legume Density") +
-  theme(text = element_text(size = 15)) +
-  scale_fill_manual(values = c("#008080", "#f6edbd", "#de8a5a")) +
-  labs(fill = "Water")
-# ggsave("figures/MS_version1/FigS2_RII_num_bg.png", width = 8, height = 3.5)
-
+## Plot ####
 ## RII by planted density
 brho_RII %>%
   group_by(ACAM, water, microbe) %>%
@@ -55,15 +37,50 @@ brho_RII %>%
   geom_line() +
   geom_point(aes(fill = water), colour = "black", pch = 21, size = 3.5) +
   facet_wrap(~microbe) +
-  scale_fill_manual(values = c("#008080", "#f6edbd", "#de8a5a")) +
+  scale_fill_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  
   xlab("Planted Legume Density") +
   ylab("Relative Interaction Intensity") +
   labs(fill = "Water") +
   theme(text = element_text(size = 15)) +
   theme(legend.position = "bottom")
-# ggsave("figures/MS_draft2/Fig2_meanRII_planted_dens.png", width = 7, height = 4)
+# ggsave("figures/MS_draft2/Fig2_meanRII_planted_dens_20250210.png", width = 7, height = 4)
+
+brho_RII %>%
+  group_by(ACAM, water, microbe) %>%
+  summarise(mean.seeds = mean(seeds.out.percap, na.rm = T),
+            se.seeds = calcSE(seeds.out.percap)) %>%
+  
+  ggplot(aes(x=ACAM, y=mean.seeds, fill = water)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_errorbar(aes(ymin = mean.seeds - se.seeds, ymax = mean.seeds + se.seeds)) +
+  geom_line() +
+  geom_point(aes(fill = water), colour = "black", pch = 21, size = 3.5) +
+  facet_wrap(~microbe) +
+  scale_fill_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  
+  xlab("Planted Legume Density") +
+  ylab("Per-Capita Seeds Out") +
+  labs(fill = "Water") +
+  theme(text = element_text(size = 15)) +
+  theme(legend.position = "bottom")
+# ggsave("figures/MS_draft2/seeds_out_planted_dens.png", width = 7, height = 4)
+
+## Seed output by final density
+ggplot(brho_RII, aes(x=num.bg.indiv, y=seeds.out.percap, color = water)) +
+ # geom_point(aes(fill = water), colour = "black", pch = 21, size = 3) +
+  geom_point(size = 2) +
+  facet_wrap(~microbe) +
+  scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  geom_smooth(method = "lm", alpha = 0.25) +
+  xlab("Legume Density") +
+  ylab("Grass Per-capita Seeds Out") +
+  labs(color = "Water")
+## ggsave("figures/MS_draft2/seeds_out_v_final_dens.png", width = 8, height = 3.5)
 
 
+
+## Supp Figs ####
 ## planted vs. final density
 ggplot(brho_RII, aes(x=ACAM, y=num.bg.indiv)) +
   geom_point() +
@@ -72,11 +89,32 @@ ggplot(brho_RII, aes(x=ACAM, y=num.bg.indiv)) +
   ylab("Final Legume Density")
 ## ggsave("figures/MS_version1/FigS3_planted_v_final_dens.png", width = 8, height = 7)
 
-## Seed output by final density
-ggplot(brho_RII, aes(x=num.bg.indiv, y=seeds.percap, fill = water)) +
-  geom_point(aes(fill = water), colour = "black", pch = 21, size = 3) +
+## RII by final density
+brho_RII %>%
+  filter(num.bg.indiv != 0) %>%
+  ggplot(aes(x=num.bg.indiv, y=RII, color = water)) +
+  geom_point(aes(fill = water), colour = "black", pch = 21, size = 2.5) +
+  #geom_smooth()+
+  geom_hline(yintercept = 0, linetype = 'dashed') +
   facet_wrap(~microbe) +
-  scale_fill_manual(values = c("#008080", "#f6edbd", "#de8a5a"))
+  ylab("Relative Interaction Intensity") +
+  xlab("Final Legume Density") +
+  theme(text = element_text(size = 15)) +
+  scale_fill_manual(values = c("#70a494", "#f6edbd", "#de8a5a")) +
+  labs(fill = "Water")
+# ggsave("figures/MS_version1/FigS2_RII_num_bg.png", width = 8, height = 3.5)
+
+
+
+
+
+
+
+
+
+
+
+
 
 ## this would be good as a supplementary figure I think!
 ggplot(brho_RII, aes(x=num.bg.indiv, y=seeds.percap, fill = microbe)) +

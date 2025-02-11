@@ -50,9 +50,9 @@ ggplot(brho_clean, aes(x=num.focal.indiv.in.bag, y = num.addl.focals)) +
 ggplot(brho_clean, aes(x=num.focal.indiv.in.bag, y = num.resprouted.BRHO.focals)) +
   geom_point()
 
-## should create a per-capita seed output for pots where fewer focals were collected than those that grew
-
-## should then multiply the per-cap amt by the total num of focal indiv
+## to account for indiv that grew but weren't collected in pots: 
+    ## create a per-capita seed output 
+    ## multiply the per-cap amt by the total num of focal indiv
 
 ## Necessary columns
 ## unique.ID
@@ -80,26 +80,23 @@ binter_for_RII_seed_analyses = brho_clean %>%
   ## fill bg.indiv with 0's where there are NA's
   mutate(num.bg.indiv = ifelse(is.na(num.bg.indiv), 0, num.bg.indiv)) %>%
   
-  filter(!is.na(total.biomass.g), !unique.ID %in% rm.contaminated) %>% ## there is one NA value, remove & figure out why it is missing later!
+  filter(!is.na(total.biomass.g), !unique.ID %in% rm.contaminated) %>% 
+  ## there is one NA value, remove & figure out why it is missing later!
 
   ## create per-cap total biomass col
   mutate(total.bio.percap = total.biomass.g/num.focal.indiv.in.bag,
+         seeds.out.percap = total.bio.percap*alloB,
          
+         ## determine correct num focals
          ## replace NA's with 0 in focal columns
          num.addl.focals = ifelse(is.na(num.addl.focals), 0, num.addl.focals),
          num.resprouted.BRHO.focals = ifelse(is.na(num.resprouted.BRHO.focals), 0, num.resprouted.BRHO.focals),
          
          ## sum all focal columns to get total #
          total.focal.indiv = num.focal.indiv.in.bag + num.addl.focals + num.resprouted.BRHO.focals,
-         
-         ## multiply total per-capita biomass by total # of focals
-         total.bio.of.all.focals = total.bio.percap * total.focal.indiv) %>%
-  
-  ## NOW, convert into seeds with allo relationship
-  mutate(seeds.out.ALL.focals = total.bio.of.all.focals*alloB,
-         
-         ## create per-capita seeds out column
-         seeds.out.percap = seeds.out.ALL.focals/total.focal.indiv)
+        
+        ## calc seeds out of all focals
+         seeds.out.ALL.focals = seeds.out.percap*total.focal.indiv)
   
 ### binter for model ####
 ## Fix df for modeling ONLY
@@ -227,4 +224,4 @@ names(ainter)
 acam.model = rbind(ainter, aintra)
 
 # clean env ####
-rm(abkgrd, abkgrd.join, acam, aintra, ainter, allo, bbkgrd, bintra, brho, brho_clean, alloB, alloAf, alloAsC, alloAsD)
+rm(abkgrd, abkgrd.join, acam, aintra, ainter, allo, bbkgrd, bintra, brho, brho_clean, alloB, alloAf, alloAs)
