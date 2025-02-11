@@ -53,9 +53,7 @@ transformed parameters{
     alpha_acam[i] = alpha_initial + ( (c*(1 - exp(alpha_slope*(acam[i] - N_opt)))) / (1 + exp(alpha_slope * (acam[i] - N_opt))) ) ;
 
 
-    F_hat[i] = (lambda) * exp( (N_i[i] * (alpha_brho)) + (acam[i] * alpha_acam[i])) ; //intersp
-    
-    // took N_i[i] out of eqn as the seed data is now per-capita
+    F_hat[i] = (lambda) * exp( (N_i[i] * (alpha_brho)) + (acam[i] * alpha_acam[i])) ; 
     
   }
   
@@ -66,31 +64,22 @@ model{
   // priors
   // lambda & alpha priors all come from mega-comp values
   lambda ~ normal(200, 50);
-  alpha_brho ~ normal(0.05728218, 0.25);
+  
+  alpha_brho ~ normal(-0.057, 0.25);
+  // negative since self-competition is expected
+  
   disp ~ cauchy(0, 1);
   // safer to place prior on disp than on phi (the actual error term)
 
-  alpha_initial ~ normal(0, 0.1);
-  
-  //try flat priors on these parameters, esp since bounding b/w 0-1
-  // model had trouble predicting both alpha_slope and c; both of which had a uniform prior put on them. Do they improve with a more specific prior?
-  //alpha_slope ~ uniform(-1, 0);
-  //c ~ uniform(-1, 0);
+  alpha_initial ~ normal(0.099, 0.25);
+  // use alpha_acam from mega-comp as prior
   
   alpha_slope ~ normal(-0.2, 0.2); // using priors from Lisa's model
-  c ~ normal(0, 0.1);
   
-  //N_opt ~ normal(0, 5); // not working well
+  c ~ normal(0, 0.1); // using priors from Lisa's model
   
-  N_opt ~ exponential(0.2); //try poisson as its positive
-  // poisson didn't work as this is discrete; 
-  // try exponential now;
-  
+  N_opt ~ exponential(0.5); 
   // N_opt = the optimal density of ACAM that maximizes fecundity of BRHO
-  // planted densities 3 and 6 were the highest RII values; choose between this to be the prior estimated N_opt
-  
-  // it's possible that this was too specific; for 1/24/25 models it was normal(5,1) and ALL N_opt values were 5 in posteriors; change to 0 and see what this does!
-  
   
    // calculate the likelihood
    Fecundity ~ neg_binomial_2(F_hat, (disp^2)^(-1));

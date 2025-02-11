@@ -12,14 +12,14 @@ rstan_options(auto_write = TRUE)
 ### sigmoidal ####
 rain = c(1, 0.75, 0.6)
 #microbe = c(0, 1)
-date = 20250204
+date = 20250211
 brho_sig_posts = list()
 
 for(i in rain){
 #  for(j in microbe) {
     
     ## load non-constrained models
-    load(paste0("data_analysis/models/output/sigmoidal/", date, "/brho_nb_sigmoidal_w", i, "_2_", date, ".rdata"))
+    load(paste0("data_analysis/models/output/sigmoidal/", date, "/brho_nb_sigmoidal_w", i,  date, ".rdata"))
     
     ## print model to keep track of progress during loop
     print(paste0("w", i))
@@ -128,7 +128,7 @@ rm(tmp, PrelimFit)
 
 ### sigmoidal ####
 rain = c(1, 0.75, 0.6)
-date = 20250205
+date = 20250211
 acam_sig_posts = list()
 
 for(i in rain){
@@ -155,7 +155,7 @@ for(i in rain){
     select(disp, lambda, alpha_acam, N_opt, c, alpha_slope, alpha_initial) %>%
     mutate(water = i)
   
-  tmp = tmp[9001:18000,]
+  tmp = tmp[11001:20000,]
   
   acam_sig_posteriors = rbind(acam_sig_posteriors, tmp)
   

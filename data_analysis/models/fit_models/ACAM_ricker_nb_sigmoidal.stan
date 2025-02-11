@@ -9,7 +9,7 @@ data{
   int<lower = 1> N; // number of observations
   int Fecundity[N]; // observed fecundity count at time t+1
   vector[N] N_i; // population size of species i at time t
-  vector[N] acam; // population size of interacting species at time t
+  vector[N] brho; // population size of interacting species at time t
 
 }
 
@@ -48,10 +48,10 @@ transformed parameters{
   // Biological model
   for(i in 1:N){
     
-    alpha_brho[i] = alpha_initial + ( (c*(1 - exp(alpha_slope*(acam[i] - N_opt)))) / (1 + exp(alpha_slope * (acam[i] - N_opt))) ) ;
+    alpha_brho[i] = alpha_initial + ( (c*(1 - exp(alpha_slope*(brho[i] - N_opt)))) / (1 + exp(alpha_slope * (brho[i] - N_opt))) ) ;
 
 
-    F_hat[i] = (lambda) * exp( (N_i[i]*(alpha_acam)) + (acam[i]*alpha_brho[i])) ;
+    F_hat[i] = (lambda) * exp( (N_i[i]*(alpha_acam)) + (brho[i]*alpha_brho[i])) ;
     
   }
   
@@ -62,19 +62,22 @@ model{
   // priors
   // lambda & alpha priors all come from mega-comp values
   lambda ~ normal(62, 30);
+  
   alpha_acam ~ normal(0.185, 0.25);
+  // positive since self-facilitation is expected
+  
   disp ~ cauchy(0, 1);
   // safer to place prior on disp than on phi (the actual error term)
 
-  alpha_initial ~ normal(0, 0.2);
+  alpha_initial ~ normal(-0.024, 0.25);
+  // replace normal(0, 0.2) prior with alpha_brho from mega-comp models
   
-  alpha_slope ~ normal(-0.5, 0.2);
-  // try this as prior; aim for middle of possible values
+  alpha_slope ~ normal(-0.2, 0.15);
+  // want value somewhat near 0; aiming to make the prior a straight line
 
-  c ~ normal(-0.2, 0.2);
-  // this seems like a reasonable place to start
+  c ~ normal(-0.8, 0.2);
+  // want value somewhat near 1; aiming to make the prior a straight line
   
-  //N_opt ~ normal(1, 3); 
   N_opt ~ exponential(0.5); 
   // N_opt = the optimal density of BRHO that maximizes fecundity of ACAM
   

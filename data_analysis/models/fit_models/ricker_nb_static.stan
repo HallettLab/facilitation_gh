@@ -34,8 +34,8 @@ transformed parameters{
   for(i in 1:N){
 
     F_hat[i] = (lambda) * exp((N_i[i]*(alpha_brho)) + (acam[i]*(alpha_acam)));
-    // remove N_i * lambda; 
-    // incorporate negative signs into the alphas so that facil = positive alpha
+   
+    // have changed signs so that facil = positive; comp = negative
   }
   
 }
@@ -46,11 +46,11 @@ model{
   // priors
   // lambda & alpha priors all come from mega-comp values
   lambda ~ normal(200, 50);
-  alpha_acam ~ normal(0.099, 0.25); // sd is wider than normal to make this flatter
-  // make this positive since we expect facilitation
+  alpha_acam ~ normal(0.099, 0.25); 
+  // positive since facilitation is expected
   
-  alpha_brho ~ normal(-0.057, 0.25); // sd is wider than normal to make this flatter
-  // make this negative since we expect competition
+  alpha_brho ~ normal(-0.057, 0.25); 
+  // negative since self-competition is expected
   
   disp ~ cauchy(0, 1);
   // safer to place prior on disp than on phi (the actual error term)

@@ -1,6 +1,34 @@
 
+library(tidyverse)
+
 ## read in MC data 
 mc_posts = read.csv("data/megacomp_posteriors_20240714_models.csv")
+
+## priors for BRHO model
+brho_info = mc_posts %>%
+  filter(species == "BRHO") %>%
+  select(lambda_c, alpha_acam_c, alpha_acam_d, alpha_brho_c, alpha_brho_d)
+
+## lambda
+mean(brho_info$lambda_c)
+sd(brho_info$lambda_c)
+
+## alpha_brho
+mean(brho_info$alpha_brho_c)
+sd(brho_info$alpha_brho_c)
+
+## alpha_acam
+mean(brho_info$alpha_acam_c)
+sd(brho_info$alpha_acam_c)
+
+
+
+
+
+
+
+
+
 
 acam_info = mc_posts %>%
   filter(species == "ACAM") %>%

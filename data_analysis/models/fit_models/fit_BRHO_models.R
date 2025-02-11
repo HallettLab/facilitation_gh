@@ -25,34 +25,33 @@ library(here)
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
-## set date
-date <- 20250204
-
 ## read in data 
 source("data_cleaning/clean_model_dat.R")
 
 ## set seed
 set.seed(25)
 
+# Static Fit ####
 ## make treatment vectors
 rainfall = c(1, 0.75, 0.6)
-
+## set date
+date = 20250204
 ## make a list for model output
 static.output <- list()
 
-# Static Fit ####
+
 for(i in rainfall){
   
     ## select data 
     dat = brho.model[brho.model$water == i,] %>%
       filter(!is.na(num.focal.indiv))
-    ## currently ID 79 doesn't have a focal # entered
+    ## get rid of any NA's
   
     ## print model to keep track of progress during loop
     print(paste0("brho_w", i))
     
     ## create vectors of data inputs
-    Fecundity = as.integer(round(dat$seeds.out.percap)) ## seeds out
+    Fecundity = as.integer(round(dat$seeds.out.percap)) ## seeds out PER-CAP
     N = as.integer(length(Fecundity)) ## number of observations
     N_i = as.integer(dat$num.focal.indiv) ## stem # of focal species
     acam <- as.integer(dat$num.bg.indiv) ## background stem # data
@@ -61,9 +60,9 @@ for(i in rainfall){
     data_vec <- c("N", "Fecundity", "N_i", "acam")
     
     ## set initial values 
-    initials1 <- list(lambda=200, alpha_brho = 0.08, alpha_acam = -0.1)
+    initials1 <- list(lambda=200, alpha_brho = -0.08, alpha_acam = 0.15)
     initials2 <- list(lambda=600, alpha_brho = 0.15, alpha_acam = -0.01)
-    initials3 <- list(lambda=800, alpha_brho = 0.25, alpha_acam = 0.1)
+    initials3 <- list(lambda=800, alpha_brho = -0.25, alpha_acam = 0.1)
     initials4 <- list(lambda=100, alpha_brho = -0.01, alpha_acam = -0.2)
     
     initialsall<- list(initials1, initials2, initials3, initials4)
@@ -76,25 +75,28 @@ for(i in rainfall){
     ## save model output
     save(PrelimFit, file = paste0("data_analysis/models/output/static/", date, "/brho_nb_static_w", i, "_", date, ".rdata"))
     
+    beep(2)
+    
 }
 
 # Sigmoidal ####
 
 ## make a list for model output
+rainfall = c(1, 0.75, 0.6)
 sigmoidal.output <- list()
+date = 20250211
 
 for(i in rainfall){
   
     ## select data 
     dat = brho.model[brho.model$water == i,] %>%
       filter(!is.na(num.focal.indiv))
-    ## currently ID 79 doesn't have a focal # entered
   
     ## print model to keep track of progress during loop
     print(paste0("w", i))
     
     ## create vectors of data inputs
-    Fecundity = as.integer(round(dat$seeds.out.percap)) ## seeds out
+    Fecundity = as.integer(round(dat$seeds.out.percap)) ## seeds out PER CAP
     N = as.integer(length(Fecundity)) ## number of observations
     N_i = as.integer(dat$num.focal.indiv) ## stem # of focal species
     acam <- as.integer(dat$num.bg.indiv) ## background stem # data
@@ -115,7 +117,7 @@ for(i in rainfall){
     initialsall<- list(initials1, initials2, initials3, initials4)
   
     ## run the model
-    sigmoidal.output[[paste0("brho_w", i)]] = stan(file = 'data_analysis/models/fit_models/ricker_nb_sigmoidal.stan', data = data_vec, init = initialsall, iter = 20000, warmup = 6000, chains = 4, thin = 2, control = list(adapt_delta = 0.99, max_treedepth = 18))
+    sigmoidal.output[[paste0("brho_w", i)]] = stan(file = 'data_analysis/models/fit_models/ricker_nb_sigmoidal.stan', data = data_vec, init = initialsall, iter = 20000, chains = 4, thin = 2, control = list(adapt_delta = 0.99, max_treedepth = 18))
     
     ## adjusted iter from 5000 -> 8000 and adapt_delta from 0.9 -> 0.95 on 1/13
     ## running just for m1_w0.6
@@ -136,6 +138,6 @@ for(i in rainfall){
     PrelimFit <- sigmoidal.output[[paste0("brho_w", i)]]
     
     ## save model output
-    save(PrelimFit, file = paste0("data_analysis/models/output/sigmoidal/", date, "/brho_nb_sigmoidal_w", i, "_2_", date, ".rdata"))
+    save(PrelimFit, file = paste0("data_analysis/models/output/sigmoidal/", date, "/brho_nb_sigmoidal_w", i, "_", date, "_2.rdata"))
     
 }

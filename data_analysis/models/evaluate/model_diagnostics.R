@@ -16,12 +16,11 @@ library(tidyverse)
 ## save output file location
 output_loc = "data_analysis/models/evaluate/diagnostics/"
 
-# Load models ####
-## BRHO ####
-### sigmoidal ####
+# BRHO ####
+## sigmoidal ####
 rain = c(1, 0.75, 0.6)
 #microbe = c(0, 1)
-date = 20250204
+date = 20250211
 brho_sig_posts = list()
 
 ## create empty df for diagnostics
@@ -30,7 +29,7 @@ sig_diagnostics = data.frame(model.name = NA, Rhat = NA, Neff = NA)
 for(i in rain){
     
     ## load models
-    load(paste0("data_analysis/models/output/sigmoidal/", date, "/brho_nb_sigmoidal_w", i, "_2_", date, ".rdata"))
+    load(paste0("data_analysis/models/output/sigmoidal/", date, "/brho_nb_sigmoidal_w", i, "_", date, "_2.rdata"))
     
     ## print model to keep track of progress during loop
     print(paste0("w", i))
@@ -68,7 +67,7 @@ sig_diagnostics = sig_diagnostics %>%
 ## save output
 write.csv(sig_diagnostics, paste0(output_loc, "sigmoidal/", date, "/rhat_neff_brho_nb_sigmoidal_", date, "_2.csv"))
 
-### static ####
+## static ####
 rain = c(1, 0.75, 0.6)
 date = 20250204
 brho_stat_posts = list()
@@ -115,9 +114,56 @@ stat_diagnostics = stat_diagnostics %>%
 ## save output
 write.csv(stat_diagnostics, paste0(output_loc, "static/", date, "/rhat_neff_brho_nb_stat_", date, ".csv"))
 
-## ACAM ####
-### sigmoidal ####
-### static ####
+# ACAM ####
+## sigmoidal ####
+rain = c(1, 0.75, 0.6)
+date = 20250211
+acam_sig_posts = list()
+
+## create empty df for diagnostics
+acam_sig_diagnostics = data.frame(model.name = NA, Rhat = NA, Neff = NA)
+
+for(i in rain){
+  
+  ## load models
+  load(paste0("data_analysis/models/output/sigmoidal/", date, "/acam_nb_sigmoidal_w", i, "_", date, ".rdata"))
+  
+  ## print model to keep track of progress during loop
+  print(paste0("w", i))
+  
+  ## extract model info
+  tmp <- rstan::extract(PrelimFit, inc_warmup = FALSE)
+  
+  print(PrelimFit)
+  
+  ## save Rhat & Neff vals
+  Rhat = max(summary(PrelimFit)$summary[,"Rhat"],na.rm =T)
+  Neff = min(summary(PrelimFit)$summary[,"n_eff"],na.rm = T)
+  
+  ## put in df
+  tmp2 = data.frame(model.name = paste0("acam_w", i), Rhat = Rhat, Neff = Neff)
+  
+  ## append to main df
+  acam_sig_diagnostics = rbind(acam_sig_diagnostics, tmp2)
+  
+  ## create traceplot for the model
+  traceplot(PrelimFit, pars = c("disp", "lambda", "alpha_acam", "alpha_initial", "alpha_slope", "c", "N_opt"), inc_warmup = TRUE)
+  
+  ## save traceplot
+  ggsave(paste0(output_loc, "sigmoidal/", date, "/traceplot_mainparams_acam_w", i, ".png"), width = 10, height = 8)
+  
+}
+
+## remove NA
+acam_sig_diagnostics = acam_sig_diagnostics %>%
+  filter(!is.na(model.name))
+
+## save output
+write.csv(acam_sig_diagnostics, paste0(output_loc, "sigmoidal/", date, "/rhat_neff_acam_nb_sigmoidal_", date, ".csv"))
+
+
+
+## static ####
 rain = c(1, 0.75, 0.6)
 date = 20250205
 acam_stat_posts = list()
