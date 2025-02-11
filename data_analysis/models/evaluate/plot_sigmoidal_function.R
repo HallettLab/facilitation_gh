@@ -18,6 +18,7 @@ fig_loc = "data_analysis/models/evaluate/plot_alpha_fecundity/"
 
 theme_set(theme_classic())
 
+# Create Functions ####
 ## create sigmoidal alpha function
 alpha_function4  <- function(Amin, Aslopes,c,N,N0){
   
@@ -30,13 +31,16 @@ alpha_function4  <- function(Amin, Aslopes,c,N,N0){
   
 }
 
+# Get data ####
+## BRHO ####
+### Sigmoidal ####
 rain = c(1, 0.75, 0.6)
 sig_alpha_dat = data.frame(water = NA, density = NA, alpha = NA, fecundity = NA)
 
 ## use mean of posteriors to get data using functions
 for(i in rain) {
   
-    temp = acam_sig_posteriors %>%
+    temp = sig_posteriors %>%
       filter(water == i)
     
     ## set variables
@@ -57,39 +61,11 @@ for(i in rain) {
 
 }
 
-# Plot ####
-alpha = sig_alpha_dat %>%
-  mutate(water = ifelse(water == 1, "High", 
-                        ifelse(water == 0.75, "Intermediate", "Low"))) %>%
-ggplot(aes(x=density, y=alpha, fill = water)) +
-  geom_line() +
-  geom_point(aes(fill = water), colour = "black", pch = 21, size = 2.5) +
-  coord_cartesian(xlim = c(0,50)) +
-  xlab("Density") +
-  ylab("Alpha value") +
-  labs(fill = "Water") +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  scale_fill_manual(values = c("#008080", "#f6edbd", "#de8a5a"))
-
-fec = sig_alpha_dat %>%
-  mutate(water = ifelse(water == 1, "High", 
-                        ifelse(water == 0.75, "Intermediate", "Low"))) %>%
-  ggplot(aes(x=density, y=fecundity, fill = water)) +
-  geom_line() +
-  geom_point(aes(fill = water), colour = "black", pch = 21, size = 2.5) +
-  coord_cartesian(xlim = c(0,50)) +
-  xlab("Density") +
-  ylab("Fecundity") +
-  labs(fill = "Water") +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  scale_fill_manual(values = c("#008080", "#f6edbd", "#de8a5a"))
-
-ggarrange(alpha, fec, common.legend = TRUE, legend = "bottom", labels = "AUTO")
-
-ggsave(paste0(fig_loc, "sigmoidal/", date, "/alpha_&_fec_v_density_50_ACAM_model.png"), width = 8, height = 4)
+sig_alpha_dat2 = sig_alpha_dat %>%
+  mutate(model = "sigmoidal")
 
 
-## plot static fecundity ####
+### Static ####
 rain = c(1, 0.75, 0.6)
 stat_alpha_dat = data.frame(water = NA, density = NA, alpha = NA, fecundity = NA)
 
@@ -115,33 +91,132 @@ for(i in rain) {
   
 }
 
+stat_alpha_dat2 = stat_alpha_dat %>%
+  mutate(model = "static")
+
+### Join ####
+brho_dat = rbind(stat_alpha_dat2, sig_alpha_dat2)
+
+## ACAM ####
+### Sigmoidal ####
+rain = c(1, 0.75, 0.6)
+acam_sig_alpha_dat = data.frame(water = NA, density = NA, alpha = NA, fecundity = NA)
+
+## use mean of posteriors to get data using functions
+for(i in rain) {
+  
+  temp = acam_sig_posteriors %>%
+    filter(water == i)
+  
+  ## set variables
+  Amin = median(temp$alpha_initial)
+  Aslopes = median(temp$alpha_slope)
+  c = median(temp$c)
+  N0 = median(temp$N_opt)
+  lambda = median(temp$lambda)
+  
+  ## run alpha function and save in df
+  tmp_alpha = data.frame(water = rep(paste0(i), 51), density = c(0:50), alpha = alpha_function4(Amin, Aslopes, c, N = c(0:50), N0))
+  tmp_alpha2 = tmp_alpha %>%
+    mutate(fecundity = lambda*exp(alpha*density))
+  
+  ## append
+  acam_sig_alpha_dat = rbind(acam_sig_alpha_dat, tmp_alpha2) %>%
+    filter(!is.na(water))
+  
+}
+
+acam_sig_alpha_dat2 = acam_sig_alpha_dat %>%
+  mutate(model = "sigmoidal")
+
+### Static ####
+rain = c(1, 0.75, 0.6)
+acam_stat_alpha_dat = data.frame(water = NA, density = NA, alpha = NA, fecundity = NA)
+
+## use mean of posteriors to get data using functions
+for(i in rain) {
+  
+  temp = acam_stat_posteriors %>%
+    filter(water == i)
+  
+  ## set variables
+  alpha_acam = median(temp$alpha_acam)
+  #N0 = median(temp$N_opt)
+  lambda = median(temp$lambda)
+  
+  ## run alpha function and save in df
+  tmp_alpha = data.frame(water = rep(paste0(i), 51), density = c(0:50), alpha = alpha_acam)
+  tmp_alpha2 = tmp_alpha %>%
+    mutate(fecundity = lambda*exp(alpha*density))
+  
+  ## append
+  acam_stat_alpha_dat = rbind(acam_stat_alpha_dat, tmp_alpha2) %>%
+    filter(!is.na(water))
+  
+}
+
+acam_stat_alpha_dat2 = acam_stat_alpha_dat %>%
+  mutate(model = "static")
+
+### Join ####
+acam_dat = rbind(acam_stat_alpha_dat2, acam_sig_alpha_dat2)
+
 # Plot ####
-alphaST = stat_alpha_dat %>%
-  mutate(water = ifelse(water == 1, "High", 
-                        ifelse(water == 0.75, "Intermediate", "Low"))) %>%
-  ggplot(aes(x=density, y=alpha, fill = water)) +
-  geom_line() +
-  geom_point(aes(fill = water), colour = "black", pch = 21, size = 2.5) +
+## BRHO ####
+
+alpha = ggplot(brho_dat, aes(x=density, y=alpha, color = water, linetype = model)) +
+  geom_hline(yintercept = 0) +
+  geom_line(linewidth = 1) +
+  scale_color_manual(values = c("#de8a5a", "#edbb8a", "#70a494")) +
   coord_cartesian(xlim = c(0,50)) +
   xlab("Density") +
   ylab("Alpha value") +
-  labs(fill = "Water") +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  scale_fill_manual(values = c("#008080", "#f6edbd", "#de8a5a"))
+  labs(color = "Water", linetype = "Model") +
+  scale_linetype_manual(values = c(1, 4)) +
+  theme(text = element_text(size=13))
 
-fecST = stat_alpha_dat %>%
-  mutate(water = ifelse(water == 1, "High", 
-                        ifelse(water == 0.75, "Intermediate", "Low"))) %>%
-  ggplot(aes(x=density, y=fecundity, fill = water)) +
-  geom_line() +
-  geom_point(aes(fill = water), colour = "black", pch = 21, size = 2.5) +
+
+fec = ggplot(brho_dat, aes(x=density, y=fecundity, color = water, linetype = model)) +
+  #geom_hline(yintercept = 0) +
+  geom_line(linewidth = 1) +
+  scale_color_manual(values = c("#de8a5a", "#edbb8a", "#70a494")) +
   coord_cartesian(xlim = c(0,50)) +
   xlab("Density") +
   ylab("Fecundity") +
-  labs(fill = "Water") +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  scale_fill_manual(values = c("#008080", "#f6edbd", "#de8a5a"))
+  labs(color = "Water", linetype = "Model") +
+  scale_linetype_manual(values = c(1, 4)) +
+  theme(text = element_text(size=13))
 
-ggarrange(alphaST, fecST, common.legend = TRUE, legend = "bottom", labels = "AUTO")
 
-ggsave(paste0(fig_loc, "static/", date, "/stat_alpha_&_fec_v_density_50.png"), width = 8, height = 4)
+ggarrange(alpha, fec, common.legend = TRUE, legend = "bottom", labels = "AUTO")
+
+ggsave("figures/MS_draft2/brho_sig_v_stat.png", width = 8, height = 4)
+
+## ACAM ####
+Aalpha = ggplot(acam_dat, aes(x=density, y=alpha, color = water, linetype = model)) +
+  geom_hline(yintercept = 0) +
+  geom_line(linewidth = 1) +
+  scale_color_manual(values = c("#de8a5a", "#edbb8a", "#70a494")) +
+  coord_cartesian(xlim = c(0,50)) +
+  xlab("Density") +
+  ylab("Alpha value") +
+  labs(color = "Water", linetype = "Model") +
+  scale_linetype_manual(values = c(1, 4)) +
+  theme(text = element_text(size=13))
+
+
+Afec = ggplot(acam_dat, aes(x=density, y=fecundity, color = water, linetype = model)) +
+  #geom_hline(yintercept = 0) +
+  geom_line(linewidth = 1) +
+  scale_color_manual(values = c("#de8a5a", "#edbb8a", "#70a494")) +
+  coord_cartesian(xlim = c(0,50)) +
+  xlab("Density") +
+  ylab("Fecundity") +
+  labs(color = "Water", linetype = "Model") +
+  scale_linetype_manual(values = c(1, 4)) +
+  theme(text = element_text(size=13))
+
+
+ggarrange(Aalpha, Afec, common.legend = TRUE, legend = "bottom", labels = "AUTO")
+
+#ggsave("figures/MS_draft2/acam_sig_v_stat.png", width = 8, height = 4)
