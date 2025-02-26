@@ -30,11 +30,11 @@ lmd = c(655, 62)
 acam_mp
 
 
-lmd = c(brho_mp[brho_mp$water == 1,]$lam, acam_mp[acam_mp$water == 1,]$lam)
+lmd = c(brho_mp[brho_mp$water == 0.6,]$lam, acam_mp[acam_mp$water == 0.6,]$lam)
 
-a_brhom = c(-1*brho_mp[brho_mp$water == 1,]$a_bb, -1*brho_mp[brho_mp$water == 1,]$a_ba)
+a_brhom = c(-1*brho_mp[brho_mp$water == 0.6,]$a_bb, -1*brho_mp[brho_mp$water == 0.6,]$a_ba)
 
-a_acamm = c(-1*acam_mp[acam_mp$water == 1,]$a_aa, -1*acam_mp[acam_mp$water == 1,]$a_ab)
+a_acamm = c(-1*acam_mp[acam_mp$water == 0.6,]$a_aa, -1*acam_mp[acam_mp$water == 0.6,]$a_ab)
 
 # Ricker model ####
 ## f = percap growth rate of species
@@ -59,7 +59,7 @@ test_f <- function(N){
 
 # compute relevant parameters with python
 # the parameter `from_R = TRUE` changes data types from R to python
-pars <- NFD_model(ricker_f, n_spec, from_R = TRUE, experimental = TRUE)
+pars <- NFD_model(ricker_f, n_spec, from_R = TRUE)
 ND <- pars$ND
 NO <- pars$NO
 FD <- pars$FD

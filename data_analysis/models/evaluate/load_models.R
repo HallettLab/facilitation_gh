@@ -52,7 +52,7 @@ rm(tmp, PrelimFit)
 
 ### static ####
 rain = c(1, 0.75, 0.6)
-date = 20250204
+date = 20250225
 brho_stat_posts = list()
 
 for(i in rain){
@@ -90,7 +90,7 @@ rm(tmp, PrelimFit)
 ## ACAM ####
 ### static ####
 rain = c(1, 0.75, 0.6)
-date = 20250205
+date = 20250211
 acam_stat_posts = list()
 
 for(i in rain){
