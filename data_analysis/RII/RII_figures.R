@@ -44,7 +44,7 @@ brho_RII %>%
   labs(fill = "Water") +
   theme(text = element_text(size = 15)) +
   theme(legend.position = "bottom")
-# ggsave("figures/MS_draft2/Fig2_meanRII_planted_dens_20250210.png", width = 7, height = 4)
+# ggsave("figures/MS_draft3/Fig2_meanRII_planted_dens_20250210.png", width = 7, height = 4)
 
 brho_RII %>%
   group_by(ACAM, water, microbe) %>%
@@ -124,7 +124,7 @@ ggplot(brho_RII, aes(x=num.bg.indiv, y=seeds.percap, fill = microbe)) +
   ylab("Seeds per Capita") +
   xlab("Final Legume Density") +
   labs(fill = NULL)
-ggsave("figures/MS_version1/FigS1_seedsout_num_bg.png", width = 9, height = 3.5)
+#ggsave("figures/MS_version1/FigS1_seedsout_num_bg.png", width = 9, height = 3.5)
 
 
 ## Seed output by planted density
@@ -160,6 +160,6 @@ ggplot(acam_RII, aes(x=num.bg.indiv, y=RII, fill = water)) +
   ylab("Relative Interaction Intensity") +
   labs(fill = "Water")
 
-ggsave("figures/MS_version1/FigS4_acamRII.png", width = 5, height = 3.5)
+#ggsave("figures/MS_version1/FigS4_acamRII.png", width = 5, height = 3.5)
   
 

@@ -66,7 +66,7 @@ ggplot(brho_clean, aes(x=num.focal.indiv.in.bag, y = num.resprouted.BRHO.focals)
 alloB = allo[allo$Species == "BRHO",]$slope ## get slope of allo relationship
 
 ## contaminated samples to remove
-rm.contaminated = c(15, 25, 85, 114)
+rm.contaminated = c(15, 25, 85, 114, 103)
     ## some contamination info in the nodule counts data sheet
     ## some in the experimental design spreadsheet still located in the google drive
     ## this will eventually be updated when nodule counts are finished

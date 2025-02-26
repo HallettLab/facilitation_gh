@@ -1,0 +1,10 @@
+"species","rowname","Sum Sq","Df","F value","Pr(>F)","signif"
+"B. hordeaceus","(Intercept)",0.034,1,1.53,0.217," "
+"B. hordeaceus","ACAM",0.175,1,7.818,0.006,"**"
+"B. hordeaceus","water",0.275,2,6.156,0.002,"**"
+"B. hordeaceus","microbe",0.002,1,0.088,0.768," "
+"B. hordeaceus","ACAM:water",0.083,2,1.867,0.157," "
+"B. hordeaceus","ACAM:microbe",0.053,1,2.385,0.124," "
+"B. hordeaceus","water:microbe",0.062,2,1.383,0.253," "
+"B. hordeaceus","ACAM:water:microbe",0.229,2,5.132,0.007,"**"
+"B. hordeaceus","Residuals",5.606,251,NA,NA,NA
