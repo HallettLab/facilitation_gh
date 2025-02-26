@@ -34,11 +34,8 @@ set.seed(25)
 # Static Fit ####
 ## make treatment vectors
 rainfall = c(1, 0.75, 0.6)
-## set date
-date = 20250204
-## make a list for model output
-static.output <- list()
-
+date = 20250225
+static.output <- list() ## make a list for model output
 
 for(i in rainfall){
   
@@ -68,15 +65,13 @@ for(i in rainfall){
     initialsall<- list(initials1, initials2, initials3, initials4)
     
     ## run the model
-    static.output[[paste0("brho_w", i)]] = stan(file = 'data_analysis/models/fit_models/ricker_nb_static.stan', data = data_vec, init = initialsall, iter = 5000, chains = 4, thin = 2, control = list(adapt_delta = 0.9, max_treedepth = 18))
+    static.output[[paste0("brho_w", i)]] = stan(file = 'data_analysis/models/fit_models/ricker_nb_static.stan', data = data_vec, init = initialsall, iter = 8000, chains = 4, thin = 2, control = list(adapt_delta = 0.9, max_treedepth = 18))
     
     PrelimFit <- static.output[[paste0("brho_w", i)]]
     
     ## save model output
     save(PrelimFit, file = paste0("data_analysis/models/output/static/", date, "/brho_nb_static_w", i, "_", date, ".rdata"))
-    
-    beep(2)
-    
+   
 }
 
 # Sigmoidal ####

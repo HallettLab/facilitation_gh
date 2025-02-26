@@ -21,25 +21,29 @@ sd(brho_info$alpha_brho_c)
 mean(brho_info$alpha_acam_c)
 sd(brho_info$alpha_acam_c)
 
-
-
-
-
-
-
-
-
-
+## priors for acam model
 acam_info = mc_posts %>%
   filter(species == "ACAM") %>%
   select(lambda_c, alpha_acam_c, alpha_acam_d, alpha_brho_c, alpha_brho_d)
 
-median(acam_info$lambda_c)
-
-## get prior moments
+## lambda
 mean(acam_info$lambda_c)
 sd(acam_info$lambda_c)
 
+## alpha_brho
+mean(acam_info$alpha_brho_c)
+sd(acam_info$alpha_brho_c)
+
+## alpha_acam
+mean(acam_info$alpha_acam_c)
+sd(acam_info$alpha_acam_c)
+
+
+
+
+
+
+# OLD ####
 ## plot prior distrib
 hist(rnorm(10000, 62, 30))
 
