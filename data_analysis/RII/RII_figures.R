@@ -48,6 +48,29 @@ brho_RII %>%
 
 brho_RII %>%
   group_by(ACAM, water, microbe) %>%
+  summarise(mean.RII = mean(RII, na.rm = T),
+            se.RII = calcSE(RII)) %>%
+  
+  ggplot(aes(x=ACAM, y=mean.RII, fill = microbe)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_errorbar(aes(ymin = mean.RII - se.RII, ymax = mean.RII + se.RII)) +
+  geom_line() +
+  geom_point(aes(fill = microbe), colour = "black", pch = 21, size = 3.5) +
+  facet_wrap(~water) +
+  scale_fill_manual(values = c("black", "white")) +
+#  scale_fill_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  
+  xlab("Planted Legume Density") +
+  ylab("Relative Interaction Intensity") +
+  labs(fill = "Water") +
+  theme(text = element_text(size = 15)) +
+  theme(legend.position = "bottom")
+
+
+
+
+brho_RII %>%
+  group_by(ACAM, water, microbe) %>%
   summarise(mean.seeds = mean(seeds.out.percap, na.rm = T),
             se.seeds = calcSE(seeds.out.percap)) %>%
   
@@ -131,16 +154,16 @@ ggplot(brho_RII, aes(x=num.bg.indiv, y=seeds.percap, fill = microbe)) +
 
 
 # ACAM ####
-controls = acam.model %>%
+controls = ainter %>%
   filter(num.bg.indiv == 0) %>% ## only want planted 0's
   mutate(seeds.percap = seeds.out/num.focal.indiv) %>%
   group_by(water) %>%
   summarise(mean.control = mean(seeds.percap))
 
 ## calculate RII comparing 0 background to all other densities
-acam_RII = left_join(acam.model, controls, by = c("water")) %>%
+acam_RII = left_join(ainter, controls, by = c("water")) %>%
   
-  filter(num.bg.indiv > 9) %>% ## go back to be more careful with this filtering later
+ # filter(num.bg.indiv > 9) %>% ## go back to be more careful with this filtering later
   
   mutate(seeds.percap = seeds.out/num.focal.indiv) %>%
   
@@ -149,7 +172,8 @@ acam_RII = left_join(acam.model, controls, by = c("water")) %>%
          microbe = ifelse(microbe == 0, "Sterilized Soil", "Live Soil"), 
          water = ifelse(water == 1, "High",
                         ifelse(water == 0.75, "Intermediate",
-                               "Low"))) #%>%
+                               "Low")), 
+         BRHO = ifelse(BRHO == 48, 60, BRHO)) #%>%
   #filter(!unique.ID %in% rm.contaminated)
 
 
@@ -161,5 +185,63 @@ ggplot(acam_RII, aes(x=num.bg.indiv, y=RII, fill = water)) +
   labs(fill = "Water")
 
 #ggsave("figures/MS_version1/FigS4_acamRII.png", width = 5, height = 3.5)
+
+acam_RII %>%
+  group_by(BRHO, water) %>%
+  summarise(mean.RII = mean(RII), 
+            se.RII = calcSE(RII)) %>%
   
+ggplot(aes(x=BRHO, y=mean.RII, fill = water)) +
+  
+  geom_errorbar(aes(ymin = mean.RII - se.RII, ymax = mean.RII + se.RII), width = 2) +
+  
+  geom_point(aes(fill = water), colour = "black", pch = 21, size = 3) +
+  geom_line() +
+  scale_fill_manual(values = c("#008080", "#f6edbd", "#de8a5a")) +
+  xlab("Final Grass Density") +
+  ylab("Relative Interaction Intensity") +
+  labs(fill = "Water")
+
+
+# Joint figures ####
+
+brho_RII_j = brho_RII %>%
+  select(unique.ID, block, water, microbe, ACAM, rep, RII) %>%
+  mutate(planted.bg = ACAM, 
+         species = "BRHO") %>%
+  select(-ACAM)
+
+acam_RII_j = acam_RII %>%
+  select(unique.ID, block, water, microbe, BRHO, rep, RII) %>%
+  mutate(planted.bg = BRHO,
+         species = "ACAM") %>%
+  select(-BRHO)
+
+joint_RII = rbind(brho_RII_j, acam_RII_j)
+
+
+joint_RII %>%
+  group_by(planted.bg, water, microbe, species) %>%
+  summarise(mean.RII = mean(RII), 
+            se.RII = calcSE(RII)) %>%
+  
+  ggplot(aes(x=planted.bg, y=mean.RII, fill = microbe, shape = species)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  
+  geom_line() +
+  
+  geom_errorbar(aes(ymin = mean.RII - se.RII, ymax = mean.RII + se.RII), width = 2) +
+  
+  geom_point(aes(fill = microbe),size = 3) +
+  
+  scale_fill_manual(values = c("black", "white")) +
+  scale_shape_manual(values = c(21,22))+
+  xlab("Final Grass Density") +
+  ylab("Relative Interaction Intensity") +
+  labs(fill = "Microbe", shape = "Species") +
+  facet_wrap(~water)
+
+
+
+
 
