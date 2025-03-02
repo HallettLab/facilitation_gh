@@ -71,7 +71,7 @@ for(i in rain){
   
 }
 
-stat_posteriors <- data.frame()
+brho_stat_posteriors <- data.frame()
 
 for(i in rain){
 
@@ -79,9 +79,9 @@ for(i in rain){
       select(disp, lambda, alpha_brho, alpha_acam) %>%
       mutate(water = i)
     
-    tmp = tmp[2500:5000,]
+    tmp = tmp[4001:8000,]
     
-    stat_posteriors = rbind(stat_posteriors, tmp)
+    brho_stat_posteriors = rbind(brho_stat_posteriors, tmp)
 
 }
 
@@ -117,7 +117,7 @@ for(i in rain){
     select(disp, lambda, alpha_brho, alpha_acam) %>%
     mutate(water = i)
   
-  tmp = tmp[2500:5000,]
+  tmp = tmp[4001:8000,]
   
   acam_stat_posteriors = rbind(acam_stat_posteriors, tmp)
   

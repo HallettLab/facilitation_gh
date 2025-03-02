@@ -24,7 +24,7 @@ calcSE<-function(x){
 file_loc = "/Users/carme/University of Oregon Dropbox/Carmen Watkins/Facilitation_GH/data/biomass/Adult/"
 
 ## for BRHO models
-brho = read.csv(paste0(file_loc, "BRHO_focal_individual_processing_20250204.csv"))
+brho = read.csv(paste0(file_loc, "BRHO_focal_individual_processing_20250214.csv"))
 bbkgrd = read.csv(paste0(file_loc, "BRHO_bkgrd_sample_processing_20241117.csv"))
 
 ## for ACAM models
@@ -66,10 +66,11 @@ ggplot(brho_clean, aes(x=num.focal.indiv.in.bag, y = num.resprouted.BRHO.focals)
 alloB = allo[allo$Species == "BRHO",]$slope ## get slope of allo relationship
 
 ## contaminated samples to remove
-rm.contaminated = c(15, 25, 85, 114, 103)
+rm.contaminated = c(15, 25, 84, 85, 114, 103)
     ## some contamination info in the nodule counts data sheet
     ## some in the experimental design spreadsheet still located in the google drive
     ## this will eventually be updated when nodule counts are finished
+## 84 is taken from AMF colonization data sheet
 
 ### create RII df ####
 binter_for_RII_seed_analyses = brho_clean %>%
@@ -157,7 +158,7 @@ alloAs = allo[allo$Species == "ACAM",]$seeds_C
 ainter = acam %>%
   
   ## select needed columns
-  select(unique.ID, block, water, microbe, rep, num.focal.indiv, total.biomass.g, num.bg.indiv) %>%
+  select(unique.ID, block, water, microbe, BRHO, rep, num.focal.indiv, total.biomass.g, num.bg.indiv) %>%
   
   ## change NA's to 0 in bg indiv column
   mutate(num.bg.indiv = ifelse(is.na(num.bg.indiv), 0, num.bg.indiv)) %>%
@@ -221,7 +222,10 @@ names(aintra) = c("unique.ID", "block", "water", "microbe", "rep", "seeds.out", 
 
 names(ainter)
 
-acam.model = rbind(ainter, aintra)
+ainter2 = ainter %>%
+  select(-BRHO)
+
+acam.model = rbind(ainter2, aintra)
 
 # clean env ####
-rm(abkgrd, abkgrd.join, acam, aintra, ainter, allo, bbkgrd, bintra, brho, brho_clean, alloB, alloAf, alloAs)
+rm(abkgrd, abkgrd.join, acam, aintra, ainter2, allo, bbkgrd, bintra, brho, brho_clean, alloB, alloAf, alloAs)
