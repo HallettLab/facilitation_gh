@@ -1,85 +1,33 @@
 
-### Setup
-#setwd('./UO Hallett/Projects/usda-climvar')
+# Setup ####
+## load packages
 library(tidyverse)
 library(rstan)
 
-### Create historical rainfall conditions ----
-# First determine how common each environmental type is
-# what about for what we actually see in terms of the number of years in each env. condition
-# first read in the data
-rain <- read_csv("../avena-erodium/Data/PRISM_brownsvalley_long.csv", skip = 10) %>%
-  mutate(ppt = `ppt (inches)`*2.54*10) %>%
-  separate(Date, c("year", "month")) %>%
-  mutate(year = as.numeric(year),
-         month = as.numeric(month)) %>%
-  mutate(year = ifelse(month == 12 | month == 11 | month == 10 | month == 9, year + 1, year)) %>%
-  mutate(season = "Early",
-         season = ifelse(month == 2 | month == 3 | month == 4, "Late", season)) %>%
-  filter(month != 5, month != 6, month!= 7, month != 8)
+## read in data
+### rainfall 
+source("data_analysis/MCT/historic_rainfall.R")
 
-## Summarize by year 
-## Using 50% as the cutoff 
-rainsummary <-  rain %>%
-  group_by(year, season) %>%
-  summarize(ppt = sum(ppt)) %>%
-  spread(season, ppt) %>%
-  mutate(Total = Early + Late) 
-
-rainsummary <- rainsummary %>%
-  mutate(raintype = "fallWet",
-         raintype = ifelse(Early < quantile(rainsummary$Early, .5), "fallDry", raintype))
-
-fall.dry <- length(which(rainsummary$raintype == "fallDry")) / nrow(rainsummary)
-fall.wet <- length(which(rainsummary$raintype == "fallWet")) / nrow(rainsummary)
-
-## Germination and peak growing season correlation
-rain <- read_csv("../avena-erodium/Data/PRISM_brownsvalley_long.csv", skip = 10) %>%
-  mutate(ppt = `ppt (inches)`*2.54*10) %>%
-  separate(Date, c("year", "month")) %>%
-  mutate(year = as.numeric(year),
-         month = as.numeric(month)) %>%
-  filter(month %in% c(9,10,11,12,1,2,3,4)) %>%
-  mutate(year = ifelse(month == 12 | month == 11 | month == 10 | month == 9, year + 1, year)) %>%
-  mutate(growth_season = ifelse(month == 12 | month == 11 | month == 10 | month == 9, "early", "late")) %>%
-  group_by(year, growth_season) %>%
-  summarise(tot_rainfall = sum(ppt)) %>%
-  pivot_wider(names_from = growth_season, values_from = tot_rainfall)
-
-plot(rain$early, rain$late)
-abline(lm(rain$late ~ rain$early))
-#points(rain$early, rain$late)
-
-cor.test(rain$early, rain$late)
-
-### Load or set model parameters ----
+### model parameters
 source('./Competition/Model-fit/import_posteriors_AM.R')
 
-# Set germination and survival rates
-params$germ[params$species == "avfa"] <- 0.78
-params$germ[params$species == "brho"] <- 0.8
-params$germ[params$species == "vumy"] <- 0.6
-params$germ[params$species == "laca"] <- 0.8
-params$germ[params$species == "esca"] <- 0.92
-params$germ[params$species == "trhi"] <- 0.20
+## germination data
+germ = read.csv("data/germination_data.csv")
 
-params$surv[params$species == "avfa"] <- 0.01
-params$surv[params$species == "brho"] <- 0.013
-params$surv[params$species == "vumy"] <- 0.045
-params$surv[params$species == "laca"] <- 0.013
-params$surv[params$species == "esca"] <- 0.013
-params$surv[params$species == "trhi"] <- 0.01
+## seed survival data
+seedsurv = read.csv("data/seed_survival_sumdat.csv")
 
-# Create weighted parameters for mechanism partitioning
-params_weighted <- params[params$treatment == "fallDry",1:7]*fall.dry + params[params$treatment == "fallWet",1:7]*fall.wet
-params_weighted$species <- c("avfa","vumy","brho","esca","laca","trhi")
-params_weighted <- left_join(params_weighted, unique(params[,c("species","germ","surv")]))
+# Prep Data ####
+## Using below 30% = low; above 60% = high; perhaps adjust so that the bar for high is a little higher?
+high = length(which(rainsummary$raintype == "high")) / nrow(rainsummary)
+int = length(which(rainsummary$raintype == "int")) / nrow(rainsummary)
+low = length(which(rainsummary$raintype == "low")) / nrow(rainsummary)
 
-### Coexistence functions ----
+# Create Functs ####
 # Determine equilibrium conditions for each species in isolation 
 pop.equilibrium <- function (N0, s, g, a_intra, lambda) {
   # to run for only a single timestep
-  N <- s*(1-g)*N0 + N0*(lambda*g)/(1+a_intra*N0)
+  N <- s*(1-g)*N0 + N0*(lambda*g)*exp(a_intra*N0*g)
   return(N)
 }
 
@@ -96,9 +44,64 @@ pop.resident <- function (N0, resident, s, g, a_intra, a_inter, lambda) {
   N <- s*(1-g)*resident + resident*(lambda*g)/(1+a_intra*resident+a_inter*N0)
   return(N)
 }
-### Coexistence - No partitioning ----
+
+## Set Params ####
+# Set germination and survival rates
+g_aL = germ[germ$phyto == "ACAM" & germ$treatment == "D",]$mean.germ
+g_aI = germ[germ$phyto == "ACAM" & germ$treatment == "D",]$mean.germ
+g_aH = germ[germ$phyto == "ACAM" & germ$treatment == "C",]$mean.germ
+
+g_bL = germ[germ$phyto == "BRHO" & germ$treatment == "D",]$mean.germ
+g_bI = germ[germ$phyto == "BRHO" & germ$treatment == "D",]$mean.germ
+g_bH = germ[germ$phyto == "BRHO" & germ$treatment == "C",]$mean.germ
+
+s_a = seedsurv[seedsurv$species == "ACAM", ]$surv.mean.p
+s_b = seedsurv[seedsurv$species == "BRHO", ]$surv.mean.p
+
+## UNSURE HERE? ####
+# Create weighted parameters for mechanism partitioning
+## what is this part doing? Why are we multiplying everything by the fraction of the timeseries that is fall.dry or fall.wet....??
+params_weighted <- params[params$treatment == "fallDry",1:7]*fall.dry + params[params$treatment == "fallWet",1:7]*fall.wet
+params_weighted$species <- c("avfa","vumy","brho","esca","laca","trhi")
+params_weighted <- left_join(params_weighted, unique(params[,c("species","germ","surv")]))
+
+# Coexist No partitioning ####
+## is this the same as my IGR calcs in the other script?
+## no, this will be LDGR across time?
+
+# first determine resident equilibrium abundances and low density growth rates
+# without partitioning coexistence
 
 ## Run all species to equilibrium in isolation
+N0 = 5
+time = length(rainsummary$raintype)
+N_BRHO = rep(NA, time)
+N_BRHO[1] = N0
+
+
+for (t in 1:time) {
+  
+  if(rainsummary$raintype[t] == "high") { 
+    w = 1
+    gb = g_bH
+  } else if (rainsummary$raintype[t] == "int") { 
+    w = 0.75
+    gb = g_bI
+  } else { 
+    w = 0.6
+    gb = g_bL}
+
+  ## get params for each rain year
+  params = brho_mp %>%
+    filter(water == w)
+  
+  N_BRHO[t+1] <- pop.equilibrium(N0 = N_BRHO[t], s=0, g=gb, a_intra=params$a_bb, lambda=params$lam)
+  
+}
+
+plot(seq(1:(time+1)), N_BRHO, type="l")
+
+
 # Species to loop across and time in years
 species <- c("avfa","brho","vumy","laca","esca","trhi")
 time <- length(rainsummary$raintype)
@@ -284,7 +287,7 @@ for (i in 1:length(species)){
     # Create a string for referencing the resident's alpha in both invader and resident parameters
     resident_a <- paste0("alpha_",resident$species)
     
-    # Create a separate index for row subsets because we're starting out looping variable at 50 instead of 1
+    # Create a separate index for row subsets because we're starting out looping variable at 50 instead of 1 
     temp <- 1
     
     # Calculate GRWR for each year after burn-in (after 50 years)

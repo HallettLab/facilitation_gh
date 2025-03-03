@@ -3,7 +3,7 @@
 
 ## reformat data for N/F diffs
 
-brho_mp = stat_posteriors %>%
+brho_mp = brho_stat_posteriors %>%
   group_by(water) %>%
   summarise(lam = mean(lambda),
             a_bb = mean(alpha_brho),
