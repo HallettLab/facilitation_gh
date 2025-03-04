@@ -33,17 +33,17 @@ ricker_f = function(N, s, g, lam, A) {
   #F_j = lmd[2] * exp(-a_acamm[1]*N[2] - a_acamm[2]*N[1])
   #return(as.matrix(c(F_i, F_j)))
   
-  return(log((1-g)*s + (g*lam*exp(A%*%(g*1000*N)))))
+  return(log((1-g)*s + (g*lam*exp(A%*%(g*1000*N))))) ## why multiplied by 1000??
   
 } # log to transform the discrete time into continuous
 
 
-NDF_static <- matrix(NA,3,9) ## 6 rows (2 sp x 3 water); 8 cols
+
+NDF_static <- matrix(NA,3,11) ## 6 rows (2 sp x 3 water); 8 cols
 NDF_static <- as.data.frame(NDF_static)
 names(NDF_static )<- c("water", "NDi","NDj","NOi",
-                         "NOj","FDi","FDj",
-                         "ci","cj")
-
+                       "NOj","FDi","FDj", "FDi_2", "FDj_2",
+                       "ci","cj")
 water = c(0.6, 0.75, 1)
 
 ## Loop to calc NFD
@@ -111,6 +111,9 @@ for(i in 1:length(water)){
   NDF_static$FDi[i] <- pars$FD[1]
   NDF_static$FDj[i] <- pars$FD[2]
   
+  NDF_static$FDi_2[i] <- pars$`F`[1]
+  NDF_static$FDj_2[i] <- pars$`F`[2]
+  
   NDF_static$ci[i] <- pars$c[3]
   NDF_static$cj[i] <- pars$c[2]
 
@@ -119,23 +122,71 @@ for(i in 1:length(water)){
 
 names(NDF_static)
 
-NFD_plot = NDF_static %>%
-  select(water, NDi, NDj, FDi, FDj) %>%
-  pivot_longer(cols = c("NDi", "NDj", "FDi", "FDj"), values_to = "val", names_to = "type") %>%
+## in this version plot the niche differences from Spaak 2021 as that seems to be the more useful choice??
+NDF_static %>%
+  select(water, NDi, NDj, FDi_2, FDj_2) %>%
+  pivot_longer(cols = c("NDi", "NDj", "FDi_2", "FDj_2"), values_to = "val", names_to = "type") %>%
   mutate(sp = ifelse(substr(type, start = 3, stop = 3) == "i", "ACAM", "BRHO"),
          metric = ifelse(substr(type, start = 1, stop = 2) == "ND", "Niche", "Fitness")) %>%
   select(-type) %>%
-  pivot_wider(names_from = "metric", values_from = "val")
+  pivot_wider(names_from = "metric", values_from = "val") %>%
 
-ggplot(NFD_plot, aes(x=Niche, y= Fitness, shape = sp, fill = as.factor(water))) +
+ggplot(aes(x=Niche, y= Fitness, shape = sp, fill = as.factor(water))) +
   geom_point(aes(fill = as.factor(water)), size = 3.5) +
   theme_classic() +
-  coord_cartesian(xlim = c(-0.1, 2), ylim = c(-1, 1)) +
+  coord_cartesian(xlim = c(-1, 2), ylim = c(-18, 2)) +
   geom_vline(xintercept = 0, color = "gray") +
   geom_vline(xintercept = 1, color = "gray") +
   scale_fill_manual(values = c("#de8a5a", "#f3d0ae", "#70a494")) +
   scale_shape_manual(values = c(21, 22)) +
-  geom_abline(slope = 1, intercept = 0)
+  geom_abline(slope = 1, intercept = 0) +
+  geom_hline(yintercept = 0, color = "gray") +
+  geom_hline(yintercept = 1, color = "gray")
+
+ggsave("data_analysis/NFD/figures/static_NFD_2021Fdef.png", width = 7, height = 5)
+
+## Spaak & DeLaender 2020 Fitness version
+## i can persist when -F < N/(1-N)
+## high F implies implies competitive advantage for species i 
+NDF_static %>%
+  select(water, NDi, NDj, FDi, FDj) %>%
+  pivot_longer(cols = c("NDi", "NDj", "FDi", "FDj"), values_to = "val", names_to = "type") %>%
+  mutate(sp = ifelse(substr(type, start = 3, stop = 3) == "i", "ACAM", "BRHO"),
+         metric = ifelse(substr(type, start = 1, stop = 2) == "ND", "Niche", "Fitness")) %>%
+  select(-type)  %>%
+  pivot_wider(names_from = "metric", values_from = "val") %>%
+  
+  mutate(p_temp = Niche / (1 - Niche),
+         p2 = -Fitness) %>%
+  
+  ggplot(aes(x=Niche, y= -Fitness, shape = sp, fill = as.factor(water))) +
+  geom_point(aes(fill = as.factor(water)), size = 3.5) +
+  theme_classic() +
+  #coord_cartesian(xlim = c(-1, 2), ylim = c(-1.1, 1.1)) +
+  geom_vline(xintercept = 0, color = "gray") +
+  geom_vline(xintercept = 1, color = "gray") +
+  scale_fill_manual(values = c("#de8a5a", "#f3d0ae", "#70a494")) +
+  scale_shape_manual(values = c(21, 22)) +
+ # geom_abline(slope = 1, intercept = 0) +
+  geom_hline(yintercept = 0, color = "gray") +
+  geom_hline(yintercept = 1, color = "gray")# +
+#  geom_function(fun = Niche_line)
+
+
+## I think fitness diffs are plotted as (-F) for the Spaak 2020 version of things??
+
+Niche_line = function(n) {
+  
+  return(n/(1-n))
+  
+}
+
+
+
+
+
+
+
 
 
 
