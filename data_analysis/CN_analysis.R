@@ -4,8 +4,8 @@ library(lubridate)
 library(dplyr)
 library(stringr)
 
-CN_data_raw <- read.csv("leaf_cn_raw_data.csv")
-sampling_data_raw <- read.csv("adult_sampling.csv")
+CN_data_raw <- read.csv("data/leaf_cn_raw_data.csv")
+sampling_data_raw <- read.csv("data/adult_sampling.csv")
 
 names(CN_data_raw) <- c("info", "id", "weight", "NAir", "CVPDB", "WtN", "WtC", "CN")
 
