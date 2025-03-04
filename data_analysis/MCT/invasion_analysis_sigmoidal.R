@@ -8,6 +8,8 @@ seedsurv = read.csv("data/seed_survival_sumdat.csv")
 
 igr = function(surv, germ, lambda, alpha_intra, Nt, alpha_inter, germ_inter, inter_abund) {
   
+  alpha_inter = alpha_0 + ((c*(1 - exp(alpha_slope*(Nt - N0))))/(1+exp(alpha_slope*(Nt - N0))))
+  
   Ntp1 <- (1-germ)*surv*Nt + germ*lambda*Nt*exp(alpha_intra *germ* Nt + alpha_inter*germ_inter*inter_abund)
   
   return(log(Ntp1/Nt))
@@ -39,7 +41,7 @@ for(i in 1:length(species)) {
     for (k in 1:length(posts)) {
       
       p = posts[k]
-    
+      
       ## define params
       if (sp == "ACAM") {
         
@@ -54,7 +56,7 @@ for(i in 1:length(species)) {
           filter(species == "BRHO", water == r, post_num == p) %>%
           select(n_star) %>%
           as.numeric()
-    
+        
         
       } else {
         
@@ -77,7 +79,7 @@ for(i in 1:length(species)) {
       
       ## fill in data 
       tmp = data.frame(focal = sp, water = r, post_num = p, igr = igr_tmp)
-                       
+      
       ## append
       igr_dat = rbind(igr_dat, tmp)
       

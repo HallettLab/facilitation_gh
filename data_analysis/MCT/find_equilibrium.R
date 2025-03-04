@@ -3,6 +3,13 @@
 library(tidyverse)
 theme_set(theme_classic())
 
+## germination data
+germ = read.csv("data/germination_data.csv")
+
+## seed survival data
+seedsurv = read.csv("data/seed_survival_sumdat.csv")
+
+
 # Find Equilibrium ####
 set.seed(0)
 
