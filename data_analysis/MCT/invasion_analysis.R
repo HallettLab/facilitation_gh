@@ -1,13 +1,22 @@
 
 # Set up ####
+## first, load models
+## still have to do that manually for the moment; eventually will automate it.
+
 ## equilibrium data
 source("data_analysis/MCT/find_equilibrium.R")
 
+## germ and seedsurv come along with the find equilibrium script; no need to re-load these
 ## germination data
-germ = read.csv("data/germination_data.csv")
+#germ = read.csv("data/germination_data.csv")
 
 ## seed survival data
-seedsurv = read.csv("data/seed_survival_sumdat.csv")
+#seedsurv = read.csv("data/seed_survival_sumdat.csv")
+
+calcSE<-function(x){
+  x2<-na.omit(x)
+  sd(x2)/sqrt(length(x2))
+}
 
 ## create function to calc IGR
 igr = function(surv, germ, lambda, alpha_intra, Nt, alpha_inter, germ_inter, inter_abund) {
@@ -19,6 +28,7 @@ igr = function(surv, germ, lambda, alpha_intra, Nt, alpha_inter, germ_inter, int
 }
 
 
+# Calc IGR ####
 ## create empty df
 igr_dat = data.frame(focal = NA, water = NA, post_num = NA, igr = NA)
 
@@ -94,6 +104,7 @@ for(i in 1:length(species)) {
 igr_dat = igr_dat %>%
   filter(!is.na(focal))
 
+# Plot ####
 ggplot(igr_dat, aes(x=igr, color = as.factor(water), linetype = focal)) +
   geom_vline(xintercept = 0, linetype = "dashed") +
   geom_density(linewidth = 1) +
@@ -104,4 +115,28 @@ ggplot(igr_dat, aes(x=igr, color = as.factor(water), linetype = focal)) +
   labs(color = "Water")
 
 ggsave("data_analysis/MCT/figures/igr_static_models.png", width = 6, height = 2.75)
+
+
+igr_dat %>%
+  #group_by(focal, water) %>%
+  #summarise(mean_igr = mean(igr), 
+    #       se_igr = calcSE(igr)) %>%
+  mutate(water.text = ifelse(water == 1, "High", 
+                             ifelse(water == 0.75, "Intermediate", "Low"))) %>%
+  
+ggplot(aes(x=as.factor(focal), y=igr, group = interaction(focal, water.text), color = as.factor(water.text))) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  
+  #geom_density(linewidth = 1) +
+  geom_jitter(size = 0.75) +
+  geom_boxplot() +
+#geom_errorbar(aes(ymin = mean_igr - 2*se_igr, ymax = mean_igr + 2*se_igr)) +
+  facet_wrap(~water.text) +
+  scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  ylab("Invasion Growth Rate") +
+  xlab("Focal Species") +
+  labs(color = "Water") #+
+#  legend("bottom")
+
+ggsave("data_analysis/MCT/figures/igr_static_models_boxplot.png", width = 7, height = 3)
 

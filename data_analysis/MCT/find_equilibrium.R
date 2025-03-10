@@ -85,7 +85,6 @@ for(i in 1:length(species)) {
   
 }
 
-
 equil = equil %>%
   filter(!is.na(species))
 
