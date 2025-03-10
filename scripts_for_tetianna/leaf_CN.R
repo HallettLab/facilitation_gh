@@ -30,7 +30,7 @@ library(stringr)
 
 
 ## READ THE DATA FILE IN HERE! 
-
+CN_final = read.csv("data/leaf_CN_data_for_Tetianna.csv")
 
 ##plot CN by water
 ggplot(CN_final, aes(x=as.factor(water), y=CN)) +
@@ -60,6 +60,35 @@ CN_final %>%
   labs(color = "Water")
 
 #ggsave("CN_ratio.png", width = 5, height = 3) ## code to save the figure
+
+AMF_CN = left_join(AMF_results, CN_final, by = c("unique.ID", "block", "water", "microbe", "rep", "bkgrd", "num.bg.indiv"))
+
+ggplot(AMF_CN, aes(x=delta_15N, y=percent_colonization)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+ggplot(AMF_CN, aes(x=CN, y=percent_colonization)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+## AMF col higher with less N
+
+## C:N 
+
+AMF_CN_bio = left_join(AMF_CN, dat, by = c("unique.ID", "block", "water", "microbe", "rep", "num.bg.indiv", "ACAM"))
+
+ggplot(AMF_CN_bio, aes(x = percent_colonization, y = seeds.out.percap)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+## More AMF col leads to higher biomass/seed output because plants have access to more nutrients
+
+ggplot(AMF_CN_bio, aes(x = num.bg.indiv, y = percent_colonization)) +
+  geom_jitter() +
+  geom_smooth(method = "lm")
+
+na.check = AMF_CN_bio %>%
+  filter(is.na(num.bg.indiv))
+## track down why these didn't join in correctly - 3 dens 12 samples
+
 
 ## run a quick statistical test 
 a1 = aov(CN ~ as.factor(ACAM) * as.factor(water), data = CN_final)

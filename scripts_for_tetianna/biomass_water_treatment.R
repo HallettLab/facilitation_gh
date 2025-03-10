@@ -10,13 +10,18 @@
    #      ACAM %in% c(0, 12, 24))
 
 #write.csv(dat, "data/biomass_seed_data_for_Tetianna.csv", row.names = F)
+library(tidyverse)
+theme_set(theme_classic())
 
+dat = read.csv("data/biomass_seed_data_for_Tetianna.csv")
 
 ## read in Data here!! 
 
 
 ## plot biomass by water treatment
-ggplot(dat, aes(x=as.factor(water), y=total.bio.percap)) +
+dat %>%
+  mutate(trt = paste0(water, "_", ACAM)) %>%
+ggplot(aes(x=as.factor(water), y=total.bio.percap, color = as.factor(ACAM))) +
   geom_boxplot() +
   geom_jitter() +
   xlab("Water") +
