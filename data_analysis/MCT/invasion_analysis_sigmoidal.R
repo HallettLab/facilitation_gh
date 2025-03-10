@@ -1,5 +1,7 @@
 
 ## read in model data from load_models script - needs to be done manually for the moment.
+source("data_analysis/models/evaluate/load_models.R")
+source("data_analysis/MCT/find_equilibrium_sigmoidal.R")
 
 ## germination data
 germ = read.csv("data/germination_data.csv")
@@ -145,5 +147,5 @@ ggplot(aes(x=dens, y = igr, group = interaction(water, post_num), color = as.fac
   xlab("Neighbor Density") +
   labs(color = "Water")
 
-ggsave("data_analysis/MCT/figures/igr_sigmoidal_models.png", width = 8, height = 6.5)
+#ggsave("data_analysis/MCT/figures/igr_sigmoidal_models.png", width = 8, height = 6.5)
 

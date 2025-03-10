@@ -4,6 +4,7 @@
 ## still have to do that manually for the moment; eventually will automate it.
 
 ## equilibrium data
+source("data_analysis/models/evaluate/load_models.R")
 source("data_analysis/MCT/find_equilibrium.R")
 
 ## germ and seedsurv come along with the find equilibrium script; no need to re-load these
@@ -26,7 +27,6 @@ igr = function(surv, germ, lambda, alpha_intra, Nt, alpha_inter, germ_inter, int
   return(log(Ntp1/Nt))
   
 }
-
 
 # Calc IGR ####
 ## create empty df

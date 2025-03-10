@@ -21,7 +21,7 @@ seedsurv = read.csv("data/seed_survival_sumdat.csv")
 acam_sig_posteriors2 = acam_sig_posteriors %>%
   filter(!is.na(lambda))
 
-brho_sig_posteriors2 = sig_posteriors %>%
+brho_sig_posteriors2 = brho_sig_posteriors %>%
   filter(!is.na(lambda))
 
 
@@ -34,11 +34,11 @@ rain = c(0.6, 0.75, 1)
 post_list = sample(c(1:7000), 200, replace = FALSE)
 
 ## create empty df
-equil = matrix(ncol = 8, nrow = 1)
-equil = as.data.frame(equil)
-names(equil) =c("species", "water", "post_num", "n_star", "lambda", "alpha_ii", "g_i", "s_i")
+equil_sig = matrix(ncol = 8, nrow = 1)
+equil_sig = as.data.frame(equil_sig)
+names(equil_sig) =c("species", "water", "post_num", "n_star", "lambda", "alpha_ii", "g_i", "s_i")
 
-
+## run loop
 for(i in 1:length(species)) {
   
   sp = species[i]
@@ -92,7 +92,7 @@ for(i in 1:length(species)) {
                        alpha_ii = alpha_ii, g_i = g_i, s_i = s_i)
       
       ## append
-      equil = rbind(equil, tmp)
+      equil_sig = rbind(equil_sig, tmp)
       
     }
     
@@ -101,12 +101,12 @@ for(i in 1:length(species)) {
 }
 
 
-equil = equil %>%
+equil_sig = equil_sig %>%
   filter(!is.na(species))
 
-hist(equil$n_star)
+hist(equil_sig$n_star)
 
-ggplot(equil, aes(x=n_star, color = as.factor(water))) +
+ggplot(equil_sig, aes(x=n_star, color = as.factor(water))) +
   # geom_histogram() +
   geom_density(linewidth = 1) +
   facet_wrap(~species) +
@@ -115,60 +115,4 @@ ggplot(equil, aes(x=n_star, color = as.factor(water))) +
   labs(color = "Water") +
   ylab("Density")
 
-ggsave("data_analysis/MCT/figures/equilibrium_dens_postdraws_sigmodels.png", width = 7, height = 3)
-
-
-
-
-
-
-
-
-N_star = (1/alpha_ii*g_i)*ln ( (1 - (1-g_i)*s_i ) / (g_i * lambda_i) )
-
-N_star = (1/(-0.0517*0.516)) * log( (1 - ((1-0.516)*0.16 )) / (0.516 * 29) )
-
-((1 - 0.51611111) * 0.16) + (0.51611111 * 29 * exp(-0.0517 * 0.51611111 * 104.4))
-
-
-brho_mp
-bsurv = 0
-bgerm = 1
-blam = 400
-bintra = -0.0520
-ainter = -0.00603
-
-agerm = 0.516
-aNeq = 104
-
-
-
-
-
-
-
-# OLD, SAVE ####
-## solve for equilibrium graphically
-
-test_vals = seq(1, 120, by = 100/1000)
-
-growth = rep(NA, length(test_vals))
-err = 1
-
-for (i in 1:length(test_vals)) {
-  
-  N_eq = test_vals[i]
-  
-  growth_val = ((1 - 0.516) * 0.16 ) +  (0.516 * 29 * exp(-0.0517 * 0.516 * N_eq))
-  
-  growth[i] = growth_val
-  
-  if(abs(growth_val - 1) < err) {
-    err = abs(growth_val - 1)
-    print(paste0("N = ", as.character(N_eq), ", err = ", as.character(err)))
-  }
-  
-}
-
-plot(test_vals, growth)
-
+#ggsave("data_analysis/MCT/figures/equilibrium_dens_postdraws_sigmodels.png", width = 7, height = 3)

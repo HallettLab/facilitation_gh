@@ -14,153 +14,292 @@ library(HDInterval)
 ## read in models
 source("data_analysis/models/evaluate/load_models.R")
 
+source("data_analysis/MCT/find_equilibrium.R")
+source("data_analysis/MCT/find_equilibrium_sigmoidal.R")
+
+
 ## set fig location
 fig_loc = "data_analysis/models/evaluate/plot_alpha_fecundity/"
 
 theme_set(theme_classic())
 
+calcSE<-function(x){
+  x2<-na.omit(x)
+  sd(x2)/sqrt(length(x2))
+}
+
 # Create Functions ####
-## create sigmoidal alpha function
-alpha_function4  <- function(Amin, Aslopes,c,N,N0){
+## sigmoidal igr; also returns alpha_inter
+igr_sig_func = function(surv, germ, lambda, alpha_intra, Nt, germ_inter, inter_abund, alpha_0, alpha_slope, N0, c) {
   
-  e = exp(Aslopes*(N-N0)) # c is stretching the graph horizontally 
-  a = c*(1-e) #stretching the graph vertically
-  d = Amin
-  alpha = (a/(1 + e)) + d
+  ## Nt = abund of focal
   
-  return(alpha)
+  alpha_inter = alpha_0 + ((c*(1 - exp(alpha_slope*(inter_abund - N0))))/(1+exp(alpha_slope*(inter_abund - N0))))
   
-}
-
-# Get data ####
-## BRHO ####
-### Sigmoidal ####
-rain = c(1, 0.75, 0.6)
-sig_alpha_dat = data.frame(water = NA, density = NA, alpha = NA, fecundity = NA)
-
-## use mean of posteriors to get data using functions
-for(i in rain) {
+  Ntp1 = ((1-germ)*surv*Nt) + (germ * lambda * Nt * exp(alpha_inter*germ_inter*inter_abund))
   
-  temp = sig_posteriors %>%
-    filter(water == i)
+  dat = data.frame(a_ij = alpha_inter, igr = log(Ntp1/Nt))
   
-  ## set variables
-  Amin = median(temp$alpha_initial)
-  Aslopes = median(temp$alpha_slope)
-  c = median(temp$c)
-  N0 = median(temp$N_opt)
-  lambda = median(temp$lambda)
-  
-  ## run alpha function and save in df
-  tmp_alpha = data.frame(water = rep(paste0(i), 51), density = c(0:50), alpha = alpha_function4(Amin, Aslopes, c, N = c(0:50), N0))
-  tmp_alpha2 = tmp_alpha %>%
-    mutate(fecundity = lambda*exp(alpha*density))
-  
-  ## append
-  sig_alpha_dat = rbind(sig_alpha_dat, tmp_alpha2) %>%
-    filter(!is.na(water))
+  return(dat)
   
 }
 
-sig_alpha_dat2 = sig_alpha_dat %>%
-  mutate(model = "sigmoidal")
-
-
-### Static ####
-rain = c(1, 0.75, 0.6)
-stat_alpha_dat = data.frame(water = NA, density = NA, alpha = NA, fecundity = NA)
-
-## use mean of posteriors to get data using functions
-for(i in rain) {
+## static igr
+igr_stat_func = function(surv, germ, lambda, alpha_intra, Nt, alpha_inter, germ_inter, inter_abund) {
   
-  temp = stat_posteriors %>%
-    filter(water == i)
+  Ntp1 <- (1-germ)*surv*Nt + germ*lambda*Nt*exp(alpha_intra *germ* Nt + alpha_inter*germ_inter*inter_abund)
   
-  ## set variables
-  alpha_acam = median(temp$alpha_acam)
-  #N0 = median(temp$N_opt)
-  lambda = median(temp$lambda)
-  
-  ## run alpha function and save in df
-  tmp_alpha = data.frame(water = rep(paste0(i), 51), density = c(0:50), alpha = alpha_acam)
-  tmp_alpha2 = tmp_alpha %>%
-    mutate(fecundity = lambda*exp(alpha*density))
-  
-  ## append
-  stat_alpha_dat = rbind(stat_alpha_dat, tmp_alpha2) %>%
-    filter(!is.na(water))
+  return(log(Ntp1/Nt))
   
 }
 
-stat_alpha_dat2 = stat_alpha_dat %>%
+## get rid of NA's in posteriors - still not sure why these are here? 
+acam_sig_posteriors2 = acam_sig_posteriors %>%
+  filter(!is.na(lambda))
+
+brho_sig_posteriors2 = brho_sig_posteriors %>%
+  filter(!is.na(lambda))
+
+# Calc alpha & IGR ####
+## Static ####
+## create empty df
+igr_stat = data.frame(focal = NA, water = NA, post_num = NA, igr = NA, dens = NA, alpha_inter = NA)
+
+## set post draw list from equil df
+posts_stat = unique(equil$post_num)
+
+## create treatment vectors
+species = c("ACAM", "BRHO")
+rain = c(0.6, 0.75, 1)
+
+for(i in 1:length(species)) {
+  for (j in 1:length(rain)) {
+    
+    sp = species[i]
+    r = rain[j]
+    
+    ## select data
+    adat = acam_stat_posteriors[acam_stat_posteriors$water == r,]
+    bdat = brho_stat_posteriors[brho_stat_posteriors$water == r,]
+    
+    ## set treatment
+    if(r == 1) { trt = "C" } 
+    else { trt = "D" }
+    
+    ## loop thru each posterior draw
+    for (k in 1:length(posts_stat)) {
+      
+      p = posts_stat[k]
+      
+      ## define params
+      if (sp == "ACAM") {
+        
+        lambda_i = adat[p,]$lambda
+        alpha_ii = adat[p,]$alpha_acam
+        alpha_ij = adat[p,]$alpha_brho
+        g_i = germ[germ$phyto == "ACAM" & germ$treatment == trt,]$mean.germ
+        s_i = seedsurv[seedsurv$species == "ACAM",]$surv.mean.p
+        g_j = germ[germ$phyto == "BRHO" & germ$treatment == trt,]$mean.germ
+        
+        N_eq_v = c(1:45)
+        
+      } else {
+        
+        lambda_i = bdat[p,]$lambda
+        alpha_ii = bdat[p,]$alpha_brho
+        alpha_ij = bdat[p,]$alpha_acam
+        g_i = germ[germ$phyto == "BRHO" & germ$treatment == trt,]$mean.germ
+        s_i = seedsurv[seedsurv$species == "BRHO",]$surv.mean.p
+        g_j = germ[germ$phyto == "ACAM" & germ$treatment == trt,]$mean.germ
+        
+        N_eq_v = c(1:45)
+        
+      }
+      
+      ## calc IGR
+      igr_tmp = igr_stat_func(surv = s_i, germ = g_i, lambda = lambda_i, alpha_intra = alpha_ii, Nt = 1, alpha_inter = alpha_ij, germ_inter = g_j, inter_abund = N_eq_v)
+      
+      ## fill in data 
+      tmp = data.frame(focal = sp, water = r, post_num = p, igr = igr_tmp, alpha_inter = alpha_ij, dens = N_eq_v)
+      
+      ## append
+      igr_stat = rbind(igr_stat, tmp)
+      
+    }
+    
+  }
+  
+}
+
+igr_stat = igr_stat %>%
+  filter(!is.na(focal)) %>%
   mutate(model = "static")
 
-### Join ####
-brho_dat = rbind(stat_alpha_dat2, sig_alpha_dat2)
+## Sigmoidal ####
+## create empty df
+igr_sig = data.frame(focal = NA, water = NA, post_num = NA, alpha_inter = NA, igr = NA, dens = NA)
 
-## ACAM ####
-### Sigmoidal ####
-rain = c(1, 0.75, 0.6)
-acam_sig_alpha_dat = data.frame(water = NA, density = NA, alpha = NA, fecundity = NA)
+## set post draw list from equil df
+posts_sig = unique(equil_sig$post_num)
 
-## use mean of posteriors to get data using functions
-for(i in rain) {
-  
-  temp = acam_sig_posteriors %>%
-    filter(water == i)
-  
-  ## set variables
-  Amin = median(temp$alpha_initial)
-  Aslopes = median(temp$alpha_slope)
-  c = median(temp$c)
-  N0 = median(temp$N_opt)
-  lambda = median(temp$lambda)
-  
-  ## run alpha function and save in df
-  tmp_alpha = data.frame(water = rep(paste0(i), 51), density = c(0:50), alpha = alpha_function4(Amin, Aslopes, c, N = c(0:50), N0))
-  tmp_alpha2 = tmp_alpha %>%
-    mutate(fecundity = lambda*exp(alpha*density))
-  
-  ## append
-  acam_sig_alpha_dat = rbind(acam_sig_alpha_dat, tmp_alpha2) %>%
-    filter(!is.na(water))
+## create treatment vectors
+species = c("ACAM", "BRHO")
+rain = c(0.6, 0.75, 1)
+
+for(i in 1:length(species)) {
+  for (j in 1:length(rain)) {
+    
+    sp = species[i]
+    r = rain[j]
+    
+    ## select data
+    adat = acam_sig_posteriors2[acam_sig_posteriors2$water == r,]
+    bdat = brho_sig_posteriors2[brho_sig_posteriors2$water == r,]
+    
+    ## set treatment
+    if(r == 1) { trt = "C" 
+    } else { trt = "D" }
+    
+    ## loop thru each posterior draw
+    for (k in 1:length(posts)) {
+      
+      p = posts[k]
+      
+      ## define params
+      if (sp == "ACAM") {
+        
+        lambda_i = adat[p,]$lambda
+        alpha_ii = adat[p,]$alpha_acam
+        ## alpha_ij = adat[p,]$alpha_brho
+        
+        ## alpha_inter params
+        n_opt = adat[p,]$N_opt
+        c = adat[p,]$c
+        alpha_slope = adat[p,]$alpha_slope
+        alpha_init = adat[p,]$alpha_initial
+        
+        g_i = germ[germ$phyto == "ACAM" & germ$treatment == trt,]$mean.germ
+        s_i = seedsurv[seedsurv$species == "ACAM",]$surv.mean.p
+        g_j = germ[germ$phyto == "BRHO" & germ$treatment == trt,]$mean.germ
+
+        N_eq_v = c(1:45)
+        
+        
+      } else {
+        
+        lambda_i = bdat[p,]$lambda
+        alpha_ii = bdat[p,]$alpha_brho
+        ## alpha_ij = bdat[p,]$alpha_acam
+        
+        n_opt = bdat[p,]$N_opt
+        c = bdat[p,]$c
+        alpha_slope = bdat[p,]$alpha_slope
+        alpha_init = bdat[p,]$alpha_initial
+        
+        g_i = germ[germ$phyto == "BRHO" & germ$treatment == trt,]$mean.germ
+        s_i = seedsurv[seedsurv$species == "BRHO",]$surv.mean.p
+        g_j = germ[germ$phyto == "ACAM" & germ$treatment == trt,]$mean.germ
+
+        N_eq_v = c(1:45)
+        
+      }
+      
+      ## calc IGR
+      igr_tmp = igr_sig_func(surv = s_i, germ = g_i, lambda = lambda_i, alpha_intra = alpha_ii, Nt = 1, germ_inter = g_j, inter_abund = N_eq_v, alpha_0 = alpha_init, alpha_slope = alpha_slope, N0 = n_opt, c = c)
+      
+      ## fill in data
+      tmp = data.frame(focal = sp, water = r, post_num = p, igr = igr_tmp$igr, alpha_inter = igr_tmp$a_ij, dens = N_eq_v)
+      
+      ## append
+      igr_sig = rbind(igr_sig, tmp)
+      
+    }
+    
+  }
   
 }
 
-acam_sig_alpha_dat2 = acam_sig_alpha_dat %>%
+igr_sig = igr_sig %>%
+  filter(!is.na(focal)) %>%
   mutate(model = "sigmoidal")
 
-### Static ####
-rain = c(1, 0.75, 0.6)
-acam_stat_alpha_dat = data.frame(water = NA, density = NA, alpha = NA, fecundity = NA)
+# Plot ####
+## Join ####
+names(igr_sig)
 
-## use mean of posteriors to get data using functions
-for(i in rain) {
-  
-  temp = acam_stat_posteriors %>%
-    filter(water == i)
-  
-  ## set variables
-  alpha_acam = median(temp$alpha_acam)
-  #N0 = median(temp$N_opt)
-  lambda = median(temp$lambda)
-  
-  ## run alpha function and save in df
-  tmp_alpha = data.frame(water = rep(paste0(i), 51), density = c(0:50), alpha = alpha_acam)
-  tmp_alpha2 = tmp_alpha %>%
-    mutate(fecundity = lambda*exp(alpha*density))
-  
-  ## append
-  acam_stat_alpha_dat = rbind(acam_stat_alpha_dat, tmp_alpha2) %>%
-    filter(!is.na(water))
-  
-}
+names(igr_stat)
 
-acam_stat_alpha_dat2 = acam_stat_alpha_dat %>%
-  mutate(model = "static")
+igr_both = rbind(igr_sig, igr_stat)
 
-### Join ####
-acam_dat = rbind(acam_stat_alpha_dat2, acam_sig_alpha_dat2)
+
+alphas = igr_both %>%
+  filter(!is.na(focal)) %>%
+  group_by(model, focal, water, dens) %>%
+  
+  summarise(mean.igr = mean(igr), 
+            se.igr = calcSE(igr),
+            mean.alpha = mean(alpha_inter), 
+            se.alpha = calcSE(alpha_inter)) %>%
+  
+  ungroup() %>%
+  
+  mutate(focal = fct_relevel(focal, "BRHO", "ACAM")) %>%
+  
+ggplot(aes(x=dens, y=mean.alpha, group = interaction(model, water), fill = as.factor(water), color = as.factor(water), linetype = model)) +
+  geom_ribbon(aes(ymin = mean.alpha - (2*se.alpha), ymax = mean.alpha + (2*se.alpha)), alpha = 0.5) +
+  geom_hline(yintercept = 0) +
+  geom_line(linewidth = 1) +
+  facet_wrap(~focal) +
+  scale_fill_manual(values = c("#de8a5a", "#edbb8a", "#70a494")) +
+  scale_color_manual(values = c("#de8a5a", "#edbb8a", "#70a494")) +
+  xlab("Density") +
+  ylab("Alpha value") +
+  labs(fill = "Water", color = "Water", linetype = "Model") +
+  theme(text = element_text(size=13))
+
+
+igrs = igr_both %>%
+  filter(!is.na(focal)) %>%
+  group_by(model, focal, water, dens) %>%
+  
+  summarise(mean.igr = mean(igr), 
+            se.igr = calcSE(igr),
+            mean.alpha = mean(alpha_inter), 
+            se.alpha = calcSE(alpha_inter)) %>%
+  
+  ungroup() %>%
+  
+  mutate(focal = fct_relevel(focal, "BRHO", "ACAM")) %>%
+  
+  ggplot(aes(x=dens, y=mean.igr, group = interaction(model, water), fill = as.factor(water), color = as.factor(water), linetype = model)) +
+  geom_ribbon(aes(ymin = mean.igr - (2*se.igr), ymax = mean.igr + (2*se.igr)), alpha = 0.5) +
+  #geom_hline(yintercept = 0) +
+  geom_line(linewidth = 1) +
+  facet_wrap(~focal, scales = "free") +
+  scale_fill_manual(values = c("#de8a5a", "#edbb8a", "#70a494")) +
+  scale_color_manual(values = c("#de8a5a", "#edbb8a", "#70a494")) +
+  xlab("Density") +
+  ylab("Invasion Growth Rate") +
+  labs(fill = "Water", color = "Water", linetype = "Model") +
+  theme(text = element_text(size=13))
+
+ggarrange(alphas, igrs, labels = "AUTO", common.legend = TRUE, ncol = 1, nrow = 2, legend = "bottom")
+
+ggsave("data_analysis/MCT/figures/alphas_igrs_dens.png", width = 8, height = 7)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Plot ####
 ## BRHO ####
