@@ -91,6 +91,7 @@ equil = equil %>%
 
 hist(equil$n_star)
 
+# Plot ####
 ggplot(equil, aes(x=n_star, color = as.factor(water))) +
  # geom_histogram() +
   geom_density(linewidth = 1) +
@@ -100,7 +101,7 @@ ggplot(equil, aes(x=n_star, color = as.factor(water))) +
   labs(color = "Water") +
   ylab("Density")
   
-ggsave("data_analysis/MCT/figures/equilibrium_dens_postdraws.png", width = 7, height = 3)
+## ggsave("data_analysis/MCT/figures/equilibrium_dens_postdraws.png", width = 7, height = 3)
 
 
 
@@ -109,51 +110,45 @@ ggsave("data_analysis/MCT/figures/equilibrium_dens_postdraws.png", width = 7, he
 
 
 
-N_star = (1/alpha_ii*g_i)*ln ( (1 - (1-g_i)*s_i ) / (g_i * lambda_i) )
+# N_star = (1/alpha_ii*g_i)*ln ( (1 - (1-g_i)*s_i ) / (g_i * lambda_i) )
 
-N_star = (1/(-0.0517*0.516)) * log( (1 - ((1-0.516)*0.16 )) / (0.516 * 29) )
+# N_star = (1/(-0.0517*0.516)) * log( (1 - ((1-0.516)*0.16 )) / (0.516 * 29) )
 
-((1 - 0.51611111) * 0.16) + (0.51611111 * 29 * exp(-0.0517 * 0.51611111 * 104.4))
-
-
-brho_mp
-bsurv = 0
-bgerm = 1
-blam = 400
-bintra = -0.0520
-ainter = -0.00603
-
-agerm = 0.516
-aNeq = 104
+# ((1 - 0.51611111) * 0.16) + (0.51611111 * 29 * exp(-0.0517 * 0.51611111 * 104.4))
 
 
+# brho_mp
+# bsurv = 0
+# bgerm = 1
+# blam = 400
+# bintra = -0.0520
+# ainter = -0.00603
 
-
-
+# agerm = 0.516
+# aNeq = 104
 
 
 # OLD, SAVE ####
 ## solve for equilibrium graphically
 
-test_vals = seq(1, 120, by = 100/1000)
+# test_vals = seq(1, 120, by = 100/1000)
 
-growth = rep(NA, length(test_vals))
-err = 1
+# growth = rep(NA, length(test_vals))
+# err = 1
 
-for (i in 1:length(test_vals)) {
+# for (i in 1:length(test_vals)) {
   
-  N_eq = test_vals[i]
+#   N_eq = test_vals[i]
   
-  growth_val = ((1 - 0.516) * 0.16 ) +  (0.516 * 29 * exp(-0.0517 * 0.516 * N_eq))
+#  growth_val = ((1 - 0.516) * 0.16 ) +  (0.516 * 29 * exp(-0.0517 * 0.516 * N_eq))
   
-  growth[i] = growth_val
+#  growth[i] = growth_val
   
-  if(abs(growth_val - 1) < err) {
-    err = abs(growth_val - 1)
-    print(paste0("N = ", as.character(N_eq), ", err = ", as.character(err)))
-  }
+#  if(abs(growth_val - 1) < err) {
+#    err = abs(growth_val - 1)
+#    print(paste0("N = ", as.character(N_eq), ", err = ", as.character(err)))
+#  }
   
-}
+#}
 
-plot(test_vals, growth)
-
+#plot(test_vals, growth)

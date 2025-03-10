@@ -1,0 +1,6 @@
+"rowname","Sum Sq","Df","F value","Pr(>F)","species","signif"
+"(Intercept)",2.955,1,3.879,0.054,"A. americanus","."
+"num.bg.indiv",4.946,1,6.492,0.014,"A. americanus","*"
+"water",7.055,1,9.26,0.004,"A. americanus","**"
+"num.bg.indiv:water",0.833,1,1.094,0.3,"A. americanus"," "
+"Residuals",41.14,54,NA,NA,"A. americanus",NA

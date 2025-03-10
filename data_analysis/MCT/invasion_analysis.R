@@ -1,11 +1,15 @@
 
+# Set up ####
+## equilibrium data
+source("data_analysis/MCT/find_equilibrium.R")
+
 ## germination data
 germ = read.csv("data/germination_data.csv")
 
 ## seed survival data
 seedsurv = read.csv("data/seed_survival_sumdat.csv")
 
-
+## create function to calc IGR
 igr = function(surv, germ, lambda, alpha_intra, Nt, alpha_inter, germ_inter, inter_abund) {
   
   Ntp1 <- (1-germ)*surv*Nt + germ*lambda*Nt*exp(alpha_intra *germ* Nt + alpha_inter*germ_inter*inter_abund)
@@ -63,7 +67,7 @@ for(i in 1:length(species)) {
         alpha_ij = bdat[p,]$alpha_acam
         g_i = germ[germ$phyto == "BRHO" & germ$treatment == trt,]$mean.germ
         s_i = seedsurv[seedsurv$species == "BRHO",]$surv.mean.p
-        g_j = germ[germ$phyto == "BRHO" & germ$treatment == trt,]$mean.germ
+        g_j = germ[germ$phyto == "ACAM" & germ$treatment == trt,]$mean.germ
         
         N_eq = equil %>%
           filter(species == "ACAM", water == r, post_num == p) %>%
