@@ -114,7 +114,7 @@ ggplot(igr_dat, aes(x=igr, color = as.factor(water), linetype = focal)) +
   ylab("Density") +
   labs(color = "Water")
 
-ggsave("data_analysis/MCT/figures/igr_static_models.png", width = 6, height = 2.75)
+#ggsave("data_analysis/MCT/figures/igr_static_models.png", width = 6, height = 2.75)
 
 
 igr_dat %>%
@@ -138,5 +138,5 @@ ggplot(aes(x=as.factor(focal), y=igr, group = interaction(focal, water.text), co
   labs(color = "Water") #+
 #  legend("bottom")
 
-ggsave("data_analysis/MCT/figures/igr_static_models_boxplot.png", width = 7, height = 3)
+# ggsave("data_analysis/MCT/figures/igr_static_models_boxplot.png", width = 7, height = 3)
 
