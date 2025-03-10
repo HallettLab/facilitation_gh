@@ -41,25 +41,25 @@ sig_alpha_dat = data.frame(water = NA, density = NA, alpha = NA, fecundity = NA)
 ## use mean of posteriors to get data using functions
 for(i in rain) {
   
-    temp = sig_posteriors %>%
-      filter(water == i)
-    
-    ## set variables
-    Amin = median(temp$alpha_initial)
-    Aslopes = median(temp$alpha_slope)
-    c = median(temp$c)
-    N0 = median(temp$N_opt)
-    lambda = median(temp$lambda)
-    
-    ## run alpha function and save in df
-    tmp_alpha = data.frame(water = rep(paste0(i), 51), density = c(0:50), alpha = alpha_function4(Amin, Aslopes, c, N = c(0:50), N0))
-    tmp_alpha2 = tmp_alpha %>%
-      mutate(fecundity = lambda*exp(alpha*density))
-                           
-    ## append
-    sig_alpha_dat = rbind(sig_alpha_dat, tmp_alpha2) %>%
-      filter(!is.na(water))
-
+  temp = sig_posteriors %>%
+    filter(water == i)
+  
+  ## set variables
+  Amin = median(temp$alpha_initial)
+  Aslopes = median(temp$alpha_slope)
+  c = median(temp$c)
+  N0 = median(temp$N_opt)
+  lambda = median(temp$lambda)
+  
+  ## run alpha function and save in df
+  tmp_alpha = data.frame(water = rep(paste0(i), 51), density = c(0:50), alpha = alpha_function4(Amin, Aslopes, c, N = c(0:50), N0))
+  tmp_alpha2 = tmp_alpha %>%
+    mutate(fecundity = lambda*exp(alpha*density))
+  
+  ## append
+  sig_alpha_dat = rbind(sig_alpha_dat, tmp_alpha2) %>%
+    filter(!is.na(water))
+  
 }
 
 sig_alpha_dat2 = sig_alpha_dat %>%

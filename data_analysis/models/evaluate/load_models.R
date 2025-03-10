@@ -32,7 +32,7 @@ for(i in rain){
   
 }
 
-sig_posteriors <- data.frame()
+brho_sig_posteriors <- data.frame()
 
 for(i in rain){
 #  for(j in microbe) {
@@ -43,7 +43,7 @@ for(i in rain){
   
   tmp = tmp[10001:20000,]
   
-  sig_posteriors = rbind(sig_posteriors, tmp)
+  brho_sig_posteriors = rbind(brho_sig_posteriors, tmp)
   
 #  }
 }
