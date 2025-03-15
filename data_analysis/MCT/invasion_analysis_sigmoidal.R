@@ -4,10 +4,10 @@ source("data_analysis/models/evaluate/load_models.R")
 source("data_analysis/MCT/find_equilibrium_sigmoidal.R")
 
 ## germination data
-germ = read.csv("data/germination_data.csv")
+#germ = read.csv("data/germination_data.csv")
 
 ## seed survival data
-seedsurv = read.csv("data/seed_survival_sumdat.csv")
+#seedsurv = read.csv("data/seed_survival_sumdat.csv")
 
 
 igr_sig = function(surv, germ, lambda, alpha_intra, Nt, germ_inter, inter_abund, alpha_0, alpha_slope, N0, c) {
@@ -130,6 +130,8 @@ for(i in 1:length(species)) {
 
 igr_sig_dat = igr_sig_dat %>%
   filter(!is.na(focal))
+
+write.csv(igr_sig_dat, "data_analysis/MCT/output/igr_sig.csv", row.names = F)
 
 igr_sig_dat %>%
   #group_by(focal, water) %>%

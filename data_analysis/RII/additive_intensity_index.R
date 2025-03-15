@@ -1,4 +1,8 @@
 
+## SET UP ####
+## read in data 
+source("data_cleaning/clean_model_dat.R")
+
 
 
 ## 2 * (deltaP / P^-N + abs(deltaP))

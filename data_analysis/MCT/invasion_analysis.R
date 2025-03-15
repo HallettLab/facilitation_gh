@@ -30,7 +30,7 @@ igr = function(surv, germ, lambda, alpha_intra, Nt, alpha_inter, germ_inter, int
 
 # Calc IGR ####
 ## create empty df
-igr_dat = data.frame(focal = NA, water = NA, post_num = NA, igr = NA)
+igr_stat_dat = data.frame(focal = NA, water = NA, post_num = NA, igr = NA)
 
 ## set post draw list from equil df
 posts = unique(equil$post_num)
@@ -93,7 +93,7 @@ for(i in 1:length(species)) {
       tmp = data.frame(focal = sp, water = r, post_num = p, igr = igr_tmp)
                        
       ## append
-      igr_dat = rbind(igr_dat, tmp)
+      igr_stat_dat = rbind(igr_stat_dat, tmp)
       
     }
     
@@ -101,11 +101,13 @@ for(i in 1:length(species)) {
   
 }
 
-igr_dat = igr_dat %>%
+igr_stat_dat = igr_stat_dat %>%
   filter(!is.na(focal))
 
+write.csv(igr_stat_dat, "data_analysis/MCT/output/igr_stat.csv", row.names = F)
+
 # Plot ####
-ggplot(igr_dat, aes(x=igr, color = as.factor(water), linetype = focal)) +
+ggplot(igr_stat_dat, aes(x=igr, color = as.factor(water), linetype = focal)) +
   geom_vline(xintercept = 0, linetype = "dashed") +
   geom_density(linewidth = 1) +
   facet_wrap(~water) +
@@ -117,7 +119,7 @@ ggplot(igr_dat, aes(x=igr, color = as.factor(water), linetype = focal)) +
 #ggsave("data_analysis/MCT/figures/igr_static_models.png", width = 6, height = 2.75)
 
 
-igr_dat %>%
+igr_stat_dat %>%
   #group_by(focal, water) %>%
   #summarise(mean_igr = mean(igr), 
     #       se_igr = calcSE(igr)) %>%

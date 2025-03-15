@@ -3,58 +3,151 @@
 ## read in data
 source("data_cleaning/clean_model_dat.R")
 
-# BRHO ####
-## mean/SE by planted density
-binter_for_RII_seed_analyses %>%
-  group_by(ACAM, water, microbe) %>%
-  summarise(mean.spc = mean(seeds.out.percap, na.rm = T),
-            se.spc = calcSE(seeds.out.percap)) %>%
-  
-  ggplot(aes(x=ACAM, y=mean.spc, fill = as.factor(water))) +
-  geom_errorbar(aes(ymin = mean.spc - se.spc, ymax = mean.spc + se.spc), width = 1) +
-  geom_line() +
-  geom_point(aes(fill = as.factor(water)), colour = "black", pch = 21, size = 3.5) +
-  facet_wrap(~water) +
-  scale_fill_manual(values = c("#de8a5a", "#f3d0ae", "#70a494")) +
-  xlab("Planted Legume Density") +
-  ylab("Seed Production (per cap.)") +
-  labs(fill = "Water") +
-  theme(text = element_text(size = 15)) +
-  theme(legend.position = "bottom")
-# ggsave("figures/MS_draft2/Fig2pt2_seedsout_planted_dens.png", width = 5, height = 4)
+library(ggpubr)
 
-## raw data seeds per cap by num bg indiv
-binter_for_RII_seed_analyses %>%
+# Figure 2 ####
+## BRHO, HW ####
+b_ij_h = binter_for_RII_seed_analyses %>%
   mutate(water.text = ifelse(water == 1, "High", 
                              ifelse(water == 0.75, "Intermediate", "Low"))) %>%
+  filter(water.text == "High") %>%
   ggplot(aes(x=num.bg.indiv, y=seeds.out.percap, shape = as.factor(microbe), color = as.factor(water.text), linetype = as.factor(microbe))) +
-  facet_wrap(~water.text) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  
+  geom_smooth(method = "lm", alpha = 0.15, linewidth = 1) +
   geom_point(size = 2.5) +
-  geom_smooth(method = "lm", alpha = 0.15, linewidth = 1.5) +
-  scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  scale_color_manual(values = c("#70a494")) +
   scale_linetype_manual(values = c(4, 1)) +
   xlab("Legume Density") +
-  ylab("Per Capita Seed Production") +
+  ylab("Grass Per Capita Seed Output") +
   labs(linetype = "Microbe", shape = "Microbe", color = "Water") +
   scale_shape_manual(values = c(1, 16)) +
   theme(text = element_text(size = 14)) +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom") +
+  coord_cartesian(xlim = c(0, 70), ylim = c(0, 1500)) +
+  theme(legend.position="none")
 
-#ggsave("figures/MS_draft3/seeds_by_dens.png", width = 7, height = 3.5)
 
-# ACAM ####
-ainter %>%
+b_ij_i = binter_for_RII_seed_analyses %>%
   mutate(water.text = ifelse(water == 1, "High", 
                              ifelse(water == 0.75, "Intermediate", "Low"))) %>%
-  ggplot(aes(x=num.bg.indiv, y=seeds.out.percap, color = as.factor(water.text))) +
+  filter(water.text == "Intermediate") %>%
+  ggplot(aes(x=num.bg.indiv, y=seeds.out.percap, shape = as.factor(microbe), color = as.factor(water.text), linetype = as.factor(microbe))) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  
+  geom_smooth(method = "lm", alpha = 0.15, linewidth = 1) +
   geom_point(size = 2.5) +
-  geom_smooth(method = "lm", alpha = 0.15, linewidth = 1.5) +
+  scale_color_manual(values = c("#f3d0ae")) +
+  scale_linetype_manual(values = c(4, 1)) +
+  xlab("Legume Density") +
+  ylab("") +
+  labs(linetype = "Microbe", shape = "Microbe", color = "Water") +
+  scale_shape_manual(values = c(1, 16)) +
+  theme(text = element_text(size = 14)) +
+  theme(legend.position = "bottom") +
+  coord_cartesian(xlim = c(0, 70), ylim = c(0, 1500)) +
+  theme(legend.position="none")
+
+b_ij_l = binter_for_RII_seed_analyses %>%
+  mutate(water.text = ifelse(water == 1, "High", 
+                             ifelse(water == 0.75, "Intermediate", "Low"))) %>%
+  filter(water.text == "Low") %>%
+  ggplot(aes(x=num.bg.indiv, y=seeds.out.percap, shape = as.factor(microbe), color = as.factor(water.text), linetype = as.factor(microbe))) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  
+  geom_smooth(method = "lm", alpha = 0.15, linewidth = 1) +
+  geom_point(size = 2.5) +
+  scale_color_manual(values = c("#de8a5a")) +
+  scale_linetype_manual(values = c(4, 1)) +
+  xlab("Legume Density") +
+  ylab("") +
+  labs(linetype = "Microbe", shape = "Microbe", color = "Water") +
+  scale_shape_manual(values = c(1, 16)) +
+  theme(text = element_text(size = 14)) +
+  theme(legend.position = "bottom") +
+  coord_cartesian(xlim = c(0, 70), ylim = c(0, 1500)) +
+  theme(legend.position="none")
+
+b_ii = bintra %>% 
+  mutate(water.text = ifelse(water == 1, "High", 
+                             ifelse(water == 0.75, "Intermediate", "Low"))) %>%
+  ggplot(aes(x=num.focal.indiv, y=seeds.out.percap, color = as.factor(water.text))) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+
+  geom_smooth(method = "lm", alpha = 0.1, linewidth = 1) +
+  geom_jitter(size = 1.75) +
   scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
   scale_linetype_manual(values = c(4, 1)) +
   xlab("Grass Density") +
-  ylab("Per Capita Seed Production") +
+  ylab("Grass Per Capita Seed Output") +
+  labs(linetype = "Microbe", shape = "Microbe", color = "Water") +
+  scale_shape_manual(values = c(1, 16)) +
+  theme(text = element_text(size = 14)) +
+  theme(legend.position = "bottom") +
+  coord_cartesian(xlim = c(0, 70), ylim = c(0, 1500))
+
+a_ji = ainter %>%
+  mutate(water.text = ifelse(water == 1, "High", 
+                             ifelse(water == 0.75, "Intermediate", "Low"))) %>%
+  ggplot(aes(x=num.bg.indiv, y=seeds.out.percap, color = as.factor(water.text))) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_smooth(method = "lm", alpha = 0.15, linewidth = 1) +
+  geom_point(size = 1.75) +
+  scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  scale_linetype_manual(values = c(4, 1)) +
+  xlab("Grass Density") +
+  ylab("") +
   labs(color = "Water") +
   theme(text = element_text(size = 14)) +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom") +
+  coord_cartesian(ylim = c(0, 315), xlim = c(0, 70))
+#  coord_cartesian(ylim = c(0,110), )
 
-ggsave("figures/MS_draft3/acam_seeds_by_dens.png", width = 4, height = 4)
+a_jj = aintra %>%
+  mutate(water.text = ifelse(water == 1, "High", 
+                             ifelse(water == 0.75, "Intermediate", "Low"))) %>%
+  ggplot(aes(x=num.focal.indiv, y=seeds.out.percap, color = as.factor(water.text))) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_smooth(method = "lm", alpha = 0.15, linewidth = 1) +
+  geom_point(size = 1.75) +
+  scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  #scale_linetype_manual(values = c(4, 1)) +
+  xlab("Legume Density") +
+  ylab("Legume Per Capita Seed Output") +
+  labs(color = "Water") +
+  theme(text = element_text(size = 14)) +
+  theme(legend.position = "bottom") +
+  coord_cartesian(ylim = c(0,315), xlim = c(0, 70)) 
+
+ggarrange(b_ij_h, b_ij_i, b_ij_l, b_ii, a_jj, a_ji, labels = "AUTO", common.legend = T, legend = "bottom")
+
+ggsave("data_analysis/seeds/figures/seeds_by_dens.png", width = 10, height = 8)
+
+
+
+## Make legend ####
+binter_for_RII_seed_analyses %>%
+  mutate(water.text = ifelse(water == 1, "High", 
+                             ifelse(water == 0.75, "Intermediate", "Low"))) %>%
+  #filter(water.text == "High") %>%
+  ggplot(aes(x=num.bg.indiv, y=seeds.out.percap, shape = as.factor(microbe), linetype = as.factor(microbe),color = as.factor(water.text))) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  
+  geom_smooth(method = "lm", alpha = 0.15, linewidth = 1) +
+  geom_point(size = 2.5) +
+  scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  scale_linetype_manual(values = c(4, 1)) +
+  xlab("Legume Density") +
+  ylab("Grass Per Capita Seed Output") +
+  labs(shape = "Microbe", color = "Water") +
+  scale_shape_manual(values = c(1, 16)) +
+  theme(text = element_text(size = 14)) +
+  theme(legend.position = "bottom") +
+  coord_cartesian(xlim = c(0, 70), ylim = c(0, 1500))
+
+ggsave("data_analysis/seeds/figures/legend_for_seeds_fig.png", width = 9, height = 5)
+
+# ACAM ####
+
+
+## ggsave("figures/MS_draft3/acam_seeds_by_dens.png", width = 4, height = 4)

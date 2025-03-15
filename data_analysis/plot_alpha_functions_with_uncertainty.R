@@ -161,9 +161,9 @@ for(i in 1:length(species)) {
     } else { trt = "D" }
     
     ## loop thru each posterior draw
-    for (k in 1:length(posts)) {
+    for (k in 1:length(posts_sig)) {
       
-      p = posts[k]
+      p = posts_sig[k]
       
       ## define params
       if (sp == "ACAM") {
@@ -285,7 +285,66 @@ igrs = igr_both %>%
 
 ggarrange(alphas, igrs, labels = "AUTO", common.legend = TRUE, ncol = 1, nrow = 2, legend = "bottom")
 
-ggsave("data_analysis/MCT/figures/alphas_igrs_dens.png", width = 8, height = 7)
+#ggsave("data_analysis/MCT/figures/alphas_igrs_dens.png", width = 8, height = 7)
+
+
+
+
+igr_both %>%
+  filter(!is.na(focal)) %>%
+  group_by(model, focal, water, dens) %>%
+  summarise(mean.igr = mean(igr), 
+            se.igr = calcSE(igr),
+            mean.alpha = mean(alpha_inter), 
+            se.alpha = calcSE(alpha_inter)) %>%
+  ungroup() %>%
+  mutate(focal = fct_relevel(focal, "BRHO", "ACAM")) %>%
+  filter(focal == "BRHO") %>%
+  mutate(water.text = ifelse(water == 1, "High", 
+                             ifelse(water == 0.75, "Intermediate", "Low"))) %>%
+  
+  ggplot(aes(x=dens, y=mean.alpha, group = interaction(model, water.text), fill = as.factor(water.text), color = as.factor(water.text), linetype = model)) +
+  geom_ribbon(aes(ymin = mean.alpha - (3*se.alpha), ymax = mean.alpha + (3*se.alpha)), alpha = 0.5) +
+  geom_hline(yintercept = 0) +
+  geom_line(linewidth = 1) +
+  scale_fill_manual(values = c("#70a494", "#edbb8a", "#de8a5a")) +
+  scale_color_manual(values = c("#70a494", "#edbb8a", "#de8a5a")) +
+  xlab("Neighbor Density") +
+  ylab("Interaction Coefficient") +
+  labs(fill = "Water", color = "Water", linetype = "Model") +
+  theme(text = element_text(size=15))
+
+#ggsave("data_analysis/MCT/figures/TCD_job_talk/alphas_igrs_dens_modcomp.png", width = 8, height = 5)
+
+
+## static only first
+igr_both %>%
+  filter(!is.na(focal)) %>%
+  group_by(model, focal, water, dens) %>%
+  summarise(mean.igr = mean(igr), 
+            se.igr = calcSE(igr),
+            mean.alpha = mean(alpha_inter), 
+            se.alpha = calcSE(alpha_inter)) %>%
+  ungroup() %>%
+  mutate(focal = fct_relevel(focal, "BRHO", "ACAM")) %>%
+  filter(focal == "BRHO", model == "static") %>%
+  mutate(water.text = ifelse(water == 1, "High", 
+                             ifelse(water == 0.75, "Intermediate", "Low"))) %>%
+  ggplot(aes(x=dens, y=mean.alpha, group = interaction(model, water.text), fill = as.factor(water.text), color = as.factor(water.text), linetype = model)) +
+  geom_ribbon(aes(ymin = mean.alpha - (3*se.alpha), ymax = mean.alpha + (3*se.alpha)), alpha = 0.5) +
+  geom_hline(yintercept = 0) +
+  geom_line(linewidth = 1) +
+  scale_fill_manual(values = c("#70a494", "#edbb8a", "#de8a5a")) +
+  scale_color_manual(values = c("#70a494", "#edbb8a", "#de8a5a")) +
+  scale_linetype_manual(values = "dashed") +
+  xlab("Neighbor Density") +
+  ylab("Interaction Coefficient") +
+  labs(fill = "Water", color = "Water", linetype = "Model") +
+  theme(text = element_text(size=15))
+
+#ggsave("data_analysis/MCT/figures/TCD_job_talk/alphas_igrs_dens_static.png", width = 7, height = 5)
+
+
 
 
 
