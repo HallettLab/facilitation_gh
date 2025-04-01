@@ -24,7 +24,7 @@ rstan_options(auto_write = TRUE)
 ## read in data 
 source("data_cleaning/clean_model_dat.R")
 
-## set seed
+## set seed ####
 set.seed(25)
 
 # Static Fit ####
@@ -78,7 +78,7 @@ for(i in rainfall){
 ## make a list for model output
 rainfall = c(1, 0.75, 0.6)
 sigmoidal.output <- list()
-date = 20250331
+date = 20250401
 
 for(i in rainfall){
   
@@ -111,11 +111,58 @@ for(i in rainfall){
     initialsall<- list(initials1, initials2, initials3, initials4)
   
     ## run the model
-    sigmoidal.output[[paste0("acam_w", i)]] = stan(file = 'data_analysis/models/fit_models/ACAM_ricker_nb_sigmoidal.stan', data = data_vec, init = initialsall, iter = 20000, warmup = 11000, chains = 4, thin = 2, control = list(adapt_delta = 0.99, max_treedepth = 18))
+    sigmoidal.output[[paste0("acam_w", i)]] = stan(file = 'data_analysis/models/fit_models/ACAM_ricker_nb_sigmoidal.stan', data = data_vec, init = initialsall, iter = 30000, chains = 4, thin = 2, control = list(adapt_delta = 0.999, max_treedepth = 18))
     
     PrelimFit <- sigmoidal.output[[paste0("acam_w", i)]]
     
     ## save model output
     save(PrelimFit, file = paste0("data_analysis/models/output/sigmoidal/", date, "/acam_nb_sigmoidal_w", i, "_", date, ".rdata"))
     
+}
+
+# Exponential Fit ####
+
+## make a list for model output
+rainfall = c(1, 0.75, 0.6)
+exponential.output <- list()
+date = 20250401
+
+for(i in rainfall){
+  
+  ## select data 
+  dat = acam.model[acam.model$water == i,] %>%
+    filter(!is.na(num.focal.indiv))
+  
+  ## print model to keep track of progress during loop
+  print(paste0("w", i))
+  
+  ## create vectors of data inputs
+  Fecundity = as.integer(round(dat$seeds.out.percap)) ## seeds out PER CAP
+  N = as.integer(length(Fecundity)) ## number of observations
+  N_i = as.integer(dat$num.focal.indiv) ## stem # of focal species
+  brho <- as.integer(dat$num.bg.indiv) ## background stem # data
+  
+  ## make a vector of data inputs to model
+  data_vec <- c("N", "Fecundity", "N_i", "brho")
+  
+  ## set initial values 
+  initials1 <- list(lambda=40, N_opt = 3, c = -0.2, alpha_slope = -0.15, alpha_initial = 0.1, alpha_acam = -0.2)
+  initials2 <- list(lambda=90, N_opt = 10, c = -0.1, alpha_slope = -0.4, alpha_initial = -0.1, alpha_acam = -0.4)
+  
+  #initials2 <- list(lambda=35, N_opt = 0, c = -0.5, alpha_slope = -0.35, alpha_initial = -0.2, alpha_acam = -0.1)
+  initials3 <- list(lambda=75, N_opt = 5, c = -0.1, alpha_slope = -0.4, alpha_initial = -0.1, alpha_acam = -0.4)
+  initials4 <- list(lambda=40, N_opt = 2, c = -0.3, alpha_slope = -0.05, alpha_initial = 0.3, alpha_acam = -0.2)
+  
+  ## chain 3 & 4 worked; others didn't
+  
+  initialsall<- list(initials1, initials2, initials3, initials4)
+  
+  ## run the model
+  exponential.output[[paste0("acam_w", i)]] = stan(file = 'data_analysis/models/fit_models/ACAM_ricker_nb_exponential.stan', data = data_vec, init = initialsall, iter = 30000, chains = 4, thin = 2, control = list(adapt_delta = 0.999, max_treedepth = 18))
+  
+  PrelimFit <- exponential.output[[paste0("acam_w", i)]]
+  
+  ## save model output
+  save(PrelimFit, file = paste0("data_analysis/models/output/exponential/", date, "/acam_nb_exponential_w", i, "_", date, ".rdata"))
+  
 }

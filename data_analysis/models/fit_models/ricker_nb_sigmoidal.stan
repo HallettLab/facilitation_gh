@@ -78,7 +78,7 @@ model{
   
   c ~ normal(0, 0.1); // using priors from Lisa's model
   
-  N_opt ~ exponential(0.5); 
+  N_opt ~ exponential(0.8); 
   // N_opt = the optimal density of ACAM that maximizes fecundity of BRHO
   
    // calculate the likelihood

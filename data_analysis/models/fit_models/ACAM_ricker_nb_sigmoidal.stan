@@ -72,13 +72,13 @@ model{
   alpha_initial ~ normal(-0.024, 0.25);
   // replace normal(0, 0.2) prior with alpha_brho from mega-comp models
   
-  alpha_slope ~ normal(-0.2, 0.15);
+  alpha_slope ~ normal(0, 0.2);
   // want value somewhat near 0; aiming to make the prior a straight line
 
-  c ~ normal(-0.8, 0.2);
+  c ~ normal(0, 0.2);
   // want value somewhat near 1; aiming to make the prior a straight line
   
-  N_opt ~ exponential(0.5); 
+  N_opt ~ exponential(2); 
   // N_opt = the optimal density of BRHO that maximizes fecundity of ACAM
   
    // calculate the likelihood

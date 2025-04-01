@@ -90,7 +90,7 @@ rm(tmp, PrelimFit)
 ## ACAM ####
 ### static ####
 rain = c(1, 0.75, 0.6)
-date = 20250211
+date = 20250331
 acam_stat_posts = list()
 
 for(i in rain){
@@ -128,7 +128,7 @@ rm(tmp, PrelimFit)
 
 ### sigmoidal ####
 rain = c(1, 0.75, 0.6)
-date = 20250331
+date = 20250401
 acam_sig_posts = list()
 
 for(i in rain){
@@ -155,7 +155,7 @@ for(i in rain){
     select(disp, lambda, alpha_acam, N_opt, c, alpha_slope, alpha_initial) %>%
     mutate(water = i)
   
-  tmp = tmp[11001:20000,]
+  tmp = tmp[15001:30000,]
   
   acam_sig_posteriors = rbind(acam_sig_posteriors, tmp)
   
@@ -164,3 +164,38 @@ for(i in rain){
 rm(tmp, PrelimFit)
 
 ### exponential ####
+rain = c(1, 0.75, 0.6)
+date = 20250401
+acam_exp_posts = list()
+
+for(i in rain){
+  
+  ## load models
+  load(paste0("data_analysis/models/output/exponential/", date, "/acam_nb_exponential_w", i, "_", date, ".rdata"))
+  
+  ## print model to keep track of progress during loop
+  print(paste0("w", i))
+  
+  ## extract model info
+  tmp <- rstan::extract(PrelimFit, inc_warmup = FALSE)
+  
+  ## save posterior distributions
+  acam_exp_posts[[paste0("acam_w", i)]] <- tmp
+  
+}
+
+acam_exp_posteriors <- data.frame()
+
+for(i in rain){
+  
+  tmp = as_tibble(do.call("cbind", acam_exp_posts[[paste0("acam_w", i)]])) %>%
+    select(disp, lambda, alpha_acam, N_opt, c, alpha_slope, alpha_initial) %>%
+    mutate(water = i)
+  
+  tmp = tmp[15001:30000,]
+  
+  acam_exp_posteriors = rbind(acam_exp_posteriors, tmp)
+  
+}
+
+rm(tmp, PrelimFit)

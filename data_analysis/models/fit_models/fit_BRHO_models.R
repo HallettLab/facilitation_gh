@@ -16,6 +16,9 @@
     ## because they do NOT have enough data
     ## should NOT model these data any longer; just fit live soil models.
 
+## Running 4/1/2025
+  ## aim to obtain final coefficients; do NOT edit after this point
+
 # Set up ####
 ## load packages
 library(tidyverse)
@@ -34,7 +37,7 @@ set.seed(25)
 # Static Fit ####
 ## make treatment vectors
 rainfall = c(1, 0.75, 0.6)
-date = 20250225
+date = 20250401
 static.output <- list() ## make a list for model output
 
 for(i in rainfall){
@@ -79,7 +82,7 @@ for(i in rainfall){
 ## make a list for model output
 rainfall = c(1, 0.75, 0.6)
 sigmoidal.output <- list()
-date = 20250211
+date = 20250401
 
 for(i in rainfall){
   
