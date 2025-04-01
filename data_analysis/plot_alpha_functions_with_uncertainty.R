@@ -101,7 +101,7 @@ for(i in 1:length(species)) {
         s_i = seedsurv[seedsurv$species == "ACAM",]$surv.mean.p
         g_j = germ[germ$phyto == "BRHO" & germ$treatment == trt,]$mean.germ
         
-        N_eq_v = c(1:45)
+        N_eq_v = c(0:45)
         
       } else {
         
@@ -112,7 +112,7 @@ for(i in 1:length(species)) {
         s_i = seedsurv[seedsurv$species == "BRHO",]$surv.mean.p
         g_j = germ[germ$phyto == "ACAM" & germ$treatment == trt,]$mean.germ
         
-        N_eq_v = c(1:45)
+        N_eq_v = c(0:45)
         
       }
       
@@ -182,7 +182,7 @@ for(i in 1:length(species)) {
         s_i = seedsurv[seedsurv$species == "ACAM",]$surv.mean.p
         g_j = germ[germ$phyto == "BRHO" & germ$treatment == trt,]$mean.germ
 
-        N_eq_v = c(1:45)
+        N_eq_v = c(0:45)
         
         
       } else {
@@ -200,7 +200,7 @@ for(i in 1:length(species)) {
         s_i = seedsurv[seedsurv$species == "BRHO",]$surv.mean.p
         g_j = germ[germ$phyto == "ACAM" & germ$treatment == trt,]$mean.germ
 
-        N_eq_v = c(1:45)
+        N_eq_v = c(0:45)
         
       }
       
@@ -229,7 +229,8 @@ names(igr_sig)
 
 names(igr_stat)
 
-igr_both = rbind(igr_sig, igr_stat)
+igr_both = rbind(igr_sig, igr_stat) %>%
+  mutate(alpha_inter = ifelse(dens == 0, 0, alpha_inter))
 
 
 alphas = igr_both %>%
@@ -285,7 +286,7 @@ igrs = igr_both %>%
 
 ggarrange(alphas, igrs, labels = "AUTO", common.legend = TRUE, ncol = 1, nrow = 2, legend = "bottom")
 
-#ggsave("data_analysis/MCT/figures/alphas_igrs_dens.png", width = 8, height = 7)
+#ggsave("data_analysis/MCT/figures/alphas_igrs_dens_with0.png", width = 8, height = 7)
 
 
 
@@ -346,9 +347,33 @@ igr_both %>%
 
 
 
+# Pres Plots ####
+igr_both %>%
+  filter(!is.na(focal), focal == "BRHO") %>%
+  group_by(model, focal, water, dens) %>%
+  
+  summarise(mean.igr = mean(igr), 
+            se.igr = calcSE(igr),
+            mean.alpha = mean(alpha_inter), 
+            se.alpha = calcSE(alpha_inter)) %>%
+  
+  ungroup() %>%
+  
+#  mutate(focal = fct_relevel(focal, "BRHO", "ACAM")) %>%
+  
+  ggplot(aes(x=dens, y=mean.alpha, group = interaction(model, water), fill = as.factor(water), color = as.factor(water), linetype = model)) +
+  geom_ribbon(aes(ymin = mean.alpha - (2*se.alpha), ymax = mean.alpha + (2*se.alpha)), alpha = 0.5) +
+  geom_hline(yintercept = 0) +
+  geom_line(linewidth = 1) +
+#  facet_wrap(~focal) +
+  scale_fill_manual(values = c("#de8a5a", "#edbb8a", "#70a494")) +
+  scale_color_manual(values = c("#de8a5a", "#edbb8a", "#70a494")) +
+  xlab("Density") +
+  ylab("Alpha value") +
+  labs(fill = "Water", color = "Water", linetype = "Model") +
+  theme(text = element_text(size=13))
 
-
-
+ggsave("alpha_v_dens_pres_fig.png", width = 6, height = 4)
 
 
 

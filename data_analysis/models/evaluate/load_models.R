@@ -128,7 +128,7 @@ rm(tmp, PrelimFit)
 
 ### sigmoidal ####
 rain = c(1, 0.75, 0.6)
-date = 20250211
+date = 20250331
 acam_sig_posts = list()
 
 for(i in rain){
@@ -162,3 +162,5 @@ for(i in rain){
 }
 
 rm(tmp, PrelimFit)
+
+### exponential ####

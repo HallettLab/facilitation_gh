@@ -228,4 +228,4 @@ ainter2 = ainter %>%
 acam.model = rbind(ainter2, aintra)
 
 # clean env ####
-rm(abkgrd, abkgrd.join, acam, aintra, ainter2, allo, bbkgrd, bintra, brho, brho_clean, alloB, alloAf, alloAs)
+rm(abkgrd, abkgrd.join, acam, ainter2, allo, bbkgrd, brho, brho_clean, alloB, alloAf, alloAs)

@@ -30,7 +30,7 @@ set.seed(25)
 # Static Fit ####
 ## make treatment vector
 rainfall = c(1, 0.75, 0.6)
-date = 20250211 ## set date
+date = 20250331 ## set date
 model.output <- list() ## make a list for model output
 
 for(i in rainfall){
@@ -72,12 +72,13 @@ for(i in rainfall){
 
 }
 
+
 # Sigmoidal Fit ####
 
 ## make a list for model output
 rainfall = c(1, 0.75, 0.6)
 sigmoidal.output <- list()
-date = 20250211
+date = 20250331
 
 for(i in rainfall){
   
@@ -115,8 +116,6 @@ for(i in rainfall){
     PrelimFit <- sigmoidal.output[[paste0("acam_w", i)]]
     
     ## save model output
-    save(PrelimFit, file = paste0("data_analysis/models/output/sigmoidal/", date, "/acam_nb_sigmoidal_w", i, "_", date, "_2_.rdata"))
-    
-    beep(2)
+    save(PrelimFit, file = paste0("data_analysis/models/output/sigmoidal/", date, "/acam_nb_sigmoidal_w", i, "_", date, ".rdata"))
     
 }

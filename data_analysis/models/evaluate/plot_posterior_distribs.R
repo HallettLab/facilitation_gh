@@ -1,4 +1,7 @@
 
+## load models
+source("data_analysis/models/evaluate/load_models.R")
+
 # Set up ####
 ppd_fig_loc = "data_analysis/models/evaluate/plot_posteriors/"
 
@@ -11,7 +14,7 @@ theme_set(theme_classic())
 for(i in rain) {
     
     ## filter out specific treat
-    tmp_df = sig_posteriors %>%
+    tmp_df = brho_sig_posteriors %>%
       filter(water == i)
     
     ## turn into matrix
@@ -237,14 +240,14 @@ ggsave(paste0(ppd_fig_loc, "sigmoidal/", date, "/c_posts_", date, ".png"), width
 for(i in rain) {
     
     ## filter out specific treat
-    tmp_df = stat_posteriors %>%
+    tmp_df = brho_stat_posteriors %>%
       filter(water == i)
     
     ## turn into matrix
     tmp_mat = as.matrix(tmp_df)
     
     ## save file
-    pdf(file = paste0(ppd_fig_loc, "static/", date, "/posts_w", i, date, ".pdf"))
+    pdf(file = paste0(ppd_fig_loc, "static/", date, "/posts_w", i, "_", date, ".pdf"))
     
     ## plot all the posteriors
     print(mcmc_areas(tmp_mat,

@@ -30,7 +30,7 @@ igr = function(surv, germ, lambda, alpha_intra, Nt, alpha_inter, germ_inter, int
 
 # Calc IGR ####
 ## create empty df
-igr_stat_dat = data.frame(focal = NA, water = NA, post_num = NA, igr = NA)
+igr_stat_dat = data.frame(focal = NA, water = NA, post_num = NA, igr = NA, dens = NA)
 
 ## set post draw list from equil df
 posts = unique(equil$post_num)
@@ -90,7 +90,7 @@ for(i in 1:length(species)) {
       igr_tmp = igr(surv = s_i, germ = g_i, lambda = lambda_i, alpha_intra = alpha_ii, Nt = 1, alpha_inter = alpha_ij, germ_inter = g_j, inter_abund = N_eq)
       
       ## fill in data 
-      tmp = data.frame(focal = sp, water = r, post_num = p, igr = igr_tmp)
+      tmp = data.frame(focal = sp, water = r, post_num = p, igr = igr_tmp, dens = N_eq)
                        
       ## append
       igr_stat_dat = rbind(igr_stat_dat, tmp)
