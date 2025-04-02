@@ -1,15 +1,10 @@
 
-## read in model data from load_models script - needs to be done manually for the moment.
-source("data_analysis/models/evaluate/load_models.R")
+# Set up ####
+
+## read in model posts + equilibrium values
 source("data_analysis/MCT/find_equilibrium_sigmoidal.R")
 
-## germination data
-#germ = read.csv("data/germination_data.csv")
-
-## seed survival data
-#seedsurv = read.csv("data/seed_survival_sumdat.csv")
-
-
+# Create Functions ####
 igr_sig = function(surv, germ, lambda, alpha_intra, Nt, germ_inter, inter_abund, alpha_0, alpha_slope, N0, c) {
   
   ## Nt = abund of focal
@@ -23,20 +18,9 @@ igr_sig = function(surv, germ, lambda, alpha_intra, Nt, germ_inter, inter_abund,
 }
 
 
-acam_sig_posteriors2 = acam_sig_posteriors %>%
-  filter(!is.na(lambda))
-
-brho_sig_posteriors2 = brho_sig_posteriors %>%
-  filter(!is.na(lambda))
-
-
+# Calc IGR ####
 ## create empty df
 igr_sig_dat = data.frame(focal = NA, water = NA, post_num = NA, igr = NA, dens = NA)
-
-## set post draw list from equil df
-posts = unique(equil_sig$post_num)
-
-## find a diff way of getting posts... 
 
 species = c("ACAM", "BRHO")
 rain = c(0.6, 0.75, 1)
@@ -48,73 +32,58 @@ for(i in 1:length(species)) {
     r = rain[j]
     
     ## select data
-    adat = acam_sig_posteriors2[acam_sig_posteriors2$water == r,]
-    bdat = brho_sig_posteriors2[brho_sig_posteriors2$water == r,]
+    ## want data from 80% hdi
+    dat = sigposts80[sigposts80$focal == sp & sigposts80$water == r,]
     
     ## set treatment
     if(r == 1) { trt = "C" 
     } else { trt = "D" }
     
+    ## set post draw list from equil df
+    posts_sig = unique(equil_sig[equil_sig$species == sp & equil_sig$water == r,]$post_num)
+    ## should be 400 vals
+    
     ## loop thru each posterior draw
-    for (k in 1:length(posts)) {
+    for (k in 1:length(posts_sig)) {
       
-      p = posts[k]
+      p = posts_sig[k]
       
       ## define params
       if (sp == "ACAM") {
-        
-        lambda_i = adat[p,]$lambda
-        alpha_ii = adat[p,]$alpha_acam
-        ## alpha_ij = adat[p,]$alpha_brho
-        
-        ## alpha_inter params
-        n_opt = adat[p,]$N_opt
-        c = adat[p,]$c
-        alpha_slope = adat[p,]$alpha_slope
-        alpha_init = adat[p,]$alpha_initial
         
         g_i = germ[germ$phyto == "ACAM" & germ$treatment == trt,]$mean.germ
         s_i = seedsurv[seedsurv$species == "ACAM",]$surv.mean.p
         g_j = germ[germ$phyto == "BRHO" & germ$treatment == trt,]$mean.germ
         
-        ## might need to loop over diff equil values
-        ## could create as a vector from 1:Neq??
-        N_eq = equil_sig %>%
-          filter(species == "BRHO", water == r, post_num == p) %>%
-          select(n_star) %>%
-          as.numeric()
-        
-       # N_eq_v = c(1:170)
-        
-        
       } else {
-        
-        lambda_i = bdat[p,]$lambda
-        alpha_ii = bdat[p,]$alpha_brho
-        ## alpha_ij = bdat[p,]$alpha_acam
-        
-        n_opt = bdat[p,]$N_opt
-        c = bdat[p,]$c
-        alpha_slope = bdat[p,]$alpha_slope
-        alpha_init = bdat[p,]$alpha_initial
         
         g_i = germ[germ$phyto == "BRHO" & germ$treatment == trt,]$mean.germ
         s_i = seedsurv[seedsurv$species == "BRHO",]$surv.mean.p
         g_j = germ[germ$phyto == "ACAM" & germ$treatment == trt,]$mean.germ
         
-        N_eq = equil_sig %>%
-          filter(species == "ACAM", water == r, post_num == p) %>%
-          select(n_star) %>%
-          as.numeric()
-       
-      #  N_eq_v = c(1:as.integer(N_eq))
-        ## leave this commented out for the moment to calc IGR at JUST equilibrium vals
-         
       }
       
+      lambda_i = dat[dat$post_num == p,]$lambda
+      alpha_ii = dat[dat$post_num == p,]$alpha_intra
+      
+      ## alpha_inter params
+      n_opt = dat[dat$post_num == p,]$N_opt
+      c = dat[dat$post_num == p,]$c
+      alpha_slope = dat[dat$post_num == p,]$alpha_slope
+      alpha_init = dat[dat$post_num == p,]$alpha_initial
+      
+      ## select equil value
+      N_eq = equil_sig %>%
+        filter(species == sp, water == r, post_num == p) %>%
+        select(n_star) %>%
+        as.numeric()
+      
       ## calc IGR
-      igr_tmp = igr_sig(surv = s_i, germ = g_i, lambda = lambda_i, alpha_intra = alpha_ii, Nt = 1, germ_inter = g_j, inter_abund = N_eq, alpha_0 = alpha_init, alpha_slope = alpha_slope, N0 = n_opt, c = c)
-        
+      igr_tmp = igr_sig(surv = s_i, germ = g_i, lambda = lambda_i, 
+                        alpha_intra = alpha_ii, Nt = 1, germ_inter = g_j, 
+                        inter_abund = N_eq, alpha_0 = alpha_init, 
+                        alpha_slope = alpha_slope, N0 = n_opt, c = c)
+      
         ## fill in data
         tmp = data.frame(focal = sp, water = r, post_num = p, igr = igr_tmp, dens = N_eq)
         
@@ -134,29 +103,21 @@ igr_sig_dat = igr_sig_dat %>%
 write.csv(igr_sig_dat, "data_analysis/MCT/output/igr_sig.csv", row.names = F)
 
 igr_sig_dat %>%
-  #group_by(focal, water) %>%
-  #summarise(mean_igr = mean(igr), 
-  #       se_igr = calcSE(igr)) %>%
   mutate(water.text = ifelse(water == 1, "High", 
                              ifelse(water == 0.75, "Intermediate", "Low"))) %>%
   
   ggplot(aes(x=as.factor(focal), y=igr, group = interaction(focal, water.text), color = as.factor(water.text))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  
-  #geom_density(linewidth = 1) +
-  geom_jitter(size = 0.75) +
+  geom_jitter(size = 0.5) +
   geom_boxplot() +
-  #geom_errorbar(aes(ymin = mean_igr - 2*se_igr, ymax = mean_igr + 2*se_igr)) +
   facet_wrap(~water.text) +
   scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
   ylab("Invasion Growth Rate") +
   xlab("Focal Species") +
   labs(color = "Water") +
-  ggtitle("Sigmoidal Model")
+  theme(text = element_text(size=14))
 
-  #  legend("bottom")
-
-# ggsave("data_analysis/MCT/figures/igr_sigmoidal_models_boxplot.png", width = 7, height = 3)
+# ggsave("figures/Apr2025/Fig4_igr_sig_boxplot.png", width = 7, height = 3)
 
 
 
