@@ -11,15 +11,15 @@
 library(tidyverse)
 library(HDInterval)
 
-## read in models
-source("data_analysis/models/evaluate/load_models.R")
+
+
 
 source("data_analysis/MCT/find_equilibrium.R")
 source("data_analysis/MCT/find_equilibrium_sigmoidal.R")
 
 
 ## set fig location
-fig_loc = "data_analysis/models/evaluate/plot_alpha_fecundity/"
+fig_loc = "figures/Apr2025/"
 
 theme_set(theme_classic())
 
@@ -52,13 +52,6 @@ igr_stat_func = function(surv, germ, lambda, alpha_intra, Nt, alpha_inter, germ_
   return(log(Ntp1/Nt))
   
 }
-
-## get rid of NA's in posteriors - still not sure why these are here? 
-acam_sig_posteriors2 = acam_sig_posteriors %>%
-  filter(!is.na(lambda))
-
-brho_sig_posteriors2 = brho_sig_posteriors %>%
-  filter(!is.na(lambda))
 
 # Calc alpha & IGR ####
 ## Static ####

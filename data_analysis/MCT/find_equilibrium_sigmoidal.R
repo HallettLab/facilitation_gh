@@ -1,6 +1,13 @@
+
+
 # Set up ####
 library(tidyverse)
+library(HDInterval)
+
 theme_set(theme_classic())
+
+## read in models
+sigposts = read.csv("data/model_posteriors/sig_posts_20250401.csv")
 
 ## germination data
 germ = read.csv("data/germination_data.csv")
@@ -18,12 +25,19 @@ seedsurv = read.csv("data/seed_survival_sumdat.csv")
 
 ##the invasion growth rate will need the full sigmoidal model as the low density invader will experience interspecific competition.
 
-acam_sig_posteriors2 = acam_sig_posteriors %>%
-  filter(!is.na(lambda))
+# Calc 80% HDI ####
+sig_80 = sigposts %>%
+  group_by(focal, water) %>%
+  reframe(lambda80 = hdi(lambda, credMass = 0.8)) %>%
+  group_by(focal, water) %>%
+  mutate(bound = ifelse())
 
-brho_sig_posteriors2 = brho_sig_posteriors %>%
-  filter(!is.na(lambda))
+sigposts80 = sigposts %>%
+  group_by(focal, water) %>%
+  filter(lambda >= hdi(lambda)["lower"],
+         lambda <= hdi(lambda)["upper"])
 
+test["lower"]
 
 # Find Equilibrium ####
 set.seed(0)
