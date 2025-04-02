@@ -60,20 +60,20 @@ for(i in rainfall){
     data_vec <- c("N", "Fecundity", "N_i", "acam")
     
     ## set initial values 
-    initials1 <- list(lambda=200, alpha_brho = -0.08, alpha_acam = 0.15)
-    initials2 <- list(lambda=600, alpha_brho = 0.15, alpha_acam = -0.01)
-    initials3 <- list(lambda=800, alpha_brho = -0.25, alpha_acam = 0.1)
-    initials4 <- list(lambda=100, alpha_brho = -0.01, alpha_acam = -0.2)
+    initials1 <- list(lambda=200, alpha_acam = 0.03, alpha_brho = -0.08)
+    initials2 <- list(lambda=150, alpha_acam = 0.05, alpha_brho = -0.06)
+    initials3 <- list(lambda=250, alpha_acam = -0.01, alpha_brho = -0.04)
+    initials4 <- list(lambda=300, alpha_acam = -0.04, alpha_brho = -0.01)
     
     initialsall<- list(initials1, initials2, initials3, initials4)
     
     ## run the model
-    static.output[[paste0("brho_w", i)]] = stan(file = 'data_analysis/models/fit_models/ricker_nb_static.stan', data = data_vec, init = initialsall, iter = 8000, chains = 4, thin = 2, control = list(adapt_delta = 0.9, max_treedepth = 18))
+    static.output[[paste0("brho_w", i)]] = stan(file = 'data_analysis/models/fit_models/ricker_nb_static.stan', data = data_vec, init = initialsall, iter = 5000, chains = 4, thin = 2, control = list(adapt_delta = 0.9, max_treedepth = 18))
     
     PrelimFit <- static.output[[paste0("brho_w", i)]]
     
     ## save model output
-    save(PrelimFit, file = paste0("data_analysis/models/output/static/", date, "/brho_nb_static_w", i, "_", date, ".rdata"))
+    save(PrelimFit, file = paste0("data_analysis/models/output/static/", date, "/brho_nb_static_w", i, "_", date, "_final.rdata"))
    
 }
 
@@ -103,11 +103,11 @@ for(i in rainfall){
     data_vec <- c("N", "Fecundity", "N_i", "acam")
   
     ## set initial values 
-    initials1 <- list(lambda=200, N_opt = 1, c = -0.5, alpha_slope = -0.8, alpha_initial = 0.1, alpha_brho = 0.08)
-    initials2 <- list(lambda=600, N_opt = 2, c = -0.6, alpha_slope = -0.7, alpha_initial = 0.2, alpha_brho = 0.06)
-    initials3 <- list(lambda=800, N_opt = 5, c = -0.2, alpha_slope = -0.4, alpha_initial = -0.1, alpha_brho = 0.04)
-    initials4 <- list(lambda=400, N_opt = 4, c = -0.3, alpha_slope = -0.2, alpha_initial = 0.3, alpha_brho = 0.01)
-    
+    initials1 <- list(lambda=200, N_opt = 1, c = -0.05, alpha_slope = -0.1, alpha_initial = 0.03, alpha_brho = -0.08)
+    initials2 <- list(lambda=150, N_opt = 0.5, c = -0.06, alpha_slope = -0.15, alpha_initial = 0.05, alpha_brho = -0.06)
+    initials3 <- list(lambda=250, N_opt = 2, c = -0.02, alpha_slope = -0.25, alpha_initial = -0.01, alpha_brho = -0.04)
+    initials4 <- list(lambda=300, N_opt = 1.5, c = -0.03, alpha_slope = -0.2, alpha_initial = -0.04, alpha_brho = -0.01)
+
     ## try 0 for N_opt; 
     ## cld try means of priors for init values
     
@@ -118,7 +118,7 @@ for(i in rainfall){
     initialsall<- list(initials1, initials2, initials3, initials4)
   
     ## run the model
-    sigmoidal.output[[paste0("brho_w", i)]] = stan(file = 'data_analysis/models/fit_models/ricker_nb_sigmoidal.stan', data = data_vec, init = initialsall, iter = 20000, chains = 4, thin = 2, control = list(adapt_delta = 0.99, max_treedepth = 18))
+    sigmoidal.output[[paste0("brho_w", i)]] = stan(file = 'data_analysis/models/fit_models/ricker_nb_sigmoidal.stan', data = data_vec, init = initialsall, iter = 5000, chains = 4, thin = 2, control = list(adapt_delta = 0.99, max_treedepth = 18))
     
     ## adjusted iter from 5000 -> 8000 and adapt_delta from 0.9 -> 0.95 on 1/13
     ## running just for m1_w0.6
@@ -139,6 +139,6 @@ for(i in rainfall){
     PrelimFit <- sigmoidal.output[[paste0("brho_w", i)]]
     
     ## save model output
-    save(PrelimFit, file = paste0("data_analysis/models/output/sigmoidal/", date, "/brho_nb_sigmoidal_w", i, "_", date, "_2.rdata"))
+    save(PrelimFit, file = paste0("data_analysis/models/output/sigmoidal/", date, "/brho_nb_sigmoidal_w", i, "_", date, "_final.rdata"))
     
 }

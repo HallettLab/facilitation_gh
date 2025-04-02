@@ -19,7 +19,7 @@ for(i in rain){
 #  for(j in microbe) {
     
     ## load non-constrained models
-    load(paste0("data_analysis/models/output/sigmoidal/", date, "/brho_nb_sigmoidal_w", i, "_", date, "_2.rdata"))
+    load(paste0("data_analysis/models/output/sigmoidal/", date, "/brho_nb_sigmoidal_w", i, "_", date, "_final.rdata"))
     
     ## print model to keep track of progress during loop
     print(paste0("w", i))
@@ -41,7 +41,7 @@ for(i in rain){
     select(disp, lambda, alpha_brho, N_opt, c, alpha_slope, alpha_initial) %>%
     mutate(water = i)
   
-  tmp = tmp[10001:20000,]
+  tmp = tmp[2501:5000,]
   
   brho_sig_posteriors = rbind(brho_sig_posteriors, tmp)
   
@@ -58,7 +58,7 @@ brho_stat_posts = list()
 for(i in rain){
     
     ## load models
-    load(paste0("data_analysis/models/output/static/", date, "/brho_nb_static_w", i, "_", date, ".rdata"))
+    load(paste0("data_analysis/models/output/static/", date, "/brho_nb_static_w", i, "_", date, "_final.rdata"))
     
     ## print model to keep track of progress during loop
     print(paste0("w", i))
@@ -79,7 +79,7 @@ for(i in rain){
       select(disp, lambda, alpha_brho, alpha_acam) %>%
       mutate(water = i)
     
-    tmp = tmp[4001:8000,]
+    tmp = tmp[2501:5000,]
     
     brho_stat_posteriors = rbind(brho_stat_posteriors, tmp)
 
@@ -90,7 +90,7 @@ rm(tmp, PrelimFit)
 ## ACAM ####
 ### static ####
 rain = c(1, 0.75, 0.6)
-date = 20250331
+date = 20250401
 acam_stat_posts = list()
 
 for(i in rain){
@@ -117,7 +117,7 @@ for(i in rain){
     select(disp, lambda, alpha_brho, alpha_acam) %>%
     mutate(water = i)
   
-  tmp = tmp[4001:8000,]
+  tmp = tmp[2501:5000,]
   
   acam_stat_posteriors = rbind(acam_stat_posteriors, tmp)
   
@@ -134,7 +134,7 @@ acam_sig_posts = list()
 for(i in rain){
   
   ## load models
-  load(paste0("data_analysis/models/output/sigmoidal/", date, "/acam_nb_sigmoidal_w", i, "_", date, ".rdata"))
+  load(paste0("data_analysis/models/output/sigmoidal/", date, "/acam_nb_sigmoidal_w", i, "_", date, "_final.rdata"))
   
   ## print model to keep track of progress during loop
   print(paste0("w", i))
@@ -155,7 +155,7 @@ for(i in rain){
     select(disp, lambda, alpha_acam, N_opt, c, alpha_slope, alpha_initial) %>%
     mutate(water = i)
   
-  tmp = tmp[15001:30000,]
+  tmp = tmp[2501:5000,]
   
   acam_sig_posteriors = rbind(acam_sig_posteriors, tmp)
   

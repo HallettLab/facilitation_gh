@@ -15,7 +15,7 @@ hist(rcauchy(10000, 0, 1))
 ## seems centered on 0 and almost all obs are very close to this however, there are a few that are super far out. This could potentially be concerning? Leave for now, but good to know
 
 hist(rnorm(10000, -0.2, 0.2))
-hist(rnorm(10000, 0, 0.2))
+hist(rnorm(10000, 0, 0.1))
 
 hist(rcauchy(100, 0, 1), breaks = 30)
 hist(rcauchy(50, 0, 1), breaks = 30)
@@ -23,7 +23,7 @@ hist(rcauchy(50, 0, 1), breaks = 30)
 hist(rexp(10000, 0.5))
 hist(rexp(10000, 2))
 hist(rexp(10000, 0))
-hist(rexp(10000, 0.8))
+hist(rexp(10000, 0.9))
 
 ## brho lambda
 sum_params[sum_params$species == "BRHO",]$lambda_c_mean

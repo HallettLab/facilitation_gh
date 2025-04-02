@@ -198,7 +198,7 @@ Aalpha = ggplot(acam_dat, aes(x=density, y=alpha, color = water, linetype = mode
   geom_hline(yintercept = 0) +
   geom_line(linewidth = 1) +
   scale_color_manual(values = c("#de8a5a", "#edbb8a", "#70a494")) +
-  coord_cartesian(xlim = c(0,50)) +
+  coord_cartesian(xlim = c(0,30)) +
   xlab("Density") +
   ylab("Alpha value") +
   labs(color = "Water", linetype = "Model") +
@@ -210,7 +210,7 @@ Afec = ggplot(acam_dat, aes(x=density, y=fecundity, color = water, linetype = mo
   #geom_hline(yintercept = 0) +
   geom_line(linewidth = 1) +
   scale_color_manual(values = c("#de8a5a", "#edbb8a", "#70a494")) +
-  coord_cartesian(xlim = c(0,50)) +
+  coord_cartesian(xlim = c(0,30)) +
   xlab("Density") +
   ylab("Fecundity") +
   labs(color = "Water", linetype = "Model") +

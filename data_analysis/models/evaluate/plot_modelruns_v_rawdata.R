@@ -21,13 +21,13 @@ fig_loc = "data_analysis/models/evaluate/plot_with_data/"
 
 # BRHO ####
 ## Sigmoidal ####
-date = 20250204
+date = 20250401
 ## plot 
 for(i in rain){
 
     # extract mu and phi
-    mu = brho_sig_posts[[paste0("brho_w", i)]]$F_hat[10001:20000,]
-    disp = brho_sig_posts[[paste0("brho_w", i)]]$disp[10001:20000]
+    mu = brho_sig_posts[[paste0("brho_w", i)]]$F_hat[2501:5000,]
+    disp = brho_sig_posts[[paste0("brho_w", i)]]$disp[2501:5000]
     phi = (disp^2)^(-1)
     
     # generating posterior predictions
@@ -116,13 +116,13 @@ for(i in rain){
 
 # ACAM ####
 ## Sigmoidal ####
-date = 20250211
+date = 20250401
 ## plot 
 for(i in rain){
   
   # extract mu and phi
-  mu = acam_sig_posts[[paste0("acam_w", i)]]$F_hat[11001:18000,]
-  disp = acam_sig_posts[[paste0("acam_w", i)]]$disp[11001:18000]
+  mu = acam_sig_posts[[paste0("acam_w", i)]]$F_hat[2501:5000,]
+  disp = acam_sig_posts[[paste0("acam_w", i)]]$disp[2501:5000]
   phi = (disp^2)^(-1)
   
   # generating posterior predictions

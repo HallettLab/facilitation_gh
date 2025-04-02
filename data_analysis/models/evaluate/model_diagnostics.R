@@ -20,7 +20,7 @@ output_loc = "data_analysis/models/evaluate/diagnostics/"
 ## sigmoidal ####
 rain = c(1, 0.75, 0.6)
 #microbe = c(0, 1)
-date = 20250211
+date = 20250401
 brho_sig_posts = list()
 
 ## create empty df for diagnostics
@@ -29,7 +29,7 @@ sig_diagnostics = data.frame(model.name = NA, Rhat = NA, Neff = NA)
 for(i in rain){
     
     ## load models
-    load(paste0("data_analysis/models/output/sigmoidal/", date, "/brho_nb_sigmoidal_w", i, "_", date, "_2.rdata"))
+    load(paste0("data_analysis/models/output/sigmoidal/", date, "/brho_nb_sigmoidal_w", i, "_", date, "_final.rdata"))
     
     ## print model to keep track of progress during loop
     print(paste0("w", i))
@@ -56,7 +56,7 @@ for(i in rain){
     traceplot(PrelimFit, pars = c("disp", "lambda", "alpha_brho", "alpha_initial", "alpha_slope", "c", "N_opt"), inc_warmup = TRUE)
     
     ## save traceplot
-    ggsave(paste0(output_loc, "sigmoidal/", date, "/traceplot_mainparams_brho_w", i, "_2.png"), width = 10, height = 8)
+    ggsave(paste0(output_loc, "sigmoidal/", date, "/traceplot_mainparams_brho_w", i, "_final.png"), width = 10, height = 8)
     
 }
 
@@ -65,11 +65,11 @@ sig_diagnostics = sig_diagnostics %>%
   filter(!is.na(model.name))
 
 ## save output
-write.csv(sig_diagnostics, paste0(output_loc, "sigmoidal/", date, "/rhat_neff_brho_nb_sigmoidal_", date, "_2.csv"))
+write.csv(sig_diagnostics, paste0(output_loc, "sigmoidal/", date, "/rhat_neff_brho_nb_sigmoidal_", date, "_final.csv"))
 
 ## static ####
 rain = c(1, 0.75, 0.6)
-date = 20250204
+date = 20250401
 brho_stat_posts = list()
 
 ## create empty df for diagnostics
@@ -78,7 +78,7 @@ stat_diagnostics = data.frame(model.name = NA, Rhat = NA, Neff = NA)
 for(i in rain){
   
     ## load models
-    load(paste0("data_analysis/models/output/static/", date, "/brho_nb_static_w", i, "_", date, ".rdata"))
+    load(paste0("data_analysis/models/output/static/", date, "/brho_nb_static_w", i, "_", date, "_final.rdata"))
     
     ## print model to keep track of progress during loop
     print(paste0("w", i))
@@ -112,12 +112,12 @@ stat_diagnostics = stat_diagnostics %>%
   filter(!is.na(model.name))
 
 ## save output
-write.csv(stat_diagnostics, paste0(output_loc, "static/", date, "/rhat_neff_brho_nb_stat_", date, ".csv"))
+write.csv(stat_diagnostics, paste0(output_loc, "static/", date, "/rhat_neff_brho_nb_stat_", date, "_final.csv"))
 
 # ACAM ####
 ## sigmoidal ####
 rain = c(1, 0.75, 0.6)
-date = 20250211
+date = 20250401
 acam_sig_posts = list()
 
 ## create empty df for diagnostics
@@ -126,7 +126,7 @@ acam_sig_diagnostics = data.frame(model.name = NA, Rhat = NA, Neff = NA)
 for(i in rain){
   
   ## load models
-  load(paste0("data_analysis/models/output/sigmoidal/", date, "/acam_nb_sigmoidal_w", i, "_", date, ".rdata"))
+  load(paste0("data_analysis/models/output/sigmoidal/", date, "/acam_nb_sigmoidal_w", i, "_", date, "_final.rdata"))
   
   ## print model to keep track of progress during loop
   print(paste0("w", i))
@@ -159,13 +159,11 @@ acam_sig_diagnostics = acam_sig_diagnostics %>%
   filter(!is.na(model.name))
 
 ## save output
-write.csv(acam_sig_diagnostics, paste0(output_loc, "sigmoidal/", date, "/rhat_neff_acam_nb_sigmoidal_", date, ".csv"))
-
-
+write.csv(acam_sig_diagnostics, paste0(output_loc, "sigmoidal/", date, "/rhat_neff_acam_nb_sigmoidal_", date, "_final.csv"))
 
 ## static ####
 rain = c(1, 0.75, 0.6)
-date = 20250205
+date = 20250401
 acam_stat_posts = list()
 
 ## create empty df for diagnostics
@@ -201,8 +199,6 @@ for(i in rain){
     
     ## save traceplot
     ggsave(paste0(output_loc, "static/", date, "/traceplot_mainparams_acam_w", i, ".png"), width = 6, height = 5)
-    
- # }
   
 }
 

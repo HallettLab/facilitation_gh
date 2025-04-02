@@ -124,7 +124,7 @@ for(i in rainfall){
     PrelimFit <- sigmoidal.output[[paste0("acam_w", i)]]
     
     ## save model output
-    save(PrelimFit, file = paste0("data_analysis/models/output/sigmoidal/", date, "/acam_nb_sigmoidal_w", i, "_", date, "_2.rdata"))
+    save(PrelimFit, file = paste0("data_analysis/models/output/sigmoidal/", date, "/acam_nb_sigmoidal_w", i, "_", date, "_final.rdata"))
     
 }
 
