@@ -96,7 +96,7 @@ acam_stat_posts = list()
 for(i in rain){
   
   ## load models
-  load(paste0("data_analysis/models/output/static/", date, "/acam_nb_static_w", i, "_", date, ".rdata"))
+  load(paste0("data_analysis/models/output/static/", date, "/acam_nb_static_w", i, "_", date, "_final.rdata"))
   
   ## print model to keep track of progress during loop
   print(paste0("w", i))
