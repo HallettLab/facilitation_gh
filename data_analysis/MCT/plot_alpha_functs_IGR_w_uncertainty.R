@@ -9,14 +9,10 @@
 # Set up ####
 ## load packages
 library(tidyverse)
-library(HDInterval)
 
-
-
-
+## get equilibrium values
 source("data_analysis/MCT/find_equilibrium.R")
 source("data_analysis/MCT/find_equilibrium_sigmoidal.R")
-
 
 ## set fig location
 fig_loc = "figures/Apr2025/"
@@ -132,9 +128,6 @@ igr_stat = igr_stat %>%
 ## create empty df
 igr_sig = data.frame(focal = NA, water = NA, post_num = NA, alpha_inter = NA, igr = NA, dens = NA)
 
-## set post draw list from equil df
-posts_sig = unique(equil_sig$post_num)
-
 ## create treatment vectors
 species = c("ACAM", "BRHO")
 rain = c(0.6, 0.75, 1)
@@ -142,16 +135,22 @@ rain = c(0.6, 0.75, 1)
 for(i in 1:length(species)) {
   for (j in 1:length(rain)) {
     
+    ## select species
     sp = species[i]
+    ## select water treat
     r = rain[j]
     
     ## select data
-    adat = acam_sig_posteriors2[acam_sig_posteriors2$water == r,]
-    bdat = brho_sig_posteriors2[brho_sig_posteriors2$water == r,]
-    
+    ## want data from 80% hdi
+    dat = sigposts80[sigposts80$focal == sp & sigposts80$water == r,]
+
     ## set treatment
     if(r == 1) { trt = "C" 
     } else { trt = "D" }
+    
+    ## set post draw list from equil df
+    posts_sig = unique(equil_sig[equil_sig$species == sp & equil_sig$water == r,]$post_num)
+        ## should be 400 vals
     
     ## loop thru each posterior draw
     for (k in 1:length(posts_sig)) {
@@ -161,41 +160,29 @@ for(i in 1:length(species)) {
       ## define params
       if (sp == "ACAM") {
         
-        lambda_i = adat[p,]$lambda
-        alpha_ii = adat[p,]$alpha_acam
-        ## alpha_ij = adat[p,]$alpha_brho
-        
-        ## alpha_inter params
-        n_opt = adat[p,]$N_opt
-        c = adat[p,]$c
-        alpha_slope = adat[p,]$alpha_slope
-        alpha_init = adat[p,]$alpha_initial
-        
         g_i = germ[germ$phyto == "ACAM" & germ$treatment == trt,]$mean.germ
         s_i = seedsurv[seedsurv$species == "ACAM",]$surv.mean.p
         g_j = germ[germ$phyto == "BRHO" & germ$treatment == trt,]$mean.germ
-
-        N_eq_v = c(0:45)
-        
         
       } else {
-        
-        lambda_i = bdat[p,]$lambda
-        alpha_ii = bdat[p,]$alpha_brho
-        ## alpha_ij = bdat[p,]$alpha_acam
-        
-        n_opt = bdat[p,]$N_opt
-        c = bdat[p,]$c
-        alpha_slope = bdat[p,]$alpha_slope
-        alpha_init = bdat[p,]$alpha_initial
         
         g_i = germ[germ$phyto == "BRHO" & germ$treatment == trt,]$mean.germ
         s_i = seedsurv[seedsurv$species == "BRHO",]$surv.mean.p
         g_j = germ[germ$phyto == "ACAM" & germ$treatment == trt,]$mean.germ
-
-        N_eq_v = c(0:45)
-        
+       
       }
+      
+      lambda_i = dat[dat$post_num == p,]$lambda
+      alpha_ii = dat[dat$post_num == p,]$alpha_intra
+      
+      ## alpha_inter params
+      n_opt = dat[dat$post_num == p,]$N_opt
+      c = dat[dat$post_num == p,]$c
+      alpha_slope = dat[dat$post_num == p,]$alpha_slope
+      alpha_init = dat[dat$post_num == p,]$alpha_initial
+      
+      N_eq_v = c(0:30)
+      
       
       ## calc IGR
       igr_tmp = igr_sig_func(surv = s_i, germ = g_i, lambda = lambda_i, alpha_intra = alpha_ii, Nt = 1, germ_inter = g_j, inter_abund = N_eq_v, alpha_0 = alpha_init, alpha_slope = alpha_slope, N0 = n_opt, c = c)
@@ -218,42 +205,71 @@ igr_sig = igr_sig %>%
 
 # Plot ####
 ## Join ####
-names(igr_sig)
+#names(igr_sig)
 
-names(igr_stat)
+#names(igr_stat)
 
-igr_both = rbind(igr_sig, igr_stat) %>%
-  mutate(alpha_inter = ifelse(dens == 0, 0, alpha_inter))
+#igr_both = rbind(igr_sig, igr_stat) %>%
+#  mutate(alpha_inter = ifelse(dens == 0, 0, alpha_inter))
 
-
-alphas = igr_both %>%
-  filter(!is.na(focal)) %>%
+# Fig 3 ####
+## brho alpha ####
+brho_alpha = igr_sig %>%
+  mutate(alpha_inter = ifelse(dens == 0, 0, alpha_inter)) %>%
   group_by(model, focal, water, dens) %>%
-  
   summarise(mean.igr = mean(igr), 
+            min.igr = min(igr),
+            max.igr = max(igr),
             se.igr = calcSE(igr),
+            
             mean.alpha = mean(alpha_inter), 
+            min.alpha = min(alpha_inter),
+            max.alpha = max(alpha_inter),
             se.alpha = calcSE(alpha_inter)) %>%
-  
   ungroup() %>%
-  
-  mutate(focal = fct_relevel(focal, "BRHO", "ACAM")) %>%
-  
-ggplot(aes(x=dens, y=mean.alpha, group = interaction(model, water), fill = as.factor(water), color = as.factor(water), linetype = model)) +
-  geom_ribbon(aes(ymin = mean.alpha - (2*se.alpha), ymax = mean.alpha + (2*se.alpha)), alpha = 0.5) +
+  filter(focal == "BRHO") %>%
+ggplot(aes(x=dens, y=mean.alpha, fill = as.factor(water), color = as.factor(water))) +
+  geom_ribbon(aes(ymin = (mean.alpha - (2*se.alpha)), ymax = (mean.alpha + (2*se.alpha))), alpha = 0.25) +
   geom_hline(yintercept = 0) +
-  geom_line(linewidth = 1) +
-  facet_wrap(~focal) +
+  geom_line(linewidth = 0.5) +
   scale_fill_manual(values = c("#de8a5a", "#edbb8a", "#70a494")) +
   scale_color_manual(values = c("#de8a5a", "#edbb8a", "#70a494")) +
-  xlab("Density") +
-  ylab("Alpha value") +
+  xlab(" ") +
+  ylab("Interspecific Alpha") +
   labs(fill = "Water", color = "Water", linetype = "Model") +
-  theme(text = element_text(size=13))
+  theme(text = element_text(size=13))# +
+  #coord_cartesian(xlim = c(0,30), ylim = c(-0.06, 0.15))
 
+## acam alpha ####
+acam_alpha = igr_sig %>%
+  mutate(alpha_inter = ifelse(dens == 0, 0, alpha_inter)) %>%
+  group_by(model, focal, water, dens) %>%
+  summarise(mean.igr = mean(igr), 
+            min.igr = min(igr),
+            max.igr = max(igr),
+            se.igr = calcSE(igr),
+            
+            mean.alpha = mean(alpha_inter), 
+            min.alpha = min(alpha_inter),
+            max.alpha = max(alpha_inter),
+            se.alpha = calcSE(alpha_inter)) %>%
+  ungroup() %>%
+  filter(focal == "ACAM") %>%
+  ggplot(aes(x=dens, y=mean.alpha, fill = as.factor(water), color = as.factor(water))) +
+  geom_ribbon(aes(ymin = (mean.alpha - (2*se.alpha)), ymax = (mean.alpha + (2*se.alpha))), alpha = 0.25) +
+  geom_hline(yintercept = 0) +
+  geom_line(linewidth = 0.5) +
+  scale_fill_manual(values = c("#de8a5a", "#edbb8a", "#70a494")) +
+  scale_color_manual(values = c("#de8a5a", "#edbb8a", "#70a494")) +
+  xlab(" ") +
+  ylab(" ") +
+  labs(fill = "Water", color = "Water", linetype = "Model") +
+  theme(text = element_text(size=13)) #+
+  #coord_cartesian(xlim = c(0,30), ylim = c(-0.06, 0.15))
 
-igrs = igr_both %>%
-  filter(!is.na(focal)) %>%
+## brho igr ####
+brho_igr = igr_sig %>%
+  filter(focal == "BRHO") %>%
   group_by(model, focal, water, dens) %>%
   
   summarise(mean.igr = mean(igr), 
@@ -261,29 +277,43 @@ igrs = igr_both %>%
             mean.alpha = mean(alpha_inter), 
             se.alpha = calcSE(alpha_inter)) %>%
   
-  ungroup() %>%
-  
-  mutate(focal = fct_relevel(focal, "BRHO", "ACAM")) %>%
-  
-  ggplot(aes(x=dens, y=mean.igr, group = interaction(model, water), fill = as.factor(water), color = as.factor(water), linetype = model)) +
+  ggplot(aes(x=dens, y=mean.igr, fill = as.factor(water), color = as.factor(water))) +
   geom_ribbon(aes(ymin = mean.igr - (2*se.igr), ymax = mean.igr + (2*se.igr)), alpha = 0.5) +
-  #geom_hline(yintercept = 0) +
-  geom_line(linewidth = 1) +
-  facet_wrap(~focal, scales = "free") +
+  geom_line(linewidth = 0.5) +
   scale_fill_manual(values = c("#de8a5a", "#edbb8a", "#70a494")) +
   scale_color_manual(values = c("#de8a5a", "#edbb8a", "#70a494")) +
-  xlab("Density") +
+  xlab("Neighbor Density") +
   ylab("Invasion Growth Rate") +
-  labs(fill = "Water", color = "Water", linetype = "Model") +
+  labs(fill = "Water", color = "Water") +
   theme(text = element_text(size=13))
 
-ggarrange(alphas, igrs, labels = "AUTO", common.legend = TRUE, ncol = 1, nrow = 2, legend = "bottom")
+## acam igr ####
+acam_igr = igr_sig %>%
+  filter(focal == "ACAM") %>%
+  group_by(model, focal, water, dens) %>%
+  
+  summarise(mean.igr = mean(igr), 
+            se.igr = calcSE(igr),
+            mean.alpha = mean(alpha_inter), 
+            se.alpha = calcSE(alpha_inter)) %>%
+  
+  ggplot(aes(x=dens, y=mean.igr, fill = as.factor(water), color = as.factor(water))) +
+  geom_ribbon(aes(ymin = mean.igr - (2*se.igr), ymax = mean.igr + (2*se.igr)), alpha = 0.5) +
+  geom_line(linewidth = 0.5) +
+  scale_fill_manual(values = c("#de8a5a", "#edbb8a", "#70a494")) +
+  scale_color_manual(values = c("#de8a5a", "#edbb8a", "#70a494")) +
+  xlab("Neighbor Density") +
+  ylab(" ") +
+  labs(fill = "Water", color = "Water") +
+  theme(text = element_text(size=13))
 
-#ggsave("data_analysis/MCT/figures/alphas_igrs_dens_with0.png", width = 8, height = 7)
+ggarrange(brho_alpha, acam_alpha, brho_igr, acam_igr, labels = "AUTO", common.legend = TRUE, ncol = 2, nrow = 2, legend = "bottom")
+
+#ggsave("figures/Apr2025/Fig3_alphas_igrs_dens_with0.png", width = 8, height = 7)
 
 
 
-
+# OLD ####
 igr_both %>%
   filter(!is.na(focal)) %>%
   group_by(model, focal, water, dens) %>%

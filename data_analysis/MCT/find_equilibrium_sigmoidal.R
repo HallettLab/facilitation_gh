@@ -26,18 +26,28 @@ seedsurv = read.csv("data/seed_survival_sumdat.csv")
 ##the invasion growth rate will need the full sigmoidal model as the low density invader will experience interspecific competition.
 
 # Calc 80% HDI ####
-sig_80 = sigposts %>%
-  group_by(focal, water) %>%
-  reframe(lambda80 = hdi(lambda, credMass = 0.8)) %>%
-  group_by(focal, water) %>%
-  mutate(bound = ifelse())
-
 sigposts80 = sigposts %>%
+  select(-disp) %>%
   group_by(focal, water) %>%
-  filter(lambda >= hdi(lambda)["lower"],
-         lambda <= hdi(lambda)["upper"])
+  filter(lambda >= hdi(lambda, credMass = 0.8)["lower"],
+         lambda <= hdi(lambda, credMass = 0.8)["upper"],
+         N_opt >= hdi(N_opt, credMass = 0.8)["lower"],
+         N_opt <= hdi(N_opt, credMass = 0.8)["upper"],
+         c >= hdi(c, credMass = 0.8)["lower"],
+         c <= hdi(c, credMass = 0.8)["upper"],
+         alpha_slope >= hdi(alpha_slope, credMass = 0.8)["lower"],
+         alpha_slope <= hdi(alpha_slope, credMass = 0.8)["upper"],
+         alpha_initial >= hdi(alpha_initial, credMass = 0.8)["lower"],
+         alpha_initial <= hdi(alpha_initial, credMass = 0.8)["upper"],
+         alpha_intra >= hdi(alpha_intra, credMass = 0.8)["lower"],
+         alpha_intra <= hdi(alpha_intra, credMass = 0.8)["upper"])
 
-test["lower"]
+## this method does not produce even numbers of runs per group, but it should be okay?
+## these are also slightly low rep numbers - 700 - 800, which seems odd; things were filtered a lot to get to the 80% hdi!
+## continue for now, could consider bumping up the number of iterations in models to have more samples? 
+sigposts80_test = sigposts80 %>%
+  group_by(focal, water) %>%
+  summarise(nreps = n())
 
 # Find Equilibrium ####
 set.seed(0)
@@ -45,36 +55,34 @@ set.seed(0)
 species = c("ACAM", "BRHO")
 rain = c(0.6, 0.75, 1)
 
-post_list = sample(c(1:7000), 200, replace = FALSE)
-
 ## create empty df
-equil_sig = matrix(ncol = 8, nrow = 1)
-equil_sig = as.data.frame(equil_sig)
-names(equil_sig) =c("species", "water", "post_num", "n_star", "lambda", "alpha_ii", "g_i", "s_i")
+equil_sig = as.data.frame(matrix(ncol = 8, nrow = 1))
+names(equil_sig) = c("species", "water", "post_num", "n_star", "lambda", "alpha_ii", "g_i", "s_i")
 
 ## run loop
 for(i in 1:length(species)) {
   
+  ## select species
   sp = species[i]
   
   for (j in 1:length(rain)) {
     
+    ## select rainfall
     r = rain[j]
     
     ## select data
-    if (sp == "ACAM") {
-      
-      dat = acam_sig_posteriors2[acam_sig_posteriors2$water == r,]
-      
-    } else {
-      
-      dat = brho_sig_posteriors2[brho_sig_posteriors2$water == r,]
-      
-    }
+    dat = sigposts80[sigposts80$water == r & sigposts80$focal == sp,]
     
-    ## set treatment
-    if(r == 1) { trt = "C" } 
-    else { trt = "D" }
+    ## set treatment - for matching germination and seed survival data (which have only two rainfall levels)
+    if(r == 1) { trt = "C" 
+    } else { trt = "D" }
+    
+    ## create list of unique posterior draws
+    posts = unique(dat$post_num)
+    
+    ## select 400 random posterior draws - ok to have different draws for each water x focal combination as they were run in separate models.
+    ## selected 400 runs to smooth out equil posterior densities - they were a little weirdly bumpy with just 200 or 300 draws
+    post_list = sample(posts, 400, replace = FALSE)
     
     ## loop thru each posterior draw
     for (k in 1:length(post_list)) {
@@ -84,26 +92,25 @@ for(i in 1:length(species)) {
       ## define params
       if (sp == "ACAM") {
         
-        alpha_ii = dat[p,]$alpha_acam
         g_i = germ[germ$phyto == "ACAM" & germ$treatment == trt,]$mean.germ
         s_i = seedsurv[seedsurv$species == "ACAM",]$surv.mean.p
         
       } else {
         
-        alpha_ii = dat[p,]$alpha_brho
         g_i = germ[germ$phyto == "BRHO" & germ$treatment == trt,]$mean.germ
         s_i = seedsurv[seedsurv$species == "BRHO",]$surv.mean.p
         
       }
       
-      lambda_i = dat[p,]$lambda
+      lambda_i = dat[dat$post_num == p,]$lambda
+      alpha_ii = dat[dat$post_num == p,]$alpha_intra
       
       ## solve for equilibrium
       N_star = (1/(alpha_ii*g_i)) * log( (1 - ((1-g_i)*s_i )) / (g_i * lambda_i) )
  
       ## fill in data 
-      tmp = data.frame(species = sp, water = r, post_num = p, n_star = N_star, lambda = lambda_i, 
-                       alpha_ii = alpha_ii, g_i = g_i, s_i = s_i)
+      tmp = data.frame(species = sp, water = r, post_num = p, n_star = N_star, 
+                       lambda = lambda_i, alpha_ii = alpha_ii, g_i = g_i, s_i = s_i)
       
       ## append
       equil_sig = rbind(equil_sig, tmp)
@@ -121,7 +128,6 @@ equil_sig = equil_sig %>%
 hist(equil_sig$n_star)
 
 ggplot(equil_sig, aes(x=n_star, color = as.factor(water))) +
-  # geom_histogram() +
   geom_density(linewidth = 1) +
   facet_wrap(~species) +
   scale_color_manual(values = c("#de8a5a", "#f3d0ae", "#70a494")) +
@@ -129,4 +135,4 @@ ggplot(equil_sig, aes(x=n_star, color = as.factor(water))) +
   labs(color = "Water") +
   ylab("Density")
 
-#ggsave("data_analysis/MCT/figures/equilibrium_dens_postdraws_sigmodels.png", width = 7, height = 3)
+#ggsave("figures/Apr2025/sig_equil_dens.png", width = 7, height = 3)
