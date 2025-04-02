@@ -108,6 +108,9 @@ for(i in rainfall){
     initials3 <- list(lambda=800, N_opt = 5, c = -0.2, alpha_slope = -0.4, alpha_initial = -0.1, alpha_brho = 0.04)
     initials4 <- list(lambda=400, N_opt = 4, c = -0.3, alpha_slope = -0.2, alpha_initial = 0.3, alpha_brho = 0.01)
     
+    ## try 0 for N_opt; 
+    ## cld try means of priors for init values
+    
     ## issues with chain 4 initial values; changed lambda from 100->400 and alpha_initial from 0.5 to 0.3
     ## chain 4 initial values having issues again... 
     ## changed c from 0 -> -0.3; see if this helps? 

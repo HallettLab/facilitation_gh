@@ -22,6 +22,7 @@ hist(rcauchy(50, 0, 1), breaks = 30)
 
 hist(rexp(10000, 0.5))
 hist(rexp(10000, 2))
+hist(rexp(10000, 0))
 hist(rexp(10000, 0.8))
 
 ## brho lambda

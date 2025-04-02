@@ -21,6 +21,10 @@ germ = read.csv("data/germination_data.csv")
 ## seed survival data
 seedsurv = read.csv("data/seed_survival_sumdat.csv")
 
+##mean parameter values
+acam_mp = read.csv("acam_mp.csv")
+brho_mp = read.csv("brho_mp.csv")
+
 # create the differential equation system
 n_spec <- 2 # number of species in the system, must be an integer
 set.seed(0) # set random seed for reproduce ability
@@ -129,12 +133,13 @@ NDF_static %>%
   mutate(sp = ifelse(substr(type, start = 3, stop = 3) == "i", "ACAM", "BRHO"),
          metric = ifelse(substr(type, start = 1, stop = 2) == "ND", "Niche", "Fitness")) %>%
   select(-type) %>%
+  filter(sp == "ACAM") %>%
   pivot_wider(names_from = "metric", values_from = "val") %>%
 
 ggplot(aes(x=Niche, y= Fitness, shape = sp, fill = as.factor(water))) +
   geom_point(aes(fill = as.factor(water)), size = 3.5) +
   theme_classic() +
-  coord_cartesian(xlim = c(-1, 2), ylim = c(-18, 2)) +
+ # coord_cartesian(xlim = c(-1, 2), ylim = c(-18, 2)) +
   geom_vline(xintercept = 0, color = "gray") +
   geom_vline(xintercept = 1, color = "gray") +
   scale_fill_manual(values = c("#de8a5a", "#f3d0ae", "#70a494")) +
@@ -150,6 +155,7 @@ ggsave("data_analysis/NFD/figures/static_NFD_2021Fdef.png", width = 7, height = 
 ## high F implies implies competitive advantage for species i 
 NDF_static %>%
   select(water, NDi, NDj, FDi, FDj) %>%
+ # filter(sp == "ACAM") %>%
   pivot_longer(cols = c("NDi", "NDj", "FDi", "FDj"), values_to = "val", names_to = "type") %>%
   mutate(sp = ifelse(substr(type, start = 3, stop = 3) == "i", "ACAM", "BRHO"),
          metric = ifelse(substr(type, start = 1, stop = 2) == "ND", "Niche", "Fitness")) %>%

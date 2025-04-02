@@ -12,14 +12,14 @@ rstan_options(auto_write = TRUE)
 ### sigmoidal ####
 rain = c(1, 0.75, 0.6)
 #microbe = c(0, 1)
-date = 20250211
+date = 20250401
 brho_sig_posts = list()
 
 for(i in rain){
 #  for(j in microbe) {
     
     ## load non-constrained models
-    load(paste0("data_analysis/models/output/sigmoidal/", date, "/brho_nb_sigmoidal_w", i,  date, ".rdata"))
+    load(paste0("data_analysis/models/output/sigmoidal/", date, "/brho_nb_sigmoidal_w", i, "_", date, "_2.rdata"))
     
     ## print model to keep track of progress during loop
     print(paste0("w", i))
@@ -52,7 +52,7 @@ rm(tmp, PrelimFit)
 
 ### static ####
 rain = c(1, 0.75, 0.6)
-date = 20250225
+date = 20250401
 brho_stat_posts = list()
 
 for(i in rain){
