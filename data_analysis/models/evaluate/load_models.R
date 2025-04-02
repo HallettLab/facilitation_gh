@@ -35,8 +35,7 @@ for(i in rain){
 brho_sig_posteriors <- data.frame()
 
 for(i in rain){
-#  for(j in microbe) {
-    
+
   tmp = as_tibble(do.call("cbind", brho_sig_posts[[paste0("brho_w", i)]])) %>%
     select(disp, lambda, alpha_brho, N_opt, c, alpha_slope, alpha_initial) %>%
     mutate(water = i)
@@ -45,7 +44,6 @@ for(i in rain){
   
   brho_sig_posteriors = rbind(brho_sig_posteriors, tmp)
   
-#  }
 }
 
 rm(tmp, PrelimFit)
@@ -158,43 +156,6 @@ for(i in rain){
   tmp = tmp[2501:5000,]
   
   acam_sig_posteriors = rbind(acam_sig_posteriors, tmp)
-  
-}
-
-rm(tmp, PrelimFit)
-
-### exponential ####
-rain = c(1, 0.75, 0.6)
-date = 20250401
-acam_exp_posts = list()
-
-for(i in rain){
-  
-  ## load models
-  load(paste0("data_analysis/models/output/exponential/", date, "/acam_nb_exponential_w", i, "_", date, ".rdata"))
-  
-  ## print model to keep track of progress during loop
-  print(paste0("w", i))
-  
-  ## extract model info
-  tmp <- rstan::extract(PrelimFit, inc_warmup = FALSE)
-  
-  ## save posterior distributions
-  acam_exp_posts[[paste0("acam_w", i)]] <- tmp
-  
-}
-
-acam_exp_posteriors <- data.frame()
-
-for(i in rain){
-  
-  tmp = as_tibble(do.call("cbind", acam_exp_posts[[paste0("acam_w", i)]])) %>%
-    select(disp, lambda, alpha_acam, N_opt, c, alpha_slope, alpha_initial) %>%
-    mutate(water = i)
-  
-  tmp = tmp[15001:30000,]
-  
-  acam_exp_posteriors = rbind(acam_exp_posteriors, tmp)
   
 }
 
