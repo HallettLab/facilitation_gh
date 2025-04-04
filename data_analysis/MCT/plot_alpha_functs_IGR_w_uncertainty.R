@@ -227,8 +227,11 @@ brho_alpha = igr_sig %>%
             max.alpha = max(alpha_inter),
             se.alpha = calcSE(alpha_inter)) %>%
   ungroup() %>%
+  mutate(water.text = ifelse(water == 1, "High",
+                             ifelse(water == 0.75, "Intermediate",
+                                    "Low"))) %>%
   filter(focal == "BRHO") %>%
-ggplot(aes(x=dens, y=mean.alpha, fill = as.factor(water), color = as.factor(water))) +
+ggplot(aes(x=dens, y=mean.alpha, fill = as.factor(water.text), color = as.factor(water.text))) +
   geom_ribbon(aes(ymin = (mean.alpha - (2*se.alpha)), ymax = (mean.alpha + (2*se.alpha))), alpha = 0.25) +
   geom_hline(yintercept = 0) +
   geom_line(linewidth = 0.5) +
@@ -309,7 +312,7 @@ acam_igr = igr_sig %>%
 
 ggarrange(brho_alpha, acam_alpha, brho_igr, acam_igr, labels = "AUTO", common.legend = TRUE, ncol = 2, nrow = 2, legend = "bottom")
 
-#ggsave("figures/Apr2025/Fig3_alphas_igrs_dens_with0.png", width = 8, height = 7)
+#ggsave("figures/Apr2025/Fig3_alphas_igrs_dens_with0.png", width = 5.8, height = 5.6)
 
 
 

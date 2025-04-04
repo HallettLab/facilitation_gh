@@ -19,8 +19,8 @@ rainsummary = rain %>%
   group_by(year) %>%
   summarize(ppt = sum(ppt)) %>%
   mutate(raintype = "int",
-         raintype = ifelse(ppt < quantile(rainsummary$ppt, 0.3), "low", raintype),
-         raintype = ifelse(ppt > quantile(rainsummary$ppt, 0.6), "high", raintype)) 
+         raintype = ifelse(ppt < quantile(ppt, 0.3), "low", raintype),
+         raintype = ifelse(ppt > quantile(ppt, 0.6), "high", raintype)) 
 
 ## check rainfall patterns for site description
 last50 = rainsummary %>%
@@ -36,6 +36,14 @@ ggplot(rainsummary, aes(x=year, y=ppt)) +
   labs(x="Year", y="Annual rainfall (mm)") +
   scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a"))
 
-ggsave("data_analysis/MCT/figures/historic_rainfall.png", width = 10, height = 3)
+#ggsave("data_analysis/MCT/figures/historic_rainfall.png", width = 10, height = 3)
 
-#dev.off()
+
+
+
+
+
+
+
+
+

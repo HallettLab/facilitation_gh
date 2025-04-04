@@ -37,7 +37,7 @@ ricker_f = function(N, s, g, lam, A) {
   #F_j = lmd[2] * exp(-a_acamm[1]*N[2] - a_acamm[2]*N[1])
   #return(as.matrix(c(F_i, F_j)))
   
-  return(log((1-g)*s + (g*lam*exp(A%*%(g*1000*N))))) ## why multiplied by 1000??
+  return(log((1-g)*s + (g*lam*exp(A%*%(g*N))))) ## why multiplied by 1000?? #1000*
   
 } # log to transform the discrete time into continuous
 

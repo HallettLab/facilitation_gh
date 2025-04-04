@@ -3,13 +3,15 @@
 ## load packages
 library(tidyverse)
 library(rstan)
+library(simts)
 
 ## read in data
 ### rainfall 
 source("data_analysis/MCT/historic_rainfall.R")
 
 ### model parameters
-source('./Competition/Model-fit/import_posteriors_AM.R')
+# source('./Competition/Model-fit/import_posteriors_AM.R')
+sigposts = read.csv("data/model_posteriors/sig_posts_20250401.csv")
 
 ## germination data
 germ = read.csv("data/germination_data.csv")
@@ -17,17 +19,29 @@ germ = read.csv("data/germination_data.csv")
 ## seed survival data
 seedsurv = read.csv("data/seed_survival_sumdat.csv")
 
+
 # Prep Data ####
+sig_means = sigposts %>%
+  group_by(focal, water) %>%
+  summarise(lam = mean(lambda),
+            a_intra = mean(alpha_intra),
+            a_init = mean(alpha_initial), 
+            a_slope = mean(alpha_slope),
+            c = mean(c),
+            N_opt = mean(N_opt))
+
+
 ## Using below 30% = low; above 60% = high; perhaps adjust so that the bar for high is a little higher?
 high = length(which(rainsummary$raintype == "high")) / nrow(rainsummary)
 int = length(which(rainsummary$raintype == "int")) / nrow(rainsummary)
 low = length(which(rainsummary$raintype == "low")) / nrow(rainsummary)
 
+
 # Create Functs ####
 # Determine equilibrium conditions for each species in isolation 
-pop.equilibrium <- function (N0, s, g, a_intra, lambda) {
+pop.equilibrium = function (N0, s, g, a_intra, lambda) {
   # to run for only a single timestep
-  N <- s*(1-g)*N0 + N0*(lambda*g)*exp(a_intra*N0*g)
+  N = s*(1-g)*N0 + N0*(lambda*g)*exp(a_intra*N0*g)
   return(N)
 }
 
@@ -73,33 +87,51 @@ params_weighted <- left_join(params_weighted, unique(params[,c("species","germ",
 # without partitioning coexistence
 
 ## Run all species to equilibrium in isolation
-N0 = 5
+N0 = 2
 time = length(rainsummary$raintype)
 N_BRHO = rep(NA, time)
 N_BRHO[1] = N0
 
+N_ACAM = rep(NA, time)
+N_ACAM[1] = N0
 
-for (t in 1:time) {
-  
-  if(rainsummary$raintype[t] == "high") { 
-    w = 1
-    gb = g_bH
-  } else if (rainsummary$raintype[t] == "int") { 
-    w = 0.75
-    gb = g_bI
-  } else { 
-    w = 0.6
-    gb = g_bL}
+species = c("ACAM", "BRHO")
 
-  ## get params for each rain year
-  params = brho_mp %>%
-    filter(water == w)
+for (i in 1:length(species)){
+  for (t in 1:time) {
+    
+    sp = species[i]
+    
+    if(rainsummary$raintype[t] == "high") { 
+      w = 1
+      gb = g_bH
+    } else if (rainsummary$raintype[t] == "int") { 
+      w = 0.75
+      gb = g_bI
+    } else { 
+      w = 0.6
+      gb = g_bL}
   
-  N_BRHO[t+1] <- pop.equilibrium(N0 = N_BRHO[t], s=0, g=gb, a_intra=params$a_bb, lambda=params$lam)
-  
+    ## get params for each rain year
+    params = sig_means %>%
+      filter(water == w, focal == sp)
+    
+    if(sp == "BRHO") {
+      
+      N_BRHO[t+1] = pop.equilibrium(N0 = N_BRHO[t], s=0, g=gb, a_intra=params$a_intra, lambda=params$lam)
+      
+    } else {
+      
+      N_ACAM[t+1] = pop.equilibrium(N0 = N_ACAM[t], s=0, g=gb, a_intra=params$a_intra, lambda=params$lam)
+      
+    }
+    
+    }
 }
 
 plot(seq(1:(time+1)), N_BRHO, type="l")
+plot(seq(1:(time+1)), N_ACAM, type="l")
+
 
 
 # Species to loop across and time in years

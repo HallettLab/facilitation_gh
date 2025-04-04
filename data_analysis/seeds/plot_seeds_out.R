@@ -14,7 +14,8 @@ b_ij_h = binter_for_RII_seed_analyses %>%
   ggplot(aes(x=num.bg.indiv, y=seeds.out.percap, shape = as.factor(microbe), color = as.factor(water.text), linetype = as.factor(microbe))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   
-  geom_smooth(method = "lm", alpha = 0.15, linewidth = 1) +
+ # geom_smooth(method = "lm", alpha = 0.15, linewidth = 1) +
+  geom_smooth(method= "gam", alpha = 0.15, linewidth = 1) +
   geom_point(size = 2.5) +
   scale_color_manual(values = c("#70a494")) +
   scale_linetype_manual(values = c(4, 1)) +
@@ -35,7 +36,9 @@ b_ij_i = binter_for_RII_seed_analyses %>%
   ggplot(aes(x=num.bg.indiv, y=seeds.out.percap, shape = as.factor(microbe), color = as.factor(water.text), linetype = as.factor(microbe))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   
-  geom_smooth(method = "lm", alpha = 0.15, linewidth = 1) +
+  #geom_smooth(method = "lm", alpha = 0.15, linewidth = 1) +
+  geom_smooth(method= "gam", alpha = 0.15, linewidth = 1) +
+  
   geom_point(size = 2.5) +
   scale_color_manual(values = c("#f3d0ae")) +
   scale_linetype_manual(values = c(4, 1)) +
@@ -55,7 +58,9 @@ b_ij_l = binter_for_RII_seed_analyses %>%
   ggplot(aes(x=num.bg.indiv, y=seeds.out.percap, shape = as.factor(microbe), color = as.factor(water.text), linetype = as.factor(microbe))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   
-  geom_smooth(method = "lm", alpha = 0.15, linewidth = 1) +
+ # geom_smooth(method = "lm", alpha = 0.15, linewidth = 1) +
+  geom_smooth(method= "gam", alpha = 0.15, linewidth = 1) +
+  
   geom_point(size = 2.5) +
   scale_color_manual(values = c("#de8a5a")) +
   scale_linetype_manual(values = c(4, 1)) +
@@ -74,7 +79,9 @@ b_ii = bintra %>%
   ggplot(aes(x=num.focal.indiv, y=seeds.out.percap, color = as.factor(water.text))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
 
-  geom_smooth(method = "lm", alpha = 0.1, linewidth = 1) +
+  #geom_smooth(method = "lm", alpha = 0.1, linewidth = 1) +
+  geom_smooth(method= "gam", alpha = 0.15, linewidth = 1) +
+  
   geom_jitter(size = 1.75) +
   scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
   scale_linetype_manual(values = c(4, 1)) +
@@ -91,8 +98,11 @@ a_ji = ainter %>%
                              ifelse(water == 0.75, "Intermediate", "Low"))) %>%
   ggplot(aes(x=num.bg.indiv, y=seeds.out.percap, color = as.factor(water.text))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  geom_smooth(method = "lm", alpha = 0.15, linewidth = 1) +
-  geom_point(size = 1.75) +
+  #geom_smooth(method = "lm", alpha = 0.15, linewidth = 1) +
+  geom_smooth(method= "gam", alpha = 0.15, linewidth = 1) +
+  
+ 
+   geom_point(size = 1.75) +
   scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
   scale_linetype_manual(values = c(4, 1)) +
   xlab("Grass Density") +
@@ -108,8 +118,11 @@ a_jj = aintra %>%
                              ifelse(water == 0.75, "Intermediate", "Low"))) %>%
   ggplot(aes(x=num.focal.indiv, y=seeds.out.percap, color = as.factor(water.text))) +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  geom_smooth(method = "lm", alpha = 0.15, linewidth = 1) +
-  geom_point(size = 1.75) +
+  #geom_smooth(method = "lm", alpha = 0.15, linewidth = 1) +
+  geom_point(size = 1) +
+  geom_smooth(method= "gam", alpha = 0.15, linewidth = 1) +
+  
+  
   scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
   #scale_linetype_manual(values = c(4, 1)) +
   xlab("Legume Density") +
