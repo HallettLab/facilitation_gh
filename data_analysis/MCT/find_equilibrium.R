@@ -3,11 +3,31 @@
 library(tidyverse)
 theme_set(theme_classic())
 
+## read in models
+statposts = read.csv("data/model_posteriors/stat_posts_20250401.csv")
+
 ## germination data
 germ = read.csv("data/germination_data.csv")
 
 ## seed survival data
 seedsurv = read.csv("data/seed_survival_sumdat.csv")
+
+# Calc 80% HDI ####
+statposts80 = statposts %>%
+  select(-disp) %>%
+  group_by(focal, water) %>%
+  filter(lambda >= hdi(lambda, credMass = 0.8)["lower"],
+         lambda <= hdi(lambda, credMass = 0.8)["upper"],
+         N_opt >= hdi(N_opt, credMass = 0.8)["lower"],
+         N_opt <= hdi(N_opt, credMass = 0.8)["upper"],
+         c >= hdi(c, credMass = 0.8)["lower"],
+         c <= hdi(c, credMass = 0.8)["upper"],
+         alpha_slope >= hdi(alpha_slope, credMass = 0.8)["lower"],
+         alpha_slope <= hdi(alpha_slope, credMass = 0.8)["upper"],
+         alpha_initial >= hdi(alpha_initial, credMass = 0.8)["lower"],
+         alpha_initial <= hdi(alpha_initial, credMass = 0.8)["upper"],
+         alpha_intra >= hdi(alpha_intra, credMass = 0.8)["lower"],
+         alpha_intra <= hdi(alpha_intra, credMass = 0.8)["upper"])
 
 
 # Find Equilibrium ####
@@ -19,8 +39,8 @@ rain = c(0.6, 0.75, 1)
 post_list = sample(c(1:4000), 200, replace = FALSE)
 
 ## create empty df
-equil = matrix(ncol = 8, nrow = 1)
-equil = as.data.frame(equil)
+equil = as.data.frame(matrix(ncol = 8, nrow = 1))
+
 names(equil) =c("species", "water", "post_num", "n_star", "lambda", "alpha_ii", "g_i", "s_i")
 
 
@@ -33,24 +53,19 @@ for(i in 1:length(species)) {
     r = rain[j]
     
     ## select data
-    if (sp == "ACAM") {
-      
-      dat = acam_stat_posteriors[acam_stat_posteriors$water == r,]
-      
-    } else {
-      
-      dat = brho_stat_posteriors[brho_stat_posteriors$water == r,]
-      
-    }
+    dat = statposts80[statposts80$water == r & statposts80$focal == sp,]
     
     ## set treatment
-    if(r == 1) { trt = "C" } 
-    else { trt = "D" }
+    if(r == 1) { trt = "C" 
+    } else { trt = "D" }
+    
+    ## create list of unique posterior draws
+    posts = unique(dat$post_num)
     
     ## loop thru each posterior draw
-    for (k in 1:length(post_list)) {
+    for (k in 1:length(posts)) {
       
-      p = post_list[k]
+      p = posts[k]
       
       ## define params
       if (sp == "ACAM") {

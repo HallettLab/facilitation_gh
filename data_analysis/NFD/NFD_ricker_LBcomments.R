@@ -41,6 +41,7 @@ seedsurv = read.csv("data/seed_survival_sumdat.csv")
 
 ## parameter values
 sigposts = read.csv("data/model_posteriors/sig_posts_20250401.csv")
+statposts = read.csv("data/model_posteriors/stat_posts_20250401.csv")
 
 ## post draw numbers
     ## get these from sigmoidal equilibrium vals 
