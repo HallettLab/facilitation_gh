@@ -39,7 +39,13 @@ germ = read.csv("data/germination_data.csv")
 ## seed survival data
 seedsurv = read.csv("data/seed_survival_sumdat.csv")
 
-## mean parameter values
+## parameter values
+sigposts = read.csv("data/model_posteriors/sig_posts_20250401.csv")
+
+## post draw numbers
+    ## get these from sigmoidal equilibrium vals 
+    ## these will give same posterior draws used in invasion growth rate calcs, etc. 
+equil_sig = read.csv("data_analysis/MCT/output/equil_sig.csv")
 
 # create the differential equation system
 n_spec = 2 # number of species in the system, must be an integer
@@ -47,14 +53,6 @@ set.seed(0) # set random seed for reproduce ability
 
 # Define models ####
 ## plain ricker ####
-
-#A = matrix(data=c(-0.05, # Data$AP_a_ii_exp[i], 
-#                  -0.04, # Data$AP_a_ji_exp[i], 
-#                  0.01, # Data$AP_a_ij_exp[i], 
-#                  -0.05), # Data$AP_a_jj_exp[i]), 
- #          nrow=n_spec, 
- #          ncol=n_spec)
-## f = percap growth rate of species
 ricker_f = function(N, s, g, lam, A) {
 
   return(log((1-g)*s + (g*lam*exp(A%*%(g*N)))))
@@ -90,12 +88,31 @@ ricker_sigmoid_f = function(N, s, g, lam, a_init, c, a_slope, N0, a_intra){
   
 } # log to transform the discrete time into continuous
 
+# Prep Data ####
+## Calc 80% HDI ####
+sigposts80 = sigposts %>%
+  select(-disp) %>%
+  group_by(focal, water) %>%
+  filter(lambda >= hdi(lambda, credMass = 0.8)["lower"],
+         lambda <= hdi(lambda, credMass = 0.8)["upper"],
+         N_opt >= hdi(N_opt, credMass = 0.8)["lower"],
+         N_opt <= hdi(N_opt, credMass = 0.8)["upper"],
+         c >= hdi(c, credMass = 0.8)["lower"],
+         c <= hdi(c, credMass = 0.8)["upper"],
+         alpha_slope >= hdi(alpha_slope, credMass = 0.8)["lower"],
+         alpha_slope <= hdi(alpha_slope, credMass = 0.8)["upper"],
+         alpha_initial >= hdi(alpha_initial, credMass = 0.8)["lower"],
+         alpha_initial <= hdi(alpha_initial, credMass = 0.8)["upper"],
+         alpha_intra >= hdi(alpha_intra, credMass = 0.8)["lower"],
+         alpha_intra <= hdi(alpha_intra, credMass = 0.8)["upper"])
+
+
 
 # Calc NFD ####
 ## Sigmoidal ####
-NDF_sig = as.data.frame(matrix(NA,3,11)) ## 3 rows (water treatments); 11 cols
-names(NDF_sig) = c("water", "NDi","NDj","NOi",
-                       "NOj","FDi","FDj", "FDi_2", "FDj_2",
+NDF_sig = as.data.frame(matrix(NA,3*400,10)) ## 3 rows (water treatments); 11 cols
+names(NDF_sig) = c("water", "post_num", "NDi","NDj","NOi",
+                       "NOj","FDi","FDj",
                        "ci","cj")
 
 water = c(0.6, 0.75, 1)
@@ -111,92 +128,115 @@ for(i in 1:length(water)){
     trt = "C"
   }
   
-  dat = sig_means[sig_means$water == w,]
+  wdat = sigposts80[sigposts80$water == w,]
   
-  #adat = acam_mp[acam_mp$water == w,]
-  #bdat = brho_mp[brho_mp$water == w,]
+  ## filter data to get only certain posterior draw numbers
+  ##have to do this in a convoluted way 
+  ## filtered posteriors for 80% CI for each param; this means that not all
+  ## models have every post num any more, so can't just select 400 random draws 
+  ## and expect that each of this will have a row - ea spxwater trt has a unique 
+  ## but overlapping set of post nums
+  ## since we need the params for both species at once we need 400 specific
+  ## numbers from each model that will def work; we can get these from equil sig
+  ## calculations
+  posts = equil_sig %>%
+    filter(water == w) %>%
+    mutate(focal = species) %>%
+    select(focal, post_num)
   
-  ## viable seedt
-  lam = c(dat[dat$focal == "ACAM",]$lam, dat[dat$focal == "BRHO",]$lam)
+  wdat_filt = left_join(posts, wdat, by = c("focal", "post_num")) %>%
+    mutate(new_post_id = rep(1:400, 2))
   
-  ## seed survival
-  s = c(seedsurv[seedsurv$species == "ACAM",]$surv.mean.p, 
-        seedsurv[seedsurv$species == "BRHO",]$surv.mean.p)
+  posts2 = unique(wdat_filt$new_post_id)
   
-  ## germination
-  g = c(germ[germ$phyto == "ACAM" & germ$treatment == trt,]$mean.germ,
-        germ[germ$phyto == "BRHO" & germ$treatment == trt,]$mean.germ) 
-  
-  ## define this within the ricker_sigmoid_f function now
-  # interaction matrix
-  #A = matrix(data=c(dat[dat$focal == "ACAM",]$a_intra, # Data$AP_a_ii_exp[i], ## fill in INTRA coeffs
-                #    NA, # Data$AP_a_ji_exp[i],    ## leave INTER coeffs blank 
-                #                                  ## these change with dens
-                #    NA, # Data$AP_a_ij_exp[i], 
-               #     dat[dat$focal == "BRHO",]$a_intra), # Data$AP_a_jj_exp[i]), 
-         #    nrow=n_spec, 
-         #    ncol=n_spec)
-  
-  ## define params for sigmoidal model function
-  a_init = c(dat[dat$focal == "ACAM",]$a_init, dat[dat$focal == "BRHO",]$a_init)
-  a_slope = c(dat[dat$focal == "ACAM",]$a_slope, dat[dat$focal == "BRHO",]$a_slope)
-  c = c(dat[dat$focal == "ACAM",]$c, dat[dat$focal == "BRHO",]$c)
-  N0 = c(dat[dat$focal == "ACAM",]$N_opt, dat[dat$focal == "BRHO",]$N_opt)
-  
-  a_intra = c(dat[dat$focal == "ACAM",]$a_intra, dat[dat$focal == "BRHO",]$a_intra)
-  #A = A*-1
-  
-  # When there is a value equal to NA, the computation of NDF for that line is stopped
-  if (any(is.na(c(lam,s,g)))) next  
-  if (any(g*lam<=1)) next
-  
-  ## I think this is empirically solving for equilibrium. 
-  ## I don't understand why it goes into an array like this? 
-
- # ``N_star`` : ndarray (shape = (n_spec, n_spec))
- # N_star[i] starting guess for equilibrium density with species `i`
- # absent. N_star[i,i] is set to 0
-  
-#  N_star = ((log((1-(1-g)*s)/(lam*g)))/A) # not needed for lotka volterra
-#  N_star[2,1] <- N_star[1,1]
-#  N_star[1,2] <- N_star[2,2] # 
-#  N_star = np$array(N_star) 
-#  N_star$setflags(write = TRUE)
-#  pars0 = list(N_star = N_star) # 
-  
-  ## recoding so I can follow where everything is going
-  ##create a vector of alpha_intra just for this
-  
-  
-  N_star = (1/(a_intra*g)) * log( (1 - ((1-g)*s )) / (g * lam) )
-  ## do we want this as an array? try putting it as just a vector of 2 values and if that doesn't work, change to array! 
-  
-  N_star2 = np$array(as.matrix(rbind(N_star, N_star)))
-  
-  pars0 = list(N_star = N_star2)
-  #print(N_star)
-  # compute relevant parameters with python
-  # the parameter `from_R = TRUE` changes data types from R to python
-  pars = NFD_model(ricker_sigmoid_f, as.integer(n_spec), args=list(s, g, lam, a_init, c, a_slope, N0, a_intra), pars=pars0, from_R = TRUE)
-  
-  ## put params back in df
-  NDF_sig$water[i] = w
-
-  NDF_sig$NDi[i] = pars$ND[1]
-  NDF_sig$NDj[i] = pars$ND[2]
-  
-  NDF_sig$NOi[i] = pars$NO[1]
-  NDF_sig$NOj[i] = pars$NO[2]
-  
-  #NDF_sig$FDi[i] = pars$FD[1]
-  #NDF_sig$FDj[i] = pars$FD[2]
-   # in the pars - FD is old one, the pars$'F' is the updated
-  NDF_sig$FDi[i] = pars$`F`[1]
-  NDF_sig$FDj[i] = pars$`F`[2]
-  
-  NDF_sig$ci[i] = pars$c[3]
-  NDF_sig$cj[i] = pars$c[2]
-
+  for(j in 1:length(posts2)) {
+    
+    p = posts2[j]
+    
+    dat = wdat_filt %>%
+      filter(new_post_id == p)
+    
+    ## viable seedt
+    lam = c(dat[dat$focal == "ACAM",]$lam, dat[dat$focal == "BRHO",]$lam)
+    
+    ## seed survival
+    s = c(seedsurv[seedsurv$species == "ACAM",]$surv.mean.p, 
+          seedsurv[seedsurv$species == "BRHO",]$surv.mean.p)
+    
+    ## germination
+    g = c(germ[germ$phyto == "ACAM" & germ$treatment == trt,]$mean.germ,
+          germ[germ$phyto == "BRHO" & germ$treatment == trt,]$mean.germ) 
+    
+    ## INTRAspecific competition
+    a_intra = c(dat[dat$focal == "ACAM",]$alpha_intra, dat[dat$focal == "BRHO",]$alpha_intra)
+    
+    ## define params for sigmoidal function
+    a_init = c(dat[dat$focal == "ACAM",]$alpha_initial, dat[dat$focal == "BRHO",]$alpha_initial)
+    a_slope = c(dat[dat$focal == "ACAM",]$alpha_slope, dat[dat$focal == "BRHO",]$alpha_slope)
+    c = c(dat[dat$focal == "ACAM",]$c, dat[dat$focal == "BRHO",]$c)
+    N0 = c(dat[dat$focal == "ACAM",]$N_opt, dat[dat$focal == "BRHO",]$N_opt)
+    
+    #A = A*-1
+    
+    # When there is a value equal to NA, the computation of NDF for that line is stopped
+    if (any(is.na(c(lam,s,g)))) next  
+    if (any(g*lam<=1)) next
+    
+    ## I think this is empirically solving for equilibrium. 
+    ## I don't understand why it goes into an array like this? 
+    
+    # ``N_star`` : ndarray (shape = (n_spec, n_spec))
+    # N_star[i] starting guess for equilibrium density with species `i`
+    # absent. N_star[i,i] is set to 0
+    
+    #  N_star = ((log((1-(1-g)*s)/(lam*g)))/A) # not needed for lotka volterra
+    #  N_star[2,1] <- N_star[1,1]
+    #  N_star[1,2] <- N_star[2,2] # 
+    #  N_star = np$array(N_star) 
+    #  N_star$setflags(write = TRUE)
+    #  pars0 = list(N_star = N_star) # 
+    
+    ## re-coding so I can follow where everything is going
+    N_star = (1/(a_intra*g)) * log( (1 - ((1-g)*s )) / (g * lam) )
+    
+    ## this equation is analytically solving for equil abundance
+    
+    ## not sure if it matters, but code as an array as above, just in case
+    N_star2 = np$array(as.matrix(rbind(N_star, N_star)))
+    
+    pars0 = list(N_star = N_star2)
+    
+    # compute relevant parameters with python
+    # the parameter `from_R = TRUE` changes data types from R to python
+    ## from_R is necessary for it to run in R - when this was removed, was getting an error that the output of the function needed to be an array of length n_spec
+    pars = NFD_model(ricker_sigmoid_f, as.integer(n_spec), args=list(s, g, lam, a_init, c, a_slope, N0, a_intra), pars=pars0, from_R = TRUE)
+    
+    ## to help with counting 
+    k = i - 1
+    
+    ## put params back in df
+    NDF_sig$water[(j + (400*k))] = w
+    NDF_sig$post_num[(j + (400*k))] = p
+    
+    NDF_sig$NDi[(j + (400*k))] = pars$ND[1]
+    NDF_sig$NDj[(j + (400*k))] = pars$ND[2]
+    
+    NDF_sig$NOi[(j + (400*k))] = pars$NO[1]
+    NDF_sig$NOj[(j + (400*k))] = pars$NO[2]
+    
+    ## OLD version of fitness diffs; don't use
+    #NDF_sig$FDi[i] = pars$FD[1]
+    #NDF_sig$FDj[i] = pars$FD[2]
+    
+    # in the pars - FD is old one, the pars$'F' is the updated
+    NDF_sig$FDi[(j + (400*k))] = pars$`F`[1]
+    NDF_sig$FDj[(j + (400*k))] = pars$`F`[2]
+    
+    NDF_sig$ci[(j + (400*k))] = pars$c[3]
+    NDF_sig$cj[(j + (400*k))] = pars$c[2]
+    
+    
+  }
   
 }
 
@@ -227,13 +267,49 @@ ggplot(aes(x=Niche, y= Fitness, shape = sp, fill = as.factor(water))) +
 
 ggsave("data_analysis/NFD/figures/static_NFD_2021Fdef.png", width = 7, height = 5)
 
+# Fig 5 ####
+NDF_sig_means = NDF_sig %>% 
+  select(water, NDi, NDj, FDi, FDj, post_num) %>%
+  pivot_longer(cols = c("NDi", "NDj", "FDi", "FDj"), values_to = "val", names_to = "type") %>%
+  mutate(sp = ifelse(substr(type, start = 3, stop = 3) == "i", "ACAM", "BRHO"),
+         metric = ifelse(substr(type, start = 1, stop = 2) == "ND", "Niche", "Fitness")) %>%
+  select(-type) %>%
+  pivot_wider(names_from = "metric", values_from = "val") %>%
+  group_by(water, sp) %>%
+  summarise(mean_niche = mean(Niche), 
+            mean_fitness = mean(Fitness)) %>%
+  mutate(water = ifelse(water == 0.6, "Low", 
+                        ifelse(water == 1, "High", "Intermediate")))
 
 
+NDF_sig %>%
+  select(water, NDi, NDj, FDi, FDj, post_num) %>%
+  pivot_longer(cols = c("NDi", "NDj", "FDi", "FDj"), values_to = "val", names_to = "type") %>%
+  mutate(sp = ifelse(substr(type, start = 3, stop = 3) == "i", "ACAM", "BRHO"),
+         metric = ifelse(substr(type, start = 1, stop = 2) == "ND", "Niche", "Fitness"), 
+         water = ifelse(water == 0.6, "Low", 
+                        ifelse(water == 1, "High", "Intermediate"))) %>%
+  select(-type) %>%
+  pivot_wider(names_from = "metric", values_from = "val") %>%
+  ggplot(aes(x=Niche, y= Fitness, shape = sp, color = as.factor(water))) +
+  geom_point(alpha = 0.25, aes(fill = as.factor(water))) +
+  geom_point(data = NDF_sig_means, aes(x=mean_niche, y=mean_fitness, fill = as.factor(water)), size = 4, color = "black") +
+  theme_classic() +
+  geom_vline(xintercept = 0, color = "gray") +
+  geom_vline(xintercept = 1, color = "gray") +
+  scale_color_manual(values = c("#70a494", "#f3d0ae","#de8a5a")) +
+  scale_fill_manual(values = c("#70a494", "#f3d0ae","#de8a5a")) +
+  scale_shape_manual(values = c(21, 22)) +
+  geom_abline(slope = 1, intercept = 0) +
+  geom_hline(yintercept = 0, color = "gray") +
+  geom_hline(yintercept = 1, color = "gray") +
+  guides(fill = guide_legend("Water", override.aes = list(shape = 21))) +
+  labs(color = "Water", shape = "Species") +
+  xlab("Niche Differences") +
+  ylab("Fitness Differences") +
+  theme(text = element_text(size=14))
 
-
-
-
-
+ggsave("figures/Apr2025/Fig5_NFD_sig.png", width = 7, height = 5)
 
 ## Static ####
 NDF_static = matrix(NA,3,11) ## 6 rows (2 sp x 3 water); 8 cols

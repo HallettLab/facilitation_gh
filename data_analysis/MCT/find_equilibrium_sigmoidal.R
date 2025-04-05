@@ -136,3 +136,6 @@ ggplot(equil_sig, aes(x=n_star, color = as.factor(water))) +
   ylab("Density")
 
 #ggsave("figures/Apr2025/sig_equil_dens.png", width = 7, height = 3)
+
+write.csv(equil_sig, "data_analysis/MCT/output/equil_sig.csv", row.names = F)
+
