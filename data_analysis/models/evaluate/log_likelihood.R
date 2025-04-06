@@ -11,20 +11,20 @@ rstan_options(auto_write = TRUE)
 
 set.seed(25)
 
-date = 20250211
+date = 20250401
 
 # Run LOO ####
 ## BRHO ####
 ### Static ####
 rain = c(1, 0.75, 0.6)
-date_stat = 20250225
+date_stat = 20250401
 
 stat.loo = list()
 
 for(i in rain){
 
     ## load models
-    load(paste0("data_analysis/models/output/static/", date, "/brho_nb_static_w", i, "_", date_stat, ".rdata"))
+    load(paste0("data_analysis/models/output/static/", date, "/brho_nb_static_w", i, "_", date_stat, "_final.rdata"))
     
     ## print model to keep track of progress during loop
     print(paste0("w", i))
@@ -44,13 +44,13 @@ for(i in rain){
 
 ### Sigmoidal ####
 rain = c(1, 0.75, 0.6)
-date = 20250211
+date = 20250401
 sig.loo = list()
 
 for(i in rain){
 
     ## load models
-    load(paste0("data_analysis/models/output/sigmoidal/", date, "/brho_nb_sigmoidal_w", i, "_", date, "_2.rdata"))
+    load(paste0("data_analysis/models/output/sigmoidal/", date, "/brho_nb_sigmoidal_w", i, "_", date, "_final.rdata"))
     
     ## print model to keep track of progress during loop
     print(paste0("w", i))
@@ -97,14 +97,14 @@ write.csv(comp_loo_model2, "data_analysis/models/evaluate/log_likelihood_output/
 ## ACAM ####
 ### Static ####
 rain = c(1, 0.75, 0.6)
-date_stat = 20250331
+date_stat = 20250401
 
 stat.loo = list()
 
 for(i in rain){
   
   ## load models
-  load(paste0("data_analysis/models/output/static/", date_stat, "/acam_nb_static_w", i, "_", date_stat, ".rdata"))
+  load(paste0("data_analysis/models/output/static/", date_stat, "/acam_nb_static_w", i, "_", date_stat, "_final.rdata"))
   
   ## print model to keep track of progress during loop
   print(paste0("w", i))
@@ -140,7 +140,7 @@ sig.loo = list()
 for(i in rain){
   
   ## load models
-  load(paste0("data_analysis/models/output/sigmoidal/", date, "/acam_nb_sigmoidal_w", i, "_", date, ".rdata"))
+  load(paste0("data_analysis/models/output/sigmoidal/", date, "/acam_nb_sigmoidal_w", i, "_", date, "_final.rdata"))
   
   ## print model to keep track of progress during loop
   print(paste0("w", i))

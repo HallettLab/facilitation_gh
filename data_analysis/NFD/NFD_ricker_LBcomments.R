@@ -47,6 +47,7 @@ statposts = read.csv("data/model_posteriors/stat_posts_20250401.csv")
     ## get these from sigmoidal equilibrium vals 
     ## these will give same posterior draws used in invasion growth rate calcs, etc. 
 equil_sig = read.csv("data_analysis/MCT/output/equil_sig.csv")
+equil_stat = read.csv("data_analysis/MCT/output/equil_stat.csv")
 
 # create the differential equation system
 n_spec = 2 # number of species in the system, must be an integer
@@ -90,7 +91,8 @@ ricker_sigmoid_f = function(N, s, g, lam, a_init, c, a_slope, N0, a_intra){
 } # log to transform the discrete time into continuous
 
 # Prep Data ####
-## Calc 80% HDI ####
+## Sig ####
+### Calc 80% HDI ####
 sigposts80 = sigposts %>%
   select(-disp) %>%
   group_by(focal, water) %>%
@@ -107,7 +109,31 @@ sigposts80 = sigposts %>%
          alpha_intra >= hdi(alpha_intra, credMass = 0.8)["lower"],
          alpha_intra <= hdi(alpha_intra, credMass = 0.8)["upper"])
 
+## Stat ####
+acam = statposts %>%
+  filter(focal == "ACAM") %>%
+  mutate(alpha_intra = alpha_acam,
+         alpha_inter = alpha_brho) %>%
+  select(-alpha_acam, -alpha_brho)
 
+brho = statposts %>%
+  filter(focal == "BRHO") %>%
+  mutate(alpha_intra = alpha_brho,
+         alpha_inter = alpha_acam) %>%
+  select(-alpha_acam, -alpha_brho)
+
+stat2 = rbind(acam, brho)
+
+### Calc 80% HDI ####
+statposts80 = stat2 %>%
+  select(-disp) %>%
+  group_by(focal, water) %>%
+  filter(lambda >= hdi(lambda, credMass = 0.8)["lower"],
+         lambda <= hdi(lambda, credMass = 0.8)["upper"],
+         alpha_intra >= hdi(alpha_intra, credMass = 0.8)["lower"],
+         alpha_intra <= hdi(alpha_intra, credMass = 0.8)["upper"],
+         alpha_inter >= hdi(alpha_inter, credMass = 0.8)["lower"],
+         alpha_inter <= hdi(alpha_inter, credMass = 0.8)["upper"])
 
 # Calc NFD ####
 ## Sigmoidal ####
@@ -313,14 +339,15 @@ NDF_sig %>%
 ggsave("figures/Apr2025/Fig5_NFD_sig.png", width = 7, height = 5)
 
 ## Static ####
-NDF_static = matrix(NA,3,11) ## 6 rows (2 sp x 3 water); 8 cols
-NDF_static = as.data.frame(NDF_static)
-names(NDF_static ) = c("water", "NDi","NDj","NOi",
-                       "NOj","FDi","FDj", "FDi_2", "FDj_2",
-                       "ci","cj")
+NDF_static = as.data.frame(matrix(NA,3*400,16)) ## 3 rows (water treatments); 11 cols
+names(NDF_static) = c("water", "post_num", "NDi","NDj","NOi",
+                   "NOj","FDi","FDj",
+                   "ci","cj", 
+                   "etai", "etaj", 
+                   "mui", "muj", 
+                   "ri", "rj")
 
-
-names(NDF_static)
+water = c(0.6, 0.75, 1)
 
 for(i in 1:length(water)){
   
@@ -332,87 +359,160 @@ for(i in 1:length(water)){
     trt = "C"
   }
   
-  dat = stat_means[stat_means$water == w,]
+  wdat = statposts80[statposts80$water == w,]
   
-  #adat = acam_mp[acam_mp$water == w,]
-  #bdat = brho_mp[brho_mp$water == w,]
+  ## filter data to get only certain posterior draw numbers
+  ##have to do this in a convoluted way 
+  ## filtered posteriors for 80% CI for each param; this means that not all
+  ## models have every post num any more, so can't just select 400 random draws 
+  ## and expect that each of this will have a row - ea spxwater trt has a unique 
+  ## but overlapping set of post nums
+  ## since we need the params for both species at once we need 400 specific
+  ## numbers from each model that will def work; we can get these from equil sig
+  ## calculations
+  posts = equil_stat %>%
+    filter(water == w) %>%
+    mutate(focal = species) %>%
+    select(focal, post_num)
   
-  ## viable seedt
-  lam = c(dat[dat$focal == "ACAM",]$lam, dat[dat$focal == "BRHO",]$lam)
+  wdat_filt = left_join(posts, wdat, by = c("focal", "post_num")) %>%
+    mutate(new_post_id = rep(1:400, 2))
   
-  ## seed survival
-  s = c(seedsurv[seedsurv$species == "ACAM",]$surv.mean.p, 
-        seedsurv[seedsurv$species == "BRHO",]$surv.mean.p)
+  posts2 = unique(wdat_filt$new_post_id)
   
-  ## germination
-  g = c(germ[germ$phyto == "ACAM" & germ$treatment == trt,]$mean.germ,
-        germ[germ$phyto == "BRHO" & germ$treatment == trt,]$mean.germ) 
-  
-  ## define this within the ricker_sigmoid_f function now
-  # interaction matrix
-  A = matrix(data=c(dat[dat$focal == "ACAM",]$a_intra, # Data$AP_a_ii_exp[i], ## fill in INTRA coeffs
-                    dat[dat$focal == "BRHO",]$a_inter, # Data$AP_a_ji_exp[i],    ## leave INTER coeffs blank 
-                                    ## these change with dens
-                    dat[dat$focal == "ACAM",]$a_inter, # Data$AP_a_ij_exp[i], 
-                    dat[dat$focal == "BRHO",]$a_intra), # Data$AP_a_jj_exp[i]), 
-             nrow=n_spec, 
-             ncol=n_spec)
-  
-  a_intra = c(dat[dat$focal == "ACAM",]$a_intra, dat[dat$focal == "BRHO",]$a_intra)
-  #A = A*-1
-  
-  # When there is a value equal to NA, the computation of NDF for that line is stopped
-  if (any(is.na(c(lam,s,g)))) next  
-  if (any(g*lam<=1)) next
-  
-  ## I think this is empirically solving for equilibrium. 
-  ## I don't understand why it goes into an array like this? 
-  
-  # ``N_star`` : ndarray (shape = (n_spec, n_spec))
-  # N_star[i] starting guess for equilibrium density with species `i`
-  # absent. N_star[i,i] is set to 0
-  
-  #  N_star = ((log((1-(1-g)*s)/(lam*g)))/A) # not needed for lotka volterra
-  #  N_star[2,1] <- N_star[1,1]
-  #  N_star[1,2] <- N_star[2,2] # 
-  #  N_star = np$array(N_star) 
-  #  N_star$setflags(write = TRUE)
-  #  pars0 = list(N_star = N_star) # 
-  
-  ## recoding so I can follow where everything is going
-  ##create a vector of alpha_intra just for this
-  
-  
-  N_star = (1/(a_intra*g)) * log( (1 - ((1-g)*s )) / (g * lam) )
-  ## do we want this as an array? try putting it as just a vector of 2 values and if that doesn't work, change to array! 
-  
-  N_star2 = np$array(as.matrix(rbind(N_star, N_star)))
-  
-  pars0 = list(N_star = N_star2)
-  #print(N_star)
-  # compute relevant parameters with python
-  # the parameter `from_R = TRUE` changes data types from R to python
-  pars = NFD_model(ricker_f, as.integer(n_spec), args=list(s, g, lam, A), pars=pars0, from_R = TRUE)
-  
-  ## put params back in df
-  NDF_static$water[i] = w
-  
-  NDF_static$NDi[i] = pars$ND[1]
-  NDF_static$NDj[i] = pars$ND[2]
-  
-  NDF_static$NOi[i] = pars$NO[1]
-  NDF_static$NOj[i] = pars$NO[2]
-  
-  #NDF_sig$FDi[i] = pars$FD[1]
-  #NDF_sig$FDj[i] = pars$FD[2]
-  # in the pars - FD is old one, the pars$'F' is the updated
-  NDF_static$FDi[i] = pars$`F`[1]
-  NDF_static$FDj[i] = pars$`F`[2]
-  
-  NDF_static$ci[i] = pars$c[3]
-  NDF_static$cj[i] = pars$c[2]
+  for(j in 1:length(posts2)) {
+    
+    p = posts2[j]
+    
+    dat = wdat_filt %>%
+      filter(new_post_id == p)
+    
+    ## viable seedt
+    lam = c(dat[dat$focal == "ACAM",]$lambda, dat[dat$focal == "BRHO",]$lambda)
+    
+    ## seed survival
+    s = c(seedsurv[seedsurv$species == "ACAM",]$surv.mean.p, 
+          seedsurv[seedsurv$species == "BRHO",]$surv.mean.p)
+    
+    ## germination
+    g = c(germ[germ$phyto == "ACAM" & germ$treatment == trt,]$mean.germ,
+          germ[germ$phyto == "BRHO" & germ$treatment == trt,]$mean.germ) 
+    
+    ## define this within the ricker_sigmoid_f function now
+    # interaction matrix
+    A = matrix(data=c(dat[dat$focal == "ACAM",]$alpha_intra, # Data$AP_a_ii_exp[i],
+                      dat[dat$focal == "BRHO",]$alpha_inter, # Data$AP_a_ji_exp[i],
+                      dat[dat$focal == "ACAM",]$alpha_inter, # Data$AP_a_ij_exp[i], 
+                      dat[dat$focal == "BRHO",]$alpha_intra), # Data$AP_a_jj_exp[i]), 
+               nrow=n_spec, 
+               ncol=n_spec)
+    
+    a_intra = c(dat[dat$focal == "ACAM",]$alpha_intra, dat[dat$focal == "BRHO",]$alpha_intra)
+    #A = A*-1
+    
+    # When there is a value equal to NA, the computation of NDF for that line is stopped
+    if (any(is.na(c(lam,s,g)))) next  
+    if (any(g*lam<=1)) next
+    
+    ## recoding so I can follow where everything is going
+    ##create a vector of alpha_intra just for this
+    
+    N_star = (1/(a_intra*g)) * log( (1 - ((1-g)*s )) / (g * lam) )
+    ## do we want this as an array? try putting it as just a vector of 2 values and if that doesn't work, change to array! 
+    
+    N_star2 = np$array(as.matrix(rbind(N_star, N_star)))
+    
+    pars0 = list(N_star = N_star2)
+    #print(N_star)
+    # compute relevant parameters with python
+    # the parameter `from_R = TRUE` changes data types from R to python
+    pars = NFD_model(ricker_f, as.integer(n_spec), args=list(s, g, lam, A), pars=pars0, from_R = TRUE)
+    
+    ## to help with counting 
+    k = i - 1
+    
+    ## put params back in df
+    NDF_static$water[(j + (400*k))] = w
+    NDF_static$post_num[(j + (400*k))] = p
+    
+    NDF_static$NDi[(j + (400*k))] = pars$ND[1]
+    NDF_static$NDj[(j + (400*k))] = pars$ND[2]
+    
+    NDF_static$NOi[(j + (400*k))] = pars$NO[1]
+    NDF_static$NOj[(j + (400*k))] = pars$NO[2]
+    
+    NDF_static$FDi[(j + (400*k))] = pars$`F`[1]
+    NDF_static$FDj[(j + (400*k))] = pars$`F`[2]
+    
+    NDF_static$ci[(j + (400*k))] = pars$c[3]
+    NDF_static$cj[(j + (400*k))] = pars$c[2]
+    
+    NDF_static$etai[(j + (400*k))] = pars$eta[1]
+    NDF_static$etaj[(j + (400*k))] = pars$eta[2]
+    
+    NDF_static$mui[(j + (400*k))] = pars$mu[1]
+    NDF_static$muj[(j + (400*k))] = pars$mu[2]
+    
+    NDF_static$ri[(j + (400*k))] = pars$r_i[1]
+    NDF_static$rj[(j + (400*k))] = pars$r_i[2]
+    
+  }
   
 }
+
+# Fig SXX ####
+NDF_stat_means = NDF_static %>% 
+  select(water, NDi, NDj, FDi, FDj, post_num) %>%
+  filter(FDj > -75) %>%
+  pivot_longer(cols = c("NDi", "NDj", "FDi", "FDj"), values_to = "val", names_to = "type") %>%
+  mutate(sp = ifelse(substr(type, start = 3, stop = 3) == "i", "ACAM", "BRHO"),
+         metric = ifelse(substr(type, start = 1, stop = 2) == "ND", "Niche", "Fitness")) %>%
+  select(-type) %>%
+  pivot_wider(names_from = "metric", values_from = "val") %>%
+  group_by(water, sp) %>%
+  summarise(mean_niche = mean(Niche), 
+            mean_fitness = mean(Fitness)) %>%
+  mutate(water = ifelse(water == 0.6, "Low", 
+                        ifelse(water == 1, "High", "Intermediate"))) #%>%
+ # filter(sp == "ACAM")
+
+
+NDF_static %>%
+  select(water, NDi, NDj, FDi, FDj, post_num) %>%
+  pivot_longer(cols = c("NDi", "NDj", "FDi", "FDj"), values_to = "val", names_to = "type") %>%
+  mutate(sp = ifelse(substr(type, start = 3, stop = 3) == "i", "ACAM", "BRHO"),
+         metric = ifelse(substr(type, start = 1, stop = 2) == "ND", "Niche", "Fitness"), 
+         water = ifelse(water == 0.6, "Low", 
+                        ifelse(water == 1, "High", "Intermediate"))) %>%
+  select(-type) %>%
+  pivot_wider(names_from = "metric", values_from = "val") %>%
+  #filter(Fitness > -75) %>%
+  #filter(sp == "ACAM") %>%
+  
+  ggplot(aes(x=Niche, y= Fitness, shape = sp, color = as.factor(water))) +
+  geom_point(alpha = 0.25, aes(fill = as.factor(water))) +
+  geom_point(data = NDF_stat_means, aes(x=mean_niche, y=mean_fitness, fill = as.factor(water)), size = 4, color = "black") +
+  theme_classic() +
+  geom_vline(xintercept = 0, color = "gray") +
+  geom_vline(xintercept = 1, color = "gray") +
+  scale_color_manual(values = c("#70a494", "#f3d0ae","#de8a5a")) +
+  scale_fill_manual(values = c("#70a494", "#f3d0ae","#de8a5a")) +
+  scale_shape_manual(values = c(21, 22)) +
+  #geom_abline(slope = 1, intercept = 0) +
+  geom_hline(yintercept = 0, color = "gray") +
+  geom_hline(yintercept = 1, color = "gray") +
+  guides(fill = guide_legend("Water", override.aes = list(shape = 21))) +
+  labs(color = "Water", shape = "Species") +
+  xlab("Niche Differences") +
+  ylab("Fitness Differences") +
+  theme(text = element_text(size=14))
+
+ggsave("figures/Apr2025/Fig5_NFD_sig.png", width = 7, height = 5)
+
+
+test = NDF_static %>%
+  filter(FDj < -10000)
+
 
 ## Plot ####
 NDF_static %>%
@@ -440,9 +540,38 @@ NDF_static %>%
 
 
 
+ggplot(NDF_static, aes(x=etaj)) +
+  geom_histogram() +
+  facet_wrap(~water)
+
+ggplot(NDF_static, aes(x=muj)) +
+  geom_histogram() +
+  facet_wrap(~water)
+
+ggplot(NDF_static, aes(x=rj)) +
+  geom_histogram() +
+  facet_wrap(~water)
+
+ggplot(NDF_static, aes(x=ci)) +
+  geom_histogram() +
+  facet_wrap(~water, scales = "free") 
+
+ggplot(NDF_static, aes(x=cj)) +
+  geom_histogram() +
+  facet_wrap(~water, scales = "free") 
+
+## cj - don't know which way this conversion factor goes?? But these estimates are much more specific than estimates of ci
+
+## cij converts sp j to i and cji converts sp i to j
+##cij = 1/cji
 
 
-
+NDF_static %>%
+  mutate(test_c = 1/ci) %>%
+  
+  ggplot(aes(x=test_c, y=cj)) +
+  geom_point()
+## yep, that works
 
 
 # Extras ####
