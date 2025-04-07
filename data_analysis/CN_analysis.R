@@ -57,6 +57,7 @@ CN_all = rbind(CN_dat_Other, CN_dat_Julia)
 CN_clean = left_join(CN_all, sample_key, by = c("unique.ID"))
 
 # Visualize ####
+## Exploratory ####
 CN_clean %>%
   filter(days_post_germ == 56, 
          BRHO == "focal") %>% ## somehow there seem to be ACAM focals in here?? 
@@ -114,7 +115,7 @@ CN_clean %>%
   geom_boxplot() +
   geom_point()
 
-# Fig SXXX ####
+## Fig SXXX ####
 leafCN = CN_clean %>%
   filter(days_post_germ == 56, 
          water != 0.75,
@@ -164,6 +165,7 @@ ggsave("figures/Apr2025/Supp/leafN_soiltrt_v_dens.png", width = 8, height = 8)
 ## could show: leaf CN, N/mg tissue, delta 15N
 ## then would want colonization of these samples....
 
+## More Explore ####
 CN_clean %>%
   filter(days_post_germ == 56, 
          water != 0.75,
@@ -179,9 +181,125 @@ CN_clean %>%
   xlab("Soil Treatment") +
   ylab("delta 15 N") 
 
+CN_clean %>%
+  filter(days_post_germ == 56, 
+         water != 0.75,
+         BRHO == "focal", 
+         ACAM != 60) %>% ## somehow there seem to be ACAM focals in here?? 
+  ## I thought we only did BRHO...??
+  mutate(N_per_mg = WtN/weight.mg) %>%
+  mutate(ACAM = as.numeric(ACAM)) %>%
+  ggplot(aes(x=as.factor(microbe), y=delta13C)) +
+  geom_boxplot() +
+  geom_jitter() +
+  facet_grid(water~ACAM) +
+  xlab("Soil Treatment") +
+  ylab("delta 13 C")
 
+CN_clean %>%
+  filter(days_post_germ == 56, 
+         water != 0.75,
+         BRHO == "focal", 
+         ACAM != 60) %>% ## somehow there seem to be ACAM focals in here?? 
+  ## I thought we only did BRHO...??
+  mutate(N_per_mg = WtN/weight.mg) %>%
+  mutate(ACAM = as.numeric(ACAM)) %>%
+  ggplot(aes(x=as.factor(water), y=delta13C)) +
+  geom_boxplot() +
+  geom_jitter() +
+ # facet_grid(water~ACAM) +
+  xlab("Soil Treatment") +
+  ylab("delta 13 C")
+
+
+CN_clean %>%
+  filter(days_post_germ == 56, 
+         water != 0.75,
+         BRHO == "focal", 
+         ACAM != 60) %>% ## somehow there seem to be ACAM focals in here?? 
+  ## I thought we only did BRHO...??
+  mutate(N_per_mg = WtN/weight.mg) %>%
+  mutate(ACAM = as.numeric(ACAM)) %>%
+  ggplot(aes(x=as.factor(water), y=delta13C)) +
+  geom_boxplot() +
+  geom_jitter() +
+  # facet_grid(water~ACAM) +
+  xlab("Soil Treatment") +
+  ylab("delta 13 C")
+
+
+# Fig 6 ####
+d13C = CN_clean %>%
+  filter(days_post_germ == 56, 
+         water == 0.75,
+         BRHO == "focal") %>% 
+  mutate(N_per_mg = WtN/weight.mg) %>%
+  mutate(ACAM = as.numeric(ACAM)) %>%
+  ggplot(aes(x=as.factor(ACAM), y=delta13C)) +
+  geom_boxplot() +
+  geom_jitter(pch=21) +
+  xlab(" ") +
+  ylab("delta 13C") +
+  theme(text = element_text(size = 15))
+
+lCN = CN_clean %>%
+  filter(days_post_germ == 56, 
+         water == 0.75,
+         BRHO == "focal") %>%
+  mutate(N_per_mg = WtN/weight.mg) %>%
+  mutate(ACAM = as.numeric(ACAM)) %>%
+  ggplot(aes(x=as.factor(ACAM), y=CN)) +
+  geom_boxplot() +
+  geom_jitter(pch=21) +
+  xlab(" ") +
+  ylab("Leaf C:N Ratio") +
+  theme(text = element_text(size = 15))
+
+d15N = CN_clean %>%
+  filter(days_post_germ == 56, 
+         water == 0.75,
+         BRHO == "focal") %>% 
+  mutate(N_per_mg = WtN/weight.mg) %>%
+  mutate(ACAM = as.numeric(ACAM)) %>%
+  ggplot(aes(x=as.factor(ACAM), y=delta15N)) +
+  geom_boxplot() +
+  geom_jitter(pch=21) +
+  xlab("Density") +
+  ylab("delta 15N") +
+  theme(text = element_text(size = 15))
+
+ggarrange(d13C, lCN, d15N, ncol = 1, labels = "AUTO")
+
+ggsave("figures/Apr2025/Fig6_isotopes_leafN_dens.png", width = 8, height = 8)
+
+
+## Yet more exploring ####
+CN_clean %>%
+  filter(days_post_germ == 56, 
+         water == 0.75,
+         BRHO == "focal") %>%
+  mutate(N_per_mg = WtN/weight.mg) %>%
+  mutate(ACAM = as.numeric(ACAM)) %>%
+  ggplot(aes(x=as.factor(ACAM), y=N_per_mg)) +
+  geom_boxplot() +
+  geom_jitter() +
+  xlab(" ") +
+  ylab("Leaf N/mg")
+
+CN_clean %>%
+  filter(days_post_germ == 14, 
+         water == 0.75,
+         BRHO == "focal") %>%
+  mutate(N_per_mg = WtN/weight.mg) %>%
+  mutate(ACAM = as.numeric(ACAM)) %>%
+  ggplot(aes(x=as.factor(ACAM), y=CN)) +
+  geom_boxplot() +
+  geom_jitter() +
+  xlab(" ") +
+  ylab("Leaf C:N Ratio") 
 
 # Run Models ####
+## Water 1, 0.6 ####
 CN_model_dat = CN_clean %>%
   filter(days_post_germ == 56, 
          water != 0.75,
@@ -191,6 +309,8 @@ CN_model_dat = CN_clean %>%
 
 m1 = aov(delta15N ~ as.factor(microbe) + ACAM + as.factor(water) + as.factor(microbe):as.factor(water), data = CN_model_dat)
 summary(m1)
+
+TukeyHSD(m1)
 
 m1$coefficients %>% as.data.frame() %>% write.csv(file = "test.csv")
 m1$effects %>% as.data.frame() %>% write.csv(file = "test.csv")
@@ -217,123 +337,22 @@ summary(m3)
 
 TukeyHSD(m3)
 
-ggplot(CN_model_dat, aes(x=as.factor(ACAM), y=CN)) +
+ggplot(CN_model_dat, aes(x=as.factor(water), y=CN)) +
   geom_boxplot() +
   geom_jitter()
 
+ggplot(CN_model_dat, aes(x=as.factor(microbe), y=CN, color = as.factor(ACAM))) +
+  geom_boxplot() +
+  geom_jitter()
 
-#OLD ####
-  CN_clean %>%
-    filter(days_post_germ == 14, 
-           water == 0.75,
-           BRHO == "focal") %>% ## somehow there seem to be ACAM focals in here?? 
-    ## I thought we only did BRHO...??
-    mutate(ACAM = as.numeric(ACAM)) %>%
-    ggplot(aes(x=as.factor(ACAM), y=CN)) +
-    geom_boxplot() +
-    geom_point()
-
-CN_data_J56 <- CN_data_clean %>%
-  filter(str_detect(id, "-56")) %>%
-  mutate(id = gsub("-.*","",id)) %>%
-  mutate(id = as.numeric(id)) %>%
-  mutate(NAir = as.numeric(NAir))%>%
-  mutate(CVPDB = as.numeric(CVPDB))%>%
-  mutate(WtN = as.numeric(WtN))%>%
-  mutate(WtC = as.numeric(WtC))%>%
-  mutate(CN = as.numeric(CN))%>%
-  arrange(id)
+m4 = aov(delta13C ~ as.factor(microbe) * ACAM * as.factor(water), data = CN_model_dat)
+summary(m4)
 
 
-
-
-
-
-
-
-ggplot(CN_dat_Julia, aes(x=CN)) +
-  geom_histogram() +
-  facet_wrap(~days_post_germ)
-
-ggplot(CN_dat_Julia, aes(x= ACAM, y=CN)) +
-  #geom_histogram() +
-  geom_point() +
-  facet_wrap(~days_post_germ)
-
-
-
-extra_data <- sampling_data_raw %>% 
-  select(unique.ID, microbe, water) %>%
-  rename_at("unique.ID", ~"id")
-
-joined_data_Other <- CN_data_Other %>% left_join(extra_data, by="id")
-joined_data_J56 <- CN_data_J56 %>% left_join(extra_data, by = "id")
-joined_data_full <- joined_data_Other %>% full_join(joined_data_J56) %>% arrange(id)
-
-avg_data_Other <- joined_data_Other %>%
-  group_by(microbe, water) %>%
-  summarize(avg_CN = mean(as.numeric(CN)))
-
-avg_data_J56 <- joined_data_J56 %>%
-  group_by(microbe, water) %>%
-  summarize(avg_CN = mean(as.numeric(CN)))
-
-avg_data_full <- joined_data_full %>%
-  group_by(microbe, water) %>%
-  summarize(avg_CN = mean(as.numeric(CN)))
-
-ggplot(joined_data_Other, aes(x=as.factor(microbe), y=CN))+
-  geom_jitter()+
-  geom_boxplot()+
-  facet_wrap(vars(water))
-
-ggplot(joined_data_J56, aes(x=as.factor(microbe), y=CN))+
-  geom_jitter()+
-  geom_boxplot()+
-  facet_wrap(vars(water))
-
-ggplot(joined_data_full, aes(x=as.factor(microbe), y=CN))+
-  geom_jitter()+
-  geom_boxplot()+
-  facet_wrap(vars(water))
-
-ggsave("CNGraph.jpg", width = 6, height = 4)
-
-ggplot(joined_data_full, aes(x=as.factor(microbe), y=NAir))+
-  geom_jitter()+
-  geom_boxplot()+
-  facet_wrap(vars(water))
-
-ggsave("deltaNGraph.jpg", width = 6, height = 4)
-
-ggplot(joined_data_full, aes(x=as.factor(microbe), y=CVPDB))+
-  geom_jitter()+
-  geom_boxplot()+
-  facet_wrap(vars(water))
-
-ggsave("deltaCGraph.jpg", width = 6, height = 4)
-
-ggplot(joined_data_full, aes(x=as.factor(microbe), y=WtN))+
-  geom_jitter()+
-  geom_boxplot()+
-  facet_wrap(vars(water))
-
-ggsave("PercentNGraph.jpg", width = 6, height = 4)
-
-ggplot(joined_data_full, aes(x=as.factor(microbe), y=WtC))+
-  geom_jitter()+
-  geom_boxplot()+
-  facet_wrap(vars(water))
-
-ggsave("PercentCGraph.jpg", width = 6, height = 4)
-
-str(joined_data_full)
-
-ggplot(avg_data_Other, aes(x=as.factor(microbe), y = avg_CN, fill = as.factor(microbe)))+
-  geom_bar(stat="identity")
-
-ggplot(avg_data_J56, aes(x=as.factor(microbe), y = avg_CN, fill = as.factor(microbe)))+
-  geom_bar(stat="identity")
-
-ggplot(avg_data_full, aes(x=as.factor(microbe), y = avg_CN, fill = as.factor(microbe)))+
-  geom_bar(stat="identity")
+## Water 0.75 ####
+CN_model_dat = CN_clean %>%
+  filter(days_post_germ == 56, 
+         water != 0.75,
+         BRHO == "focal", 
+         ACAM != 60) %>%
+  mutate(N_per_mg = WtN/weight.mg)
