@@ -1,5 +1,7 @@
 
 # Set up ####
+## read in data
+source("data_cleaning/clean_model_dat.R")
 
 ## load packages
 library(lmerTest)
@@ -7,8 +9,6 @@ library(performance)
 library(multcomp)
 library(emmeans)
 library(car)
-
-library(mgcv)
 
 
 ## read in data
@@ -22,11 +22,11 @@ hist(log(ainter$seeds.out.percap))
 
 # BRHO ####
 ## model all together
-mbL1 = lm(log(seeds.out.percap) ~ num.bg.indiv * water * microbe, data = binter_for_RII_seed_analyses)
+mbL1 = lm(log(seeds.out.percap) ~ num.bg.indiv + water + microbe + num.bg.indiv:water, data = binter_for_RII_seed_analyses)
 summary(mbL1)
 ## no signif interactions
 
-mb1 = lm(seeds.out.percap ~ ACAM * water * microbe, data = binter_for_RII_seed_analyses)
+mb1 = lm(seeds.out.percap ~ num.bg.indiv + water + microbe + num.bg.indiv:water, data = binter_for_RII_seed_analyses)
 summary(mb1)
 ## no signif interactions
 
@@ -51,7 +51,7 @@ write.csv(brho_tab, "data_analysis/seeds/tables/brho_seeds_ANOVA_tab.csv", row.n
 
 # ACAM ####
 ## model all together
-maL1 = lm(log(seeds.out.percap) ~ num.bg.indiv * water, data = ainter)
+maL1 = lm(log(seeds.out.percap) ~ num.bg.indiv + water, data = ainter)
 summary(maL1)
 
 acam_tab = as.data.frame(Anova(maL1, type = 3, test.statistic = "F")) %>%

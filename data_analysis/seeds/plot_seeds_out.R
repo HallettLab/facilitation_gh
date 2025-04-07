@@ -162,6 +162,30 @@ binter_for_RII_seed_analyses %>%
 
 ggsave("data_analysis/seeds/figures/legend_for_seeds_fig.png", width = 9, height = 5)
 
+## Check interaction plot ####
+binter_for_RII_seed_analyses %>%
+  mutate(water.text = ifelse(water == 1, "High", 
+                             ifelse(water == 0.75, "Intermediate", "Low"))) %>%
+ # filter(water.text == "High") %>%
+  ggplot(aes(x=num.bg.indiv, y=seeds.out.percap, shape = as.factor(microbe), color = as.factor(water.text), linetype = as.factor(microbe))) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  
+  # geom_smooth(method = "lm", alpha = 0.15, linewidth = 1) +
+  geom_smooth(method= "lm", alpha = 0.15, linewidth = 1) +
+  geom_point(size = 2.5) +
+ # scale_color_manual(values = c("#70a494")) +
+  scale_linetype_manual(values = c(4, 1)) +
+  xlab("Legume Density") +
+  ylab("Grass Seed Output") +
+  labs(linetype = "Microbe", shape = "Microbe", color = "Water") +
+  scale_shape_manual(values = c(1, 16)) +
+  theme(text = element_text(size = 15)) +
+  theme(legend.position = "bottom") +
+  coord_cartesian(xlim = c(0, 70), ylim = c(0, 1500)) +
+  theme(legend.position="none")
+
+
+
 # ACAM ####
 
 
