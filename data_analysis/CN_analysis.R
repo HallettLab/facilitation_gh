@@ -158,23 +158,71 @@ delta15N = CN_clean %>%
   xlab("Soil Treatment") +
   ylab("delta 15 N")
 
-ggarrange(leafCN, mg_N, delta15N, ncol = 1)
+ggarrange(leafCN, mg_N, delta15N, ncol = 1, labels = "AUTO")
 
 ggsave("figures/Apr2025/Supp/leafN_soiltrt_v_dens.png", width = 8, height = 8)
 ## could show: leaf CN, N/mg tissue, delta 15N
 ## then would want colonization of these samples....
 
+CN_clean %>%
+  filter(days_post_germ == 56, 
+         water != 0.75,
+         BRHO == "focal", 
+         ACAM != 60) %>% ## somehow there seem to be ACAM focals in here?? 
+  ## I thought we only did BRHO...??
+  mutate(N_per_mg = WtN/weight.mg) %>%
+  mutate(ACAM = as.numeric(ACAM)) %>%
+  ggplot(aes(x=as.factor(microbe), y=delta15N)) +
+  geom_boxplot() +
+  geom_jitter() +
+  facet_grid(water~ACAM) +
+  xlab("Soil Treatment") +
+  ylab("delta 15 N") 
 
 
 
+# Run Models ####
+CN_model_dat = CN_clean %>%
+  filter(days_post_germ == 56, 
+         water != 0.75,
+         BRHO == "focal", 
+         ACAM != 60) %>%
+  mutate(N_per_mg = WtN/weight.mg)
+
+m1 = aov(delta15N ~ as.factor(microbe) + ACAM + as.factor(water) + as.factor(microbe):as.factor(water), data = CN_model_dat)
+summary(m1)
+
+m1$coefficients %>% as.data.frame() %>% write.csv(file = "test.csv")
+m1$effects %>% as.data.frame() %>% write.csv(file = "test.csv")
 
 
+TukeyHSD(m1)
+
+ggplot(CN_model_dat, aes(x=as.factor(microbe), y=delta15N)) +
+  geom_boxplot() +
+  geom_jitter()
+
+m2 = aov(N_per_mg ~ as.factor(microbe)  + ACAM +  as.factor(microbe):ACAM + as.factor(water), data = CN_model_dat)
+summary(m2)
+
+TukeyHSD(m2)
 
 
+ggplot(CN_model_dat, aes(x=as.factor(water), y=N_per_mg)) +
+  geom_boxplot() +
+  geom_jitter()
+
+m3 = aov(CN ~ as.factor(microbe)*ACAM + as.factor(water), data = CN_model_dat)
+summary(m3)
+
+TukeyHSD(m3)
+
+ggplot(CN_model_dat, aes(x=as.factor(ACAM), y=CN)) +
+  geom_boxplot() +
+  geom_jitter()
 
 
-
-
+#OLD ####
   CN_clean %>%
     filter(days_post_germ == 14, 
            water == 0.75,
