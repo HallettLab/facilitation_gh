@@ -206,4 +206,18 @@ ggsave("figures/Apr2025/Fig5_NIntA_index.png", width = 7, height = 3.5)
 
 #798234,#a3ad62,#d0d3a2,#fdfbe4,#f0c6c3,#df91a3,#d46780
 
+## save data for Tetianna
+datT = RII_sp %>%
+  filter(focal == "BRHO",
+         microbe == "Live", 
+         planted.bg %in% c(0, 12, 24), 
+         water != "Intermediate") %>%
+  mutate(water.text = water,
+         water = ifelse(water.text == "High", 1, 0.6),
+         microbe = 1, 
+         ACAM_density = planted.bg) %>%
+  select(-planted.bg)
+
+write.csv(datT, "data/for_Tetianna/plant_interactions.csv", row.names = FALSE)
+
 

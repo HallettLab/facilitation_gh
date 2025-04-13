@@ -8,6 +8,12 @@ library(dplyr)
 library(stringr)
 library(ggpubr)
 
+## function to calculate SE
+calcSE<-function(x){
+  x2<-na.omit(x)
+  sd(x2)/sqrt(length(x2))
+}
+
 ## read in data 
 ## CN data
 CN_data_raw = read.csv("data/leaf_cn_raw_data.csv", skip = 5)
@@ -234,10 +240,14 @@ d13C = CN_clean %>%
          water == 0.75,
          BRHO == "focal") %>% 
   mutate(N_per_mg = WtN/weight.mg) %>%
+  group_by(ACAM) %>%
+  summarise(mean_d13 = mean(delta13C),
+            se_d13 = calcSE(delta13C)) %>%
   mutate(ACAM = as.numeric(ACAM)) %>%
-  ggplot(aes(x=as.factor(ACAM), y=delta13C)) +
-  geom_boxplot() +
-  geom_jitter(pch=21) +
+  ggplot(aes(x=as.factor(ACAM), y=mean_d13, group = 1)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean_d13 - se_d13, ymax = mean_d13 + se_d13), width = 0.25) +
+  geom_line() +
   xlab(" ") +
   ylab("delta 13C") +
   theme(text = element_text(size = 15))
@@ -247,12 +257,33 @@ lCN = CN_clean %>%
          water == 0.75,
          BRHO == "focal") %>%
   mutate(N_per_mg = WtN/weight.mg) %>%
+  group_by(ACAM) %>%
+  summarise(meanCN = mean(CN),
+            seCN = calcSE(CN)) %>%
   mutate(ACAM = as.numeric(ACAM)) %>%
-  ggplot(aes(x=as.factor(ACAM), y=CN)) +
-  geom_boxplot() +
-  geom_jitter(pch=21) +
+  ggplot(aes(x=as.factor(ACAM), y=meanCN, group = 1)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = meanCN - seCN, ymax = meanCN + seCN), width = 0.25) +
+  geom_line() +
   xlab(" ") +
   ylab("Leaf C:N Ratio") +
+  theme(text = element_text(size = 15))
+
+lNmg = CN_clean %>%
+  filter(days_post_germ == 56, 
+         water == 0.75,
+         BRHO == "focal") %>%
+  mutate(N_per_mg = WtN/weight.mg) %>%
+  group_by(ACAM) %>%
+  summarise(meanN = mean(N_per_mg),
+            seN = calcSE(N_per_mg)) %>%
+  mutate(ACAM = as.numeric(ACAM)) %>%
+  ggplot(aes(x=as.factor(ACAM), y=meanN, group = 1)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = meanN - seN, ymax = meanN + seN), width = 0.25) +
+  geom_line()+
+  xlab(" ") +
+  ylab("Leaf N / mg") +
   theme(text = element_text(size = 15))
 
 d15N = CN_clean %>%
@@ -261,19 +292,131 @@ d15N = CN_clean %>%
          BRHO == "focal") %>% 
   mutate(N_per_mg = WtN/weight.mg) %>%
   mutate(ACAM = as.numeric(ACAM)) %>%
-  ggplot(aes(x=as.factor(ACAM), y=delta15N)) +
-  geom_boxplot() +
-  geom_jitter(pch=21) +
-  xlab("Density") +
-  ylab("delta 15N") +
+  group_by(ACAM) %>%
+  summarise(mean15N = mean(delta15N),
+            se15N = calcSE(delta15N)) %>%
+  mutate(ACAM = as.numeric(ACAM)) %>%
+  ggplot(aes(x=as.factor(ACAM), y=mean15N, group = 1)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean15N - se15N, ymax = mean15N + se15N), width = 0.25) +
+  geom_line()+
+  xlab("Legume Density") +
+  ylab("Delta 15N") +
   theme(text = element_text(size = 15))
 
-ggarrange(d13C, lCN, d15N, ncol = 1, labels = "AUTO")
+ggarrange(d13C, lNmg, d15N, ncol = 1, labels = "AUTO")
 
-ggsave("figures/Apr2025/Fig6_isotopes_leafN_dens.png", width = 8, height = 8)
+ggsave("figures/Apr2025/Fig4_isotopes_leafN_dens.png", width = 6, height = 6)
+
+
+## Fig 6 take 2 ####
+CN_clean %>%
+  filter(days_post_germ == 56, 
+         #water == 0.75,
+         BRHO == "focal"#, microbe == 1
+         ) %>% 
+  mutate(N_per_mg = WtN/weight.mg) %>%
+  group_by(ACAM, water, microbe) %>%
+  summarise(mean_d13 = mean(delta13C),
+            se_d13 = calcSE(delta13C)) %>%
+  mutate(ACAM = as.numeric(ACAM)) %>%
+  ggplot(aes(x=as.factor(ACAM), y=mean_d13, color = as.factor(water), shape = as.factor(microbe), group = interaction(water, microbe))) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean_d13 - se_d13, ymax = mean_d13 + se_d13), width = 0.25) +
+  geom_line() +
+  xlab(" ") +
+  ylab("delta 13C") +
+  theme(text = element_text(size = 15))
+
+CN_clean %>%
+  filter(days_post_germ == 56, 
+         water != 0.75,
+         BRHO == "focal",
+         microbe == 1) %>% 
+  mutate(N_per_mg = WtN/weight.mg) %>%
+  group_by(ACAM, water) %>%
+  summarise(mean_d13 = mean(delta13C),
+            se_d13 = calcSE(delta13C)) %>%
+  mutate(ACAM = as.numeric(ACAM)) %>%
+  ggplot(aes(x=as.factor(ACAM), y=mean_d13, color = as.factor(water), group = water)) +
+  geom_point(size = 3) +
+  geom_errorbar(aes(ymin = mean_d13 - se_d13, ymax = mean_d13 + se_d13), width = 0.25) +
+  geom_line() +
+  xlab(" ") +
+  ylab("delta 13C") +
+  theme(text = element_text(size = 15))
+
+
+
+
+
+
+
+
+
+
 
 
 ## Yet more exploring ####
+### Tetianna's samples ####
+CN_clean %>%
+  filter(days_post_germ == 56, 
+         water != 0.75,
+         BRHO == "focal", 
+         ACAM != 60) %>%
+  mutate(N_per_mg = WtN/weight.mg) %>%
+  mutate(ACAM = as.numeric(ACAM)) %>%
+  ggplot(aes(x=as.factor(ACAM), y=N_per_mg)) +
+  geom_boxplot() +
+  geom_jitter() +
+  xlab(" ") +
+  ylab("Leaf N/mg")
+
+CN_clean %>%
+  filter(days_post_germ == 56, 
+         water != 0.75,
+         BRHO == "focal", 
+         ACAM != 60) %>%
+  mutate(N_per_mg = WtN/weight.mg) %>%
+  mutate(ACAM = as.numeric(ACAM)) %>%
+  ggplot(aes(x=as.factor(water), y=delta15N)) +
+  geom_boxplot() +
+  geom_jitter() +
+  xlab(" ") +
+  ylab("Delta 15N") +
+  facet_wrap(~ACAM, ncol = 4)
+
+### other ####
+CN_clean %>%
+  filter(days_post_germ == 56, 
+         water != 0.75,
+         BRHO == "focal", 
+         ACAM != 60) %>%
+  mutate(N_per_mg = WtN/weight.mg) %>%
+  mutate(ACAM = as.numeric(ACAM)) %>%
+  ggplot(aes(x=as.factor(water), y=delta15N, color = as.factor(microbe))) +
+  geom_boxplot() +
+  geom_jitter() +
+  xlab(" ") +
+  ylab("Leaf N/mg") +
+  facet_wrap(~ACAM, ncol = 4)
+
+CN_clean %>%
+  filter(days_post_germ == 56, 
+         water != 0.75,
+         BRHO == "focal", 
+         ACAM != 60) %>%
+  mutate(N_per_mg = WtN/weight.mg) %>%
+  mutate(ACAM = as.numeric(ACAM)) %>%
+  ggplot(aes(x=as.factor(ACAM), y=delta15N, color = as.factor(water))) +
+  geom_boxplot() +
+  geom_jitter() +
+  xlab(" ") +
+  ylab("Leaf N/mg") +
+  facet_wrap(~as.factor(microbe), ncol = 4)
+
+
+
 CN_clean %>%
   filter(days_post_germ == 56, 
          water == 0.75,

@@ -3,6 +3,8 @@ library(tidyverse)
 library(lubridate)
 library(stringr)
 
+theme_set(theme_classic())
+
 ## Carmen's code to clean & separate relevant CN data!
 #CN_data_raw <- read.csv("data/leaf_cn_raw_data.csv", skip = 5)
 
@@ -30,7 +32,9 @@ library(stringr)
 
 
 ## READ THE DATA FILE IN HERE! 
-CN_final = read.csv("data/leaf_CN_data_for_Tetianna.csv")
+CN_final = read.csv("leaf_CN_data_for_Tetianna.csv")
+
+ints = read.csv("plant_interactions.csv")
 
 ##plot CN by water
 ggplot(CN_final, aes(x=as.factor(water), y=CN)) +
@@ -126,3 +130,37 @@ ggplot(aes(x=w_d, y=delta_15N, color = as.factor(water))) +
 a2 = aov(delta_15N ~ as.factor(ACAM) * as.factor(water), data = CN_final)
 summary(a2)
 ## no significant differences
+
+## ALL ####
+names(ints) = c("unique.ID", "water", "microbe", "rep", "num.bg.indiv", "RII",          "NIntA", "focal", "water.text", "ACAM")
+
+AMF_CN_ints = left_join(AMF_CN, ints, by = c("unique.ID"))
+
+str(AMF_CN)
+str(ints)
+
+
+bad = AMF_CN_ints %>%
+  filter(is.na(RII))
+
+
+AMF_CN_ints %>%
+  filter(percent_colonization < 60) %>%
+ggplot(aes(x=percent_colonization, y=NIntA, color = water.text)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ACAM.y)
+
+mt = lm(NIntA ~ percent_colonization + water.text + ACAM.y, data = AMF_CN_ints)
+summary(mt)
+
+AMF_CN_ints %>%
+  filter(percent_colonization < 60) %>%
+  ggplot(aes(x=num.bg.indiv.y, y=percent_colonization)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  facet_wrap(~ACAM.y)
+
+
+
+
