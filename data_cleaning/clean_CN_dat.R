@@ -118,10 +118,14 @@ ggplot(aes(x=ACAM, y=reps)) +
 ## the uneven sampling may be due to not sampling certain pots as there were not enough focals
 ## wouldn't worry too much about this.
 
+## List of contaminated samples; current as of 4/13/2025
+rm.contaminated = c(15, 25, 84, 85, 114, 103)
 
 # Final DF ####
 CN_final = CN_clean %>%
   filter(days_post_germ == 56,
-         ACAM != "focal")
-
+         ACAM != "focal",
+         !unique.ID %in% rm.contaminated)
+  
+## clean up env
 rm(CN_all, CN_dat, CN_dat_Julia, CN_dat_Other, CN_data_raw, w75, exp_design, sample_key)
