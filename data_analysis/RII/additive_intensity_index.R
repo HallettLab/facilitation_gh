@@ -157,24 +157,23 @@ RII_sp = rbind(brj, acj)
 
 # Fig 2 ####
 RII_sp %>%
+  filter(focal == "BRHO") %>%
   group_by(planted.bg, water, microbe, focal) %>%
   summarise(mean.NIntA = mean(NIntA, na.rm = T),
             se.NIntA = calcSE(NIntA)) %>%
-  
-  ggplot(aes(x=planted.bg, y=mean.NIntA, fill = water, shape = focal)) +
-  
+  ggplot(aes(x=planted.bg, y=mean.NIntA, fill = water)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_errorbar(aes(ymin = mean.NIntA - se.NIntA, ymax = mean.NIntA + se.NIntA)) +
   geom_line() +
-  geom_point(size = 3.5) +
+  geom_point(size = 3.5, pch = 21) +
   facet_wrap(~microbe) +
   scale_fill_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
   xlab("Planted Legume Density") +
   ylab("Additive Intensity Index") +
   labs(fill = "Water", shape = "Species") +
   theme(text = element_text(size = 14)) +
-  theme(legend.position = "bottom") +
-  scale_shape_manual(values = c(22, 21))
+  theme(legend.position = "bottom") #+
+  #scale_shape_manual(values = c(22, 21))
 
 ggsave("figures/Apr2025/Fig2_NIntA_index.png", width = 7, height = 4)
 
