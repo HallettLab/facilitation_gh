@@ -208,7 +208,7 @@ aintra = abkgrd %>%
       ## join but exclude binter$seeds.out and binter$seeds.out.percap
       ## these cols refer to BRHO seeds which we do NOT want here
   left_join(binter[ , -c(8:10)], by = c("unique.ID", "block", "water", "microbe", "rep", "num.bg.indiv")) %>%
-  filter(microbe == 1) %>%  ## have to filter here, do NOT want microbe 0 pots in models
+ # filter(microbe == 1) %>%  ## have to filter here, do NOT want microbe 0 pots in models
   
   ## swap bg column for focal column & vice-versa
   mutate(num.focal.indiv2 = num.bg.indiv,
@@ -224,8 +224,9 @@ names(ainter)
 
 ainter2 = ainter %>%
   select(-BRHO)
-
-acam.model = rbind(ainter2, aintra)
+aintra2 = aintra %>%
+  filter(microbe == 1)
+acam.model = rbind(ainter2, aintra2)
 
 # clean env ####
-rm(abkgrd, abkgrd.join, acam, ainter2, allo, bbkgrd, brho, brho_clean, alloB, alloAf, alloAs)
+rm(abkgrd, abkgrd.join, acam, aintra2, ainter2, allo, bbkgrd, brho, brho_clean, alloB, alloAf, alloAs)
