@@ -30,14 +30,20 @@ set.seed(25)
 
 ## make a list for model output
 rainfall = c(1, 0.75, 0.6)
+# rainfall = c(0.6, 0.75)
 sigmoidal.output <- list()
-date = 20250416
+date = 20250417
+
+## need to fix the 0.6 data, there is an NA;
+##oh shit, not filtering out the m0's; no wonder the lambda was so low
 
 for(i in rainfall){
   
   ## select data 
   dat = acam.model[acam.model$water == i,] %>%
-    filter(!is.na(num.focal.indiv))
+    filter(!is.na(num.focal.indiv),
+           !is.na(seeds.out),
+           microbe == 1)
   
   ## print model to keep track of progress during loop
   print(paste0("w", i))
@@ -48,29 +54,29 @@ for(i in rainfall){
   N_i = as.integer(dat$num.focal.indiv) ## stem # of focal species
   brho <- as.integer(dat$num.bg.indiv) ## background stem # data
   
-  trt <- as.integer(dat$soil) ## microbial treatment (binary)
+  # trt <- as.integer(dat$soil) ## microbial treatment (binary)
   ## live soil = 0 = the default case. No deviation param calc'ed for this trt
   ## sterilized soil = 1; deviation param will be calc'ed for this trt
   
   ## make a vector of data inputs to model
-  data_vec <- c("N", "Fecundity", "N_i", "brho", "trt")
+  data_vec <- c("N", "Fecundity", "N_i", "brho") # , "trt"
   
   ## set initial values 
-  initials1 <- list(lambda=50, N_opt = 1.5, N_opt_dev = 0.1, c = -0.001, c_dev = 0.001, 
-                    alpha_slope = -0.05, alpha_slope_dev = -0.006, alpha_initial = -0.01, 
-                    alpha_initial_dev = -0.002, alpha_brho = -0.06)
+  initials1 <- list(lambda=50, N_opt = 1.5,  c = -0.001, #N_opt_dev = 0.1, c_dev = 0.001, 
+                    alpha_slope = -0.05,  alpha_initial = -0.01, # alpha_slope_dev = -0.006,
+                    alpha_brho = -0.06) #alpha_initial_dev = -0.002, 
   
-  initials2 <- list(lambda=60, N_opt = 2, N_opt_dev = -0.1, c = -0.05, c_dev = 0.006,
-                    alpha_slope = -0.09, alpha_slope_dev = 0.01, alpha_initial = 0.01, 
-                    alpha_initial_dev = -0.02, alpha_brho = -0.03)
+  initials2 <- list(lambda=60, N_opt = 2, c = -0.05, # N_opt_dev = -0.1, c_dev = 0.006,
+                    alpha_slope = -0.09, alpha_initial = 0.01, # alpha_slope_dev = 0.01, 
+                    alpha_brho = -0.03) # alpha_initial_dev = -0.02, 
   
-  initials3 <- list(lambda=65, N_opt = 1, N_opt_dev = -0.2, c = -0.1, c_dev = -0.001,
-                    alpha_slope = -0.2, alpha_slope_dev = 0.1, alpha_initial = 0.05, 
-                    alpha_initial_dev = -0.01, alpha_brho = -0.09)
+  initials3 <- list(lambda=65, N_opt = 1, c = -0.1, # c_dev = -0.001, N_opt_dev = -0.2, 
+                    alpha_slope = -0.2, alpha_initial = 0.05, # alpha_slope_dev = 0.1, 
+                    alpha_brho = -0.09) # alpha_initial_dev = -0.01, 
   
-  initials4 <- list(lambda=45, N_opt = 0.5, N_opt_dev = -0.01, c = -0.3, c_dev = 0.02, 
-                    alpha_slope = -0.1, alpha_slope_dev = 0.005, alpha_initial = -0.03, 
-                    alpha_initial_dev = 0.001, alpha_brho = -0.02)
+  initials4 <- list(lambda=45, N_opt = 0.5, c = -0.3, # c_dev = 0.02, N_opt_dev = -0.01, 
+                    alpha_slope = -0.1, alpha_initial = -0.03,  # alpha_slope_dev = 0.005, 
+                    alpha_brho = -0.02) # alpha_initial_dev = 0.001, 
   
   ## put N_opt b/w 0-2 for init values
   ## maybe start with mean of prior distributions as init values
@@ -80,17 +86,17 @@ for(i in rainfall){
   initialsall<- list(initials1, initials2, initials3, initials4)
   
   ## run the model
-  sigmoidal.output[[paste0("acam_w", i)]] = stan(file = 'data_analysis/models/fit_models/ACAM_ricker_nb_sigmoidal_nL_INTRA.stan', data = data_vec, init = initialsall, iter = 8000, chains = 4, thin = 2, control = list(adapt_delta = 0.999, max_treedepth = 18))
+  sigmoidal.output[[paste0("acam_w", i)]] = stan(file = 'data_analysis/models/fit_models/ACAM_ricker_nb_sigmoidal_nL_INTRA_liveonly.stan', data = data_vec, init = initialsall, iter = 8000, chains = 4, thin = 2, control = list(adapt_delta = 0.99, max_treedepth = 15))
   
   PrelimFit <- sigmoidal.output[[paste0("acam_w", i)]]
   
   ## save model output
-  save(PrelimFit, file = paste0("data_analysis/models/output/intra_sigmoidal/", date, "/acam_nb_sigmoidal_w", i, "_", date, "_nL_INTRA.rdata"))
+  save(PrelimFit, file = paste0("data_analysis/models/output/intra_sigmoidal/", date, "/acam_nb_sigmoidal_w", i, "_", date, "_nL_INTRA_liveonly.rdata"))
   
 }
 
-
-
+hist(rexp(1000, 2))
+hist(rnorm(1000, 0, 0.25))
 ## water 0.6 = no samples
 ## water 1 = low ESS on c_dev and alpha_slope_dev ; I wonder if varying  these two in tandem is tricky? If one was constrained and the other allowed to vary??
 ## Rhats were all good
@@ -98,10 +104,14 @@ for(i in rainfall){
 
 ## more iterations would help; are there other tweaks that would help? More specific priors? Some of the ranges were quite large? 
 ## the initial values should be fairly well targeted?
+    ## leaving these alone for now
 
 ## maybe the treedepth could go down a notch? 
+    ## tried this
 
 ## could also consider that the priors on the ACAM model were set up to predict a competitive shape decreasing; perhaps shifting priors to find a shape more similar to initial pos interactions + decreasing to competitive would be better?
+    ## changed priors to match BRHO sigmoidal models, just to see what happens
+    ## also adjusted variances from 0.5 to 0.25 on a lot of the dev params as 0.5 is high variance for deviation off a param bounded between 0-1
 
 
 

@@ -84,19 +84,21 @@ model{
 
   alpha_initial ~ normal(0.185, 0.25);
   // replace normal(0, 0.2) prior with alpha_brho from mega-comp models
-  alpha_initial_dev ~ normal(0, 0.5);
+  alpha_initial_dev ~ normal(0, 0.25);
   
-  alpha_slope ~ normal(0, 0.1);
+  //alpha_slope ~ normal(0, 0.1);
+  alpha_slope ~ normal(-0.2, 0.2); // try this out just to see what happens?
   // want value somewhat near 0; aiming to make the prior a straight line
-  alpha_slope_dev ~ normal(0, 0.5);
+  alpha_slope_dev ~ normal(0, 0.25);
 
   c ~ normal(0, 0.1);
-  // want value somewhat near 1; aiming to make the prior a straight line
-  c_dev ~ normal(0, 0.5);
+  c_dev ~ normal(0, 0.25);
   
-  N_opt ~ exponential(2); 
-  // N_opt = the optimal density of BRHO that maximizes fecundity of ACAM
-  N_opt_dev ~ normal(0, 0.5);
+  N_opt ~ exponential(0.9); 
+  // N_opt = the optimal density of ACAM that maximizes fecundity of ACAM
+  // try giving this one a wider range to see what it does? 
+  
+  N_opt_dev ~ normal(0, 0.25);
   
    // calculate the likelihood
    Fecundity ~ neg_binomial_2(F_hat, (disp^2)^(-1));
