@@ -24,6 +24,7 @@
 # Set up ####
 library(reticulate)
 library(tidyverse)
+library(HDInterval) ## to take hdi's of posteriors
 
 np <- import("numpy",convert=F)
 
