@@ -1,4 +1,3 @@
-
 # Set up ####
 library(tidyverse)
 library(HDInterval)
@@ -28,6 +27,7 @@ brho = statposts %>%
   select(-alpha_acam, -alpha_brho)
 
 stat2 = rbind(acam, brho)
+
 
 ## Calc 80% HDI ####
 statposts80 = stat2 %>%
