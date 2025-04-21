@@ -79,11 +79,14 @@ model{
   // priors
   // lambda & alpha priors all come from mega-comp values
   lambda ~ normal(62, 30);
-  lambda_dev ~normal(0,5);
+  lambda_dev ~normal(0,12); // give wider variance
   
   alpha_brho ~ normal(-0.024, 0.25);
-  alpha_brho_dev ~ normal(0, 0.25);
+  alpha_brho_dev ~ normal(0, 0.05); // give way less variance, didn't expect this parameter to have such a wide range
   // negative since competition is expected
+  // a sd of 0.015 was too constrained, this parameter was just centered at 0.
+  //0.15 still led too quite a bit of variance in the final estimate.
+  // try 0.05 as sd; allows the parameter to vary from -1 to 1. Maybe this will strike the balance??
   
   disp ~ cauchy(0, 1);
   // safer to place prior on disp than on phi (the actual error term)

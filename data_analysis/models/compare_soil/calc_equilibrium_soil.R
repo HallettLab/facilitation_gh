@@ -7,8 +7,8 @@ theme_set(theme_classic())
 
 ## read in models
 # statposts = read.csv("data/model_posteriors/stat_posts_20250401.csv")
-aposts = read.csv("data/model_posteriors/acam_soil_comp_posts_20250419.csv")
-bposts = read.csv("data/model_posteriors/brho_soil_comp_posts_20250419.csv")
+aposts = read.csv("data/model_posteriors/acam_soil_comp_posts_20250420.csv")
+bposts = read.csv("data/model_posteriors/brho_soil_comp_posts_20250420.csv")
 
 ## germination data
 germ = read.csv("data/germination_data.csv")
@@ -17,19 +17,17 @@ germ = read.csv("data/germination_data.csv")
 seedsurv = read.csv("data/seed_survival_sumdat.csv")
 
 # Prep data ####
+## don't filter at this step because m1 and m0 still together, don't necessarily want to filter ,0 and m1 together in case it really constrains distribs??
 acam = aposts %>%
   mutate(alpha_intra = alpha_acam,
          alpha_inter = alpha_brho,
          alpha_intra_m0 = alpha_acam_m0,
-         alpha_inter_m0 = alpha_brho, ## PURPOSELY leaving this as alpha_brho as I don't trust the dev term
+         alpha_inter_m0 = alpha_brho, 
+         ## the dev term is a fairly wide distribution, but see how using it goes??
+         ## no, too wide, leave as alpha_brho
+         
          focal = "ACAM") %>%
-  select(-alpha_acam, -alpha_brho, -alpha_acam_m0, -alpha_acam_dev, -alpha_brho_m0, -alpha_brho_dev)
-
-ggplot(acam, aes(x=alpha_intra_m0)) +
-  geom_density()
-ggplot(acam, aes(x=lambda_m0)) +
-  geom_density() +
-  facet_wrap(~water)
+  select(-alpha_acam, -alpha_brho, -alpha_acam_m0, -alpha_acam_dev, -alpha_brho_m0, -alpha_brho_dev, -X, -disp)
 
 brho = bposts %>%
   mutate(alpha_intra = alpha_brho,
@@ -37,7 +35,7 @@ brho = bposts %>%
          alpha_intra_m0 = alpha_brho, ## PURPOSELY leaving this as alpha_brho as I don't trust the dev term
          alpha_inter_m0 = alpha_acam_m0,
          focal = "BRHO") %>%
-  select(-alpha_acam, -alpha_brho, -alpha_acam_m0, -alpha_acam_dev, -alpha_brho_m0, -alpha_brho_dev)
+  select(-alpha_acam, -alpha_brho, -alpha_acam_m0, -alpha_acam_dev, -alpha_brho_m0, -alpha_brho_dev, -X, -disp)
 
 stat2 = rbind(acam, brho) %>%
   group_by(focal, water) %>%
@@ -48,7 +46,7 @@ m0 = stat2 %>%
 names(m0) = c("focal", "water", "lambda", "alpha_intra", "alpha_inter", "post_num")
 
 m1 = stat2 %>%
-  select(focal, water, lambda, alpha_intra, alpha_inter, , post_num)
+  select(focal, water, lambda, alpha_intra, alpha_inter, post_num)
 
 ## Calc 80% HDI ####
 m1statposts80 = m1 %>%
@@ -56,27 +54,29 @@ m1statposts80 = m1 %>%
   filter(lambda >= hdi(lambda, credMass = 0.8)["lower"],
          lambda <= hdi(lambda, credMass = 0.8)["upper"],
          alpha_intra >= hdi(alpha_intra, credMass = 0.8)["lower"],
-         alpha_intra <= hdi(alpha_intra, credMass = 0.8)["upper"])
-#,
- #        alpha_inter >= hdi(alpha_inter, credMass = 0.8)["lower"],
-  #       alpha_inter <= hdi(alpha_inter, credMass = 0.8)["upper"])
+         alpha_intra <= hdi(alpha_intra, credMass = 0.8)["upper"],
+         alpha_inter >= hdi(alpha_inter, credMass = 0.8)["lower"],
+         alpha_inter <= hdi(alpha_inter, credMass = 0.8)["upper"])
 
 m0statposts80 = m0 %>%
   group_by(focal, water) %>%
   filter(lambda >= hdi(lambda, credMass = 0.8)["lower"],
          lambda <= hdi(lambda, credMass = 0.8)["upper"],
          alpha_intra >= hdi(alpha_intra, credMass = 0.8)["lower"],
-         alpha_intra <= hdi(alpha_intra, credMass = 0.8)["upper"])
-#,
-        # alpha_inter >= hdi(alpha_inter, credMass = 0.8)["lower"],
-        # alpha_inter <= hdi(alpha_inter, credMass = 0.8)["upper"])
+         alpha_intra <= hdi(alpha_intra, credMass = 0.8)["upper"],
+         alpha_inter >= hdi(alpha_inter, credMass = 0.8)["lower"],
+         alpha_inter <= hdi(alpha_inter, credMass = 0.8)["upper"])
 
 ggplot(m0statposts80, aes(x=lambda)) +
   geom_density() +
-  facet_grid(water~focal)
+  facet_grid(water~focal, scales = "free")
+
+ggplot(m0statposts80, aes(x=alpha_intra)) +
+  geom_density() +
+  facet_grid(focal~water)
 
 # Find Equilibrium ####
-set.seed(0)
+set.seed(25)
 
 ## m1 ####
 species = c("ACAM", "BRHO")
@@ -218,7 +218,7 @@ for(i in 1:length(species)) {
       alpha_ii = dat[dat$post_num == p,]$alpha_intra
       
       ## solve for equilibrium
-      N_star = (1/(-0.01691412*0.5161111)) * log( (1 - ((1-0.5161111)*0.16 )) / (0.5161111 * 62.50656) )
+    #  N_star = (1/(-0.01691412*0.5161111)) * log( (1 - ((1-0.5161111)*0.16 )) / (0.5161111 * 62.50656) )
       
       ## solve for equilibrium
       N_star = (1/(alpha_ii*g_i)) * log( (1 - ((1-g_i)*s_i )) / (g_i * lambda_i) )

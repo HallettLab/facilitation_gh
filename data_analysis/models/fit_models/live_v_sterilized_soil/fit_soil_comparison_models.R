@@ -19,12 +19,11 @@ library(tidyverse)
 library(bayesplot)
 library(rstan)
 library(here)
-library(beepr)
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
 ## read in data 
-source("data_cleaning/clean_model_dat_for_nL_INTRA.R")
+source("data_cleaning/clean_model_dat_for_soil_comparison.R")
 
 ## set seed ####
 set.seed(25)
@@ -34,10 +33,7 @@ set.seed(25)
 rainfall = c(1, 0.75, 0.6)
 # rainfall = c(0.6, 0.75)
 stat.output <- list()
-date = 20250419
-
-## need to fix the 0.6 data, there is an NA;
-##oh shit, not filtering out the m0's; no wonder the lambda was so low
+date = 20250420
 
 for(i in rainfall){
   
@@ -63,46 +59,41 @@ for(i in rainfall){
   data_vec <- c("N", "Fecundity", "N_i", "brho", "trt") # , "trt"
   
   ## set initial values 
-  initials1 <- list(lambda=50, alpha_acam = 0.05,  alpha_acam_dev = -0.005, 
-                    alpha_brho = -0.06, alpha_brho_dev = -0.006) #N_opt = 1.5,  c = -0.001, #N_opt_dev = 0.1, c_dev = 0.001, 
+  initials1 <- list(lambda=50, lambda_dev = -6, alpha_acam = 0.05, 
+                    alpha_acam_dev = -0.005, alpha_brho = -0.06, 
+                    alpha_brho_dev = -0.006) #N_opt = 1.5,  c = -0.001, #N_opt_dev = 0.1, c_dev = 0.001, 
                      # alpha_initial = -0.01, # alpha_slope_dev = -0.006,
                     #alpha_initial_dev = -0.002, 
   
-  initials2 <- list(lambda=60, alpha_acam = 0.01,  alpha_acam_dev = 0.002, 
-                    alpha_brho = -0.09, alpha_brho_dev = 0.001)
+  initials2 <- list(lambda=60, lambda_dev = -8, alpha_acam = 0.01,  
+                    alpha_acam_dev = 0.002, alpha_brho = -0.09, 
+                    alpha_brho_dev = 0.001)
                     
                     #N_opt = 2, c = -0.05, # N_opt_dev = -0.1, c_dev = 0.006,
                     #alpha_slope = -0.09, alpha_initial = 0.01, # alpha_slope_dev = 0.01, 
                     #alpha_brho = -0.03) # alpha_initial_dev = -0.02, 
   
-  initials3 <- list(lambda=65, alpha_acam = -0.01,  alpha_acam_dev = 0.001, 
-                    alpha_brho = -0.01, alpha_brho_dev = 0.003)
+  initials3 <- list(lambda=65, lambda_dev = -12, alpha_acam = -0.01,  
+                    alpha_acam_dev = 0.001,  alpha_brho = -0.01, 
+                    alpha_brho_dev = 0.003)
   
                     #N_opt = 1, c = -0.1, # c_dev = -0.001, N_opt_dev = -0.2, 
                     #alpha_slope = -0.2, alpha_initial = 0.05, # alpha_slope_dev = 0.1, 
                     #alpha_brho = -0.09) # alpha_initial_dev = -0.01, 
   
-  initials4 <- list(lambda=45, alpha_acam = 0.02,  alpha_acam_dev = -0.002, 
-                    alpha_brho = -0.03, alpha_brho_dev = -0.001)
-                    
-                    #N_opt = 0.5, c = -0.3, # c_dev = 0.02, N_opt_dev = -0.01, 
-                    #alpha_slope = -0.1, alpha_initial = -0.03,  # alpha_slope_dev = 0.005, 
-                    #alpha_brho = -0.02) # alpha_initial_dev = 0.001, 
-  
-  ## put N_opt b/w 0-2 for init values
-  ## maybe start with mean of prior distributions as init values
-  
-  ## chain 3 & 4 worked; others didn't
+  initials4 <- list(lambda=45, lambda_dev = -5, alpha_acam = 0.02,  
+                    alpha_acam_dev = -0.002, alpha_brho = -0.03, 
+                    alpha_brho_dev = -0.001)
   
   initialsall<- list(initials1, initials2, initials3, initials4)
   
   ## run the model
-  stat.output[[paste0("acam_w", i)]] = stan(file = 'data_analysis/models/fit_models/ACAM_ricker_nb_sigmoidal_nL_INTRA.stan', data = data_vec, init = initialsall, iter = 8000, chains = 4, thin = 2, control = list(adapt_delta = 0.99, max_treedepth = 15))
+  stat.output[[paste0("acam_w", i)]] = stan(file = 'data_analysis/models/fit_models/live_v_sterilized_soil/ACAM_ricker_nb_static_soil_comp.stan', data = data_vec, init = initialsall, iter = 6000, chains = 4, thin = 2, control = list(adapt_delta = 0.99, max_treedepth = 15))
   
   PrelimFit <- stat.output[[paste0("acam_w", i)]]
   
   ## save model output
-  save(PrelimFit, file = paste0("data_analysis/models/output/m0_models/", date, "/acam_nb_stat_w", i, "_", date, "_soil_comp.rdata"))
+  save(PrelimFit, file = paste0("data_analysis/models/output/m0_models/", date, "/acam_nb_stat_w", i, "_", date, "_soil_comp_adjust_priors.rdata"))
   
 }
 
@@ -130,7 +121,7 @@ hist(rnorm(1000, 0, 0.25))
 rainfall = c(1, 0.75, 0.6)
 # rainfall = c(0.6, 0.75)
 brho.stat.output <- list()
-date = 20250419
+date = 20250420
 
 ## need to fix the 0.6 data, there is an NA;
 ##oh shit, not filtering out the m0's; no wonder the lambda was so low
@@ -159,27 +150,27 @@ for(i in rainfall){
   data_vec <- c("N", "Fecundity", "N_i", "acam", "trt") # , "trt"
   
   ## set initial values 
-  initials1 <- list(lambda=50, alpha_acam = 0.05,  alpha_acam_dev = -0.005, 
+  initials1 <- list(lambda=50, lambda_dev = 10, alpha_acam = 0.05,  alpha_acam_dev = -0.005, 
                     alpha_brho = -0.06, alpha_brho_dev = -0.006) 
   
-  initials2 <- list(lambda=60, alpha_acam = 0.01,  alpha_acam_dev = 0.002, 
+  initials2 <- list(lambda=60, lambda_dev = 5, alpha_acam = 0.01,  alpha_acam_dev = 0.002, 
                     alpha_brho = -0.09, alpha_brho_dev = 0.001)
  
-  initials3 <- list(lambda=65, alpha_acam = -0.01,  alpha_acam_dev = 0.001, 
+  initials3 <- list(lambda=65, lambda_dev = -5, alpha_acam = -0.01,  alpha_acam_dev = 0.001, 
                     alpha_brho = -0.01, alpha_brho_dev = 0.003)
  
-  initials4 <- list(lambda=45, alpha_acam = 0.02,  alpha_acam_dev = -0.002, 
+  initials4 <- list(lambda=45, lambda_dev = -8, alpha_acam = 0.02,  alpha_acam_dev = -0.002, 
                     alpha_brho = -0.03, alpha_brho_dev = -0.001)
   
   initialsall<- list(initials1, initials2, initials3, initials4)
   
   ## run the model
-  brho.stat.output[[paste0("brho_w", i)]] = stan(file = 'data_analysis/models/fit_models/BRHO_ricker_nb_static_soil_comp.stan', data = data_vec, init = initialsall, iter = 8000, chains = 4, thin = 2, control = list(adapt_delta = 0.99, max_treedepth = 15))
+  brho.stat.output[[paste0("brho_w", i)]] = stan(file = 'data_analysis/models/fit_models/live_v_sterilized_soil/BRHO_ricker_nb_static_soil_comp.stan', data = data_vec, init = initialsall, iter = 6000, chains = 4, thin = 2, control = list(adapt_delta = 0.99, max_treedepth = 15))
   
   PrelimFit <- brho.stat.output[[paste0("brho_w", i)]]
   
   ## save model output
-  save(PrelimFit, file = paste0("data_analysis/models/output/m0_models/", date, "/brho_nb_stat_w", i, "_", date, "_soil_comp.rdata"))
+  save(PrelimFit, file = paste0("data_analysis/models/output/m0_models/", date, "/brho_nb_stat_w", i, "_", date, "_soil_comp_adjust_priors.rdata"))
   
 }
 

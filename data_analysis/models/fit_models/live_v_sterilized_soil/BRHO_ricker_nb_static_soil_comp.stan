@@ -78,11 +78,13 @@ model{
   // priors
   // lambda & alpha priors all come from mega-comp values
   lambda ~ normal(200, 50);
-  lambda_dev ~normal(0,10);
+  lambda_dev ~normal(0,7);
+  // the final distrib is barely changing from this; ok to tighten prior
   
   alpha_brho ~ normal(-0.057, 0.25); 
-  alpha_brho_dev ~ normal(0, 0.25);
+  alpha_brho_dev ~ normal(0, 0.05);
   // negative since competition is expected
+  // adjusted the variance on this parameter to avoid such a large value  
   
   disp ~ cauchy(0, 1);
   // safer to place prior on disp than on phi (the actual error term)
