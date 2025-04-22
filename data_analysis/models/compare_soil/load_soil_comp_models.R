@@ -47,6 +47,7 @@ for(i in rain){
 rm(tmp, PrelimFit)
 
 # BRHO ####
+## Stat ####
 rain = c(1, 0.75, 0.6)
 date = 20250420
 brho_stat_posts = list()
@@ -77,6 +78,42 @@ for(i in rain){
   tmp = tmp[3001:6000,]
   
   brho_stat_posteriors = rbind(brho_stat_posteriors, tmp)
+  
+}
+
+rm(tmp, PrelimFit)
+
+## Sigmoid ####
+rain = c(1, 0.75, 0.6)
+date = 20250422
+brho_sig_posts = list()
+
+for(i in rain){
+  
+  load(paste0("data_analysis/models/output/m0_models/", date, "/brho_nb_sig_w", i, "_", date, "_live.rdata"))
+  
+  ## print model to keep track of progress during loop
+  print(paste0("w", i))
+  
+  ## extract model info
+  tmp <- rstan::extract(PrelimFit, inc_warmup = FALSE)
+  
+  ## save posterior distributions
+  brho_sig_posts[[paste0("brho_w", i)]] <- tmp
+  
+}
+
+brho_sig_posteriors <- data.frame()
+
+for(i in rain){
+  
+  tmp = as_tibble(do.call("cbind", brho_sig_posts[[paste0("brho_w", i)]])) %>%
+    select(disp, lambda, alpha_brho, N_opt, c, alpha_slope, alpha_initial) %>%
+    mutate(water = i)
+  
+  tmp = tmp[4001:8000,]
+  
+  brho_sig_posteriors = rbind(brho_sig_posteriors, tmp)
   
 }
 

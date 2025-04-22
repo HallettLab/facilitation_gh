@@ -1,4 +1,6 @@
-// INTRA SPECIFIC MODEL
+// Sigmoidal
+
+// live vs. sterilized soil
 
 // Ricker growth model
 // Model as a negative binomial
