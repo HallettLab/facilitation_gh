@@ -3,6 +3,26 @@
 
 ## igr_sig is created in the plot_alpha_functs_IGR_w_uncertainty.R script
 ## not clean enough to source the script yet, so will need to run manually to create df
+brho_RII %>%
+  filter(microbe == "Live") %>%
+  group_by(ACAM, water) %>%
+  summarise(mean.NIntA = mean(NIntA, na.rm = T),
+            se.NIntA = calcSE(NIntA)) %>%
+  
+  ggplot(aes(x=ACAM, y=mean.NIntA, fill = water)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_errorbar(aes(ymin = mean.NIntA - se.NIntA, ymax = mean.NIntA + se.NIntA)) +
+  geom_line() +
+  geom_point(aes(fill = water), colour = "black", pch = 21, size = 3.5) +
+  # facet_wrap(~microbe) +
+  scale_fill_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  
+  xlab("Planted Legume Density") +
+  ylab("Additive Intensity Index") +
+  labs(fill = "Water") +
+  theme(text = element_text(size = 15)) +
+  theme(legend.position = "bottom")
+
 a = igr_sig %>%
   filter(focal == "BRHO") %>%
   mutate(alpha_inter = ifelse(dens == 0, 0, alpha_inter)) %>%

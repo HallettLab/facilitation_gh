@@ -77,26 +77,6 @@ brho_RII %>%
   theme(text = element_text(size = 15)) +
   theme(legend.position = "bottom")
 
-
-brho_RII %>%
-  group_by(ACAM, water, microbe) %>%
-  summarise(mean.NIntA = mean(NIntA, na.rm = T),
-            se.NIntA = calcSE(NIntA)) %>%
-  
-  ggplot(aes(x=ACAM, y=mean.NIntA, fill = water)) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  geom_errorbar(aes(ymin = mean.NIntA - se.NIntA, ymax = mean.NIntA + se.NIntA)) +
-  geom_line() +
-  geom_point(aes(fill = water), colour = "black", pch = 21, size = 3.5) +
-  facet_wrap(~microbe) +
-  scale_fill_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
-  
-  xlab("Planted Legume Density") +
-  ylab("Additive Intensity Index") +
-  labs(fill = "Water") +
-  theme(text = element_text(size = 15)) +
-  theme(legend.position = "bottom")
-
 brho_RII %>%
 #  group_by(ACAM, water, microbe) %>%
 #  summarise(mean.NIntA = mean(NIntA, na.rm = T),
