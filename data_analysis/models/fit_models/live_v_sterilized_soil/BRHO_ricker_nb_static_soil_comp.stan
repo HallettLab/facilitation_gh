@@ -54,7 +54,7 @@ model{
   // priors
   // lambda & alpha priors all come from mega-comp values
   lambda ~ normal(200, 50);
-  lambda_dev ~normal(0,7);
+  lambda_dev ~normal(0,12); // change from 7 to 12 for final model, see what it does.
   // the final distrib is barely changing from this; ok to tighten prior
   
   alpha_brho ~ normal(-0.057, 0.25); 

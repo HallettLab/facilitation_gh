@@ -152,6 +152,20 @@ ggplot(aes(x=B_freq, y = igr, color = as.factor(dtot))) +
   labs(color = "Density") +
   ggtitle("BRHO sig")
 
+ggsave("Adler_freq_dens_dep_BRHO.png", width = 5, height = 3.5)
+
+gr %>%
+  filter(focal == "BRHO") %>%
+  ggplot(aes(x=A_freq, y = igr, color = as.factor(dtot))) +
+  # facet_wrap(~dtot) +
+  geom_point() +
+  geom_line() +
+  xlab("ACAM Frequency") +
+  ylab("Growth rate") +
+  labs(color = "Density") +
+  ggtitle("BRHO sig") +
+  scale_color_manual(values = c("#d4d4d5", "#bfbfc1", "#aaaaad", "#828386", "#5c5d61", "#393a3f"))
+
 gr %>%
   filter(focal == "ACAM") %>%
   ggplot(aes(x=A_freq, y = igr, color = as.factor(dtot))) +
@@ -161,6 +175,8 @@ gr %>%
   xlab("ACAM Frequency") +
   ylab("Growth rate") +
   labs(color = "Density")
+
+ggsave("Adler_freq_dens_dep_ACAM.png", width = 5, height = 3.5)
 
 
 ## test with static coeff ####
