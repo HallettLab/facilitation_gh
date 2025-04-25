@@ -13,10 +13,10 @@ summary(m13c)
 
 Anova(m13c, type = 3)
 
-mpercN = lm(WtN ~ num.bg.indiv * as.factor(water), data = CN_bio[CN_bio$microbe == 1,])
+mpercN = lm(WtN ~ num.bg.indiv + as.factor(water), data = CN_bio[CN_bio$microbe == 1,])
 summary(mpercN)
 
-Anova(mpercN, type = 3)
+Anova(mpercN, type = 2)
 
 
 

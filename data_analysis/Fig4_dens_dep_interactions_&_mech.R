@@ -1,8 +1,17 @@
 
+# Set up ####
+## Scripts to manually run to get needed dfs
+## 1) additive_intensity_index.R
+## 2) MCT/calc_IGR.R
+## 3) leaf_nutrient_figs.R
+
 ## create a figure that shows context dependent interactions + mechanisms
 
 ## igr_sig is created in the plot_alpha_functs_IGR_w_uncertainty.R script
 ## not clean enough to source the script yet, so will need to run manually to create df
+
+# Plot ####
+## raw AII ####
 a = brho_RII %>%
   filter(microbe == "Live") %>%
   group_by(ACAM, water) %>%
@@ -14,14 +23,28 @@ a = brho_RII %>%
   geom_errorbar(aes(ymin = mean.NIntA - se.NIntA, ymax = mean.NIntA + se.NIntA)) +
   geom_line() +
   geom_point(aes(fill = water), colour = "black", pch = 21, size = 3.5) +
-  # facet_wrap(~microbe) +
   scale_fill_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
-  
-  xlab("Planted Legume Density") +
+  xlab(" ") +
   ylab("Additive Intensity Index") +
   labs(fill = "Water") +
   theme(text = element_text(size = 15)) +
   theme(legend.position = "bottom")
+
+## Modeled int ####
+bigr_mean = igr_sig %>%
+  mutate(alpha_inter = ifelse(dens == 0, 0, alpha_inter)) %>%
+  # filter(focal == "BRHO") %>%
+  group_by(model, focal, water, dens) %>%
+  
+  summarise(mean.igr = mean(igr), 
+            se.igr = calcSE(igr),
+            mean.alpha = mean(alpha_inter), 
+            se.alpha = calcSE(alpha_inter)) %>%
+  mutate(water.text = ifelse(water == 1, "High",
+                             ifelse(water == 0.75, "Intermediate",
+                                    "Low")),
+         focal = as.factor(focal), 
+         focal = fct_relevel(focal, "BRHO", "ACAM"))
 
 b = igr_sig %>%
   filter(focal == "BRHO") %>%
@@ -35,7 +58,7 @@ b = igr_sig %>%
   scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
   scale_fill_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
   ylab("Interspecific Alpha") +
-  xlab("Modeled Legume Density") +
+  xlab(" ") +
   labs(color = "Water", linetype = "Focal Species") +
   geom_line(data = bigr_mean[bigr_mean$focal == "BRHO",], aes(x=dens, y=mean.alpha, group = water.text, color = water.text), linewidth = 1.25, color = "black") +
   geom_line(data = bigr_mean[bigr_mean$focal == "BRHO",], aes(x=dens, y=mean.alpha, group = water.text, color = water.text), linewidth = 0.75) +
@@ -43,21 +66,8 @@ b = igr_sig %>%
   theme(text = element_text(size=15)) +
   coord_cartesian(xlim = c(0, 42))
 
-ggarrange(a, b, ncol = 2, common.legend = T, legend = "bottom")
-
-ggsave("figures/final_diss/Fig4_density_dep_interactions.png", width = 8, height = 3.5)
-
-
-
-
-
-
-
-
-
-
 ## the df for this figure comes from leaf_nutrient_figs.R
-b = CN_bio %>%
+c = CN_bio %>%
   filter(microbe == 1) %>%
   mutate(water.text = ifelse(water == 1, "High",
                              ifelse(water == 0.75, "Intermediate", "Low")),
@@ -74,7 +84,7 @@ b = CN_bio %>%
   labs(color = "Water", shape = "Soil Treatment") +
   theme(text = element_text(size = 15))
 
-c = CN_bio %>%
+d = CN_bio %>%
   filter(microbe == 1) %>%
   mutate(water.text = ifelse(water == 1, "High",
                              ifelse(water == 0.75, "Intermediate", "Low")),
@@ -85,10 +95,25 @@ c = CN_bio %>%
   geom_smooth(method = "gam", linewidth = 1.5, alpha = 0.25) +
   scale_color_manual(values = c("#de8a5a", "#f3d0ae",  "#70a494")) +
   scale_shape_manual(values = c(19, 21)) +
-  xlab(" ") +
+  xlab("Legume Density") +
   ylab("Leaf % N") +
   labs(color = "Water", shape = "Soil Treatment") +
   theme(text = element_text(size = 15))
+
+ggarrange(a, b, c, d, ncol = 2, nrow = 2, common.legend = T, legend = "bottom", align = "hv", labels = "AUTO")
+
+ggsave("figures/final_diss/Fig4_density_dep_interactions.png", width = 8, height = 7)
+
+
+
+
+
+
+
+
+
+
+
 
 ggarrange(a, b, c, ncol = 3, common.legend = T, legend = "bottom", labels = "AUTO")
 
