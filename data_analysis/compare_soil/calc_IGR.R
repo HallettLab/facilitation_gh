@@ -9,10 +9,7 @@ library(tidyverse)
 
 ## get equilibrium values
 # source("data_analysis/MCT/find_equilibrium.R")
-source("data_analysis/models/compare_soil/calc_equilibrium_soil.R")
-
-## set fig location
-fig_loc = "figures/Apr2025/"
+source("data_analysis/compare_soil/calc_equilibrium_soil.R")
 
 theme_set(theme_classic())
 
@@ -34,7 +31,7 @@ igr_stat_func = function(surv, germ, lambda, alpha_intra, Nt, alpha_inter, germ_
 # Calc alpha & IGR ####
 ## m0 ####
 ## create empty df
-igr_m0 = data.frame(focal = NA, water = NA, post_num = NA, igr = NA, equil = NA, alpha_inter = NA)
+igr_m0 = data.frame(focal = NA, water = NA, post_num = NA, igr = NA, equil = NA, alpha_inter = NA, lambda = NA)
 
 ## set post draw list from equil df
 # posts_stat = unique(m0equil$post_num)
@@ -112,7 +109,7 @@ for (j in 1:length(rain)) {
       igr_tmp = igr_stat_func(surv = s_i, germ = g_i, lambda = lambda_i, alpha_intra = alpha_ii, Nt = 1, alpha_inter = alpha_ij, germ_inter = g_j, inter_abund = n_star)
       
       ## fill in data 
-      tmp = data.frame(focal = focal, water = r, post_num = p, igr = igr_tmp, alpha_inter = alpha_ij, equil = n_star)
+      tmp = data.frame(focal = focal, water = r, post_num = p, igr = igr_tmp, alpha_inter = alpha_ij, equil = n_star, lambda = lambda_i)
       
       ## append
       igr_m0 = rbind(igr_m0, tmp)
@@ -130,7 +127,7 @@ igr_m0 = igr_m0 %>%
 
 ## m1 ####
 ## create empty df
-igr_m1 = data.frame(focal = NA, water = NA, post_num = NA, igr = NA, equil = NA, alpha_inter = NA)
+igr_m1 = data.frame(focal = NA, water = NA, post_num = NA, igr = NA, equil = NA, alpha_inter = NA, lambda = NA)
 
 ## set post draw list from equil df
 # posts_stat = unique(m0equil$post_num)
@@ -208,7 +205,7 @@ for(i in 1:length(species)) {
       igr_tmp = igr_stat_func(surv = s_i, germ = g_i, lambda = lambda_i, alpha_intra = alpha_ii, Nt = 1, alpha_inter = alpha_ij, germ_inter = g_j, inter_abund = n_star)
       
       ## fill in data 
-      tmp = data.frame(focal = focal, water = r, post_num = p, igr = igr_tmp, alpha_inter = alpha_ij, equil = n_star)
+      tmp = data.frame(focal = focal, water = r, post_num = p, igr = igr_tmp, alpha_inter = alpha_ij, equil = n_star, lambda = lambda_i)
       
       ## append
       igr_m1 = rbind(igr_m1, tmp)

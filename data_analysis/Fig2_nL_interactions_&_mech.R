@@ -3,7 +3,7 @@
 
 ## igr_sig is created in the plot_alpha_functs_IGR_w_uncertainty.R script
 ## not clean enough to source the script yet, so will need to run manually to create df
-brho_RII %>%
+a = brho_RII %>%
   filter(microbe == "Live") %>%
   group_by(ACAM, water) %>%
   summarise(mean.NIntA = mean(NIntA, na.rm = T),
@@ -23,27 +23,38 @@ brho_RII %>%
   theme(text = element_text(size = 15)) +
   theme(legend.position = "bottom")
 
-a = igr_sig %>%
+b = igr_sig %>%
   filter(focal == "BRHO") %>%
   mutate(alpha_inter = ifelse(dens == 0, 0, alpha_inter)) %>%
   mutate(water.text = ifelse(water == 1, "High",
                              ifelse(water == 0.75, "Intermediate",
                                     "Low"))) %>%
   ggplot(aes(x=dens, y = alpha_inter,  fill = as.factor(water.text))) +
-  # geom_point(alpha = 0.15, size = 0.25, pch = 21, color = "white") +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  #facet_wrap(~focal) +
   geom_line(alpha = 0.15, aes(color = water.text, group = interaction(water.text, post_num))) +
   scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
   scale_fill_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
   ylab("Interspecific Alpha") +
-  xlab(" ") +
+  xlab("Modeled Legume Density") +
   labs(color = "Water", linetype = "Focal Species") +
   geom_line(data = bigr_mean[bigr_mean$focal == "BRHO",], aes(x=dens, y=mean.alpha, group = water.text, color = water.text), linewidth = 1.25, color = "black") +
   geom_line(data = bigr_mean[bigr_mean$focal == "BRHO",], aes(x=dens, y=mean.alpha, group = water.text, color = water.text), linewidth = 0.75) +
   guides(fill = guide_legend("Water", override.aes = list(size = 3, alpha = 0.95, linewidth = 2))) +
   theme(text = element_text(size=15)) +
   coord_cartesian(xlim = c(0, 42))
+
+ggarrange(a, b, ncol = 2, common.legend = T, legend = "bottom")
+
+ggsave("figures/final_diss/Fig4_density_dep_interactions.png", width = 8, height = 3.5)
+
+
+
+
+
+
+
+
+
 
 ## the df for this figure comes from leaf_nutrient_figs.R
 b = CN_bio %>%

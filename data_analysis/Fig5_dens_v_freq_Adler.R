@@ -2,7 +2,7 @@
 # Set Up ####
 ## Read in Data ####
 ## read in models
-source("data_analysis/MCT/find_equilibrium_sigmoidal.R")
+source("data_analysis/MCT/calc_equilibrium_sigmoidal.R")
 
 ## reading in this script as it will give posteriors already with 80% hdi calcualted.
 ## germ adn seed surv data also come along with it.
@@ -80,9 +80,19 @@ ricker_stat_func = function(surv, germ, lambda, alpha_intra, Nt, germ_inter, int
 ## can set these params outside of the loop as they won't change with dens
 
 
-dens = c(4, 6, 8, 12, 16, 20)
+dens = c(4, 6, 8, 12, 16, 20, 30)
+rain = c(1, 0.75, 0.6)
 species = c("ACAM", "BRHO")
-gr = data.frame(focal = NA, dtot = NA, Nt_ACAM = NA, Nt_BRHO = NA, A_freq = NA, B_freq = NA, a_ij = NA, igr = NA)
+
+gr = data.frame(water = NA, focal = NA, dtot = NA, Nt_ACAM = NA, Nt_BRHO = NA, A_freq = NA, B_freq = NA, a_ij = NA, igr = NA, a_ii = NA)
+
+for (i in 1:length(rain)){
+  
+  r = rain[i]
+  
+  ## set treatment
+  if(r == 1) { trt = "C" 
+  } else { trt = "D" }
 
 for(j in 1:length(species)) {
   
@@ -90,20 +100,20 @@ for(j in 1:length(species)) {
   sp = species[j]
   
   ## select params
-  lam = postmeans[postmeans$focal == sp & postmeans$water == 1,]$Mlam
+  lam = postmeans[postmeans$focal == sp & postmeans$water == r,]$Mlam
   s = seedsurv[seedsurv$species == sp,]$surv.mean.p
-  g_i = germ[germ$phyto == sp & germ$treatment == "C",]$mean.germ
-  a_intra = postmeans[postmeans$focal == sp & postmeans$water == 1,]$Ma_intra
-  a_init = postmeans[postmeans$focal == sp & postmeans$water == 1,]$Ma_init
-  a_slope = postmeans[postmeans$focal == sp & postmeans$water == 1,]$Ma_slope
-  Nopt = postmeans[postmeans$focal == sp & postmeans$water == 1,]$MNopt
-  c = postmeans[postmeans$focal == sp & postmeans$water == 1,]$Mc
+  g_i = germ[germ$phyto == sp & germ$treatment == trt,]$mean.germ
+  a_intra = postmeans[postmeans$focal == sp & postmeans$water == r,]$Ma_intra
+  a_init = postmeans[postmeans$focal == sp & postmeans$water == r,]$Ma_init
+  a_slope = postmeans[postmeans$focal == sp & postmeans$water == r,]$Ma_slope
+  Nopt = postmeans[postmeans$focal == sp & postmeans$water == r,]$MNopt
+  c = postmeans[postmeans$focal == sp & postmeans$water == r,]$Mc
 
   ## set g_j param as other species
   if(sp == "ACAM") {
-    g_j = germ[germ$phyto == "BRHO" & germ$treatment == "C",]$mean.germ
+    g_j = germ[germ$phyto == "BRHO" & germ$treatment == trt,]$mean.germ
   } else {
-    g_j = germ[germ$phyto == "ACAM" & germ$treatment == "C",]$mean.germ
+    g_j = germ[germ$phyto == "ACAM" & germ$treatment == trt,]$mean.germ
   }
   
 ## loop over density
@@ -132,7 +142,9 @@ for(i in 1:length(dens)) {
   ## add gr dat back to id info
   tgr = cbind(tdens, gr_dat) %>%
     mutate(dtot = d,
-           focal = sp)
+           focal = sp, 
+           water = r,
+           a_ii = a_intra)
   
   ## append
   gr = rbind(gr, tgr) %>%
@@ -140,6 +152,190 @@ for(i in 1:length(dens)) {
 
   }
 }
+  
+}
+
+# Fig 5 ####
+cg = gr %>%
+  filter(focal == "BRHO", water == 1) %>%
+  ggplot(aes(x=A_freq, y = igr, color = as.factor(dtot))) +
+  # facet_wrap(~dtot) +
+  geom_point(size = 2) +
+  geom_line() +
+  xlab(" ") +
+  ylab(" ") +
+  labs(color = "Total Density") +
+  scale_color_manual(values = c("#d4e3de", "#c5dad3", "#b7d1c8", "#9bbfb3", "#8db6a9", "#70a494", "#639283")) +
+  theme(text = element_text(size = 14)) +
+  
+  coord_cartesian(ylim = c(4.2, 6.3))
+
+bg = gr %>%
+  filter(focal == "BRHO", water == 0.75) %>%
+  ggplot(aes(x=A_freq, y = igr, color = as.factor(dtot))) +
+  geom_point(size = 2) +
+  geom_line() +
+  xlab(" ") +
+  ylab(" ") +
+  labs(color = "Total Density") +
+  scale_color_manual(values = c("#fcf1e7", "#fbecdf", "#f9e8d7", "#f7dec6", "#f4d4b5", "#f3d0ae", "#d9b99b")) +
+  theme(text = element_text(size = 14)) +
+  
+  coord_cartesian(ylim = c(4.2, 6.3))
+
+ag = gr %>%
+  filter(focal == "BRHO", water == 0.6) %>%
+  ggplot(aes(x=A_freq, y = igr, color = as.factor(dtot))) +
+  geom_point(size = 2) +
+  geom_line() +
+  xlab(" ") +
+  ylab("Grass Growth rate ln(Nt1/Nt)") +
+  labs(color = "Total Density") +
+  scale_color_manual(values = c("#f7d8c8", "#f1c5ad", "#eebb9f", "#ebb192", "#e59e76", "#de8a5a", "#c67a4f")) +
+  theme(text = element_text(size = 14)) +
+  
+  coord_cartesian(ylim = c(4.2, 6.3))
+
+ggarrange(ag, bg, cg, ncol = 3, nrow = 1, labels = "AUTO", legend = F)
+
+ggsave("figures/final_diss/Fig5_dens_freq_dep.png", width = 9, height = 3.5)
+
+## create a legend
+ggarrange(ag, bg, cg, ncol = 3, nrow = 1, labels = "AUTO")
+ggsave("figures/final_diss/Fig5_for legend.png", width = 5, height = 3.5)
+
+
+
+# Fig 5 ####
+cl = gr %>%
+  filter(focal == "ACAM", water == 1) %>%
+  ggplot(aes(x=A_freq, y = igr, color = as.factor(dtot))) +
+  # facet_wrap(~dtot) +
+  geom_point(size = 2) +
+  geom_line() +
+  xlab(" ") +
+  ylab(" ") +
+  labs(color = "Total Density") +
+  scale_color_manual(values = c("#d4e3de", "#c5dad3", "#b7d1c8", "#9bbfb3", "#8db6a9", "#70a494", "#639283")) +
+  theme(text = element_text(size = 14)) +
+  
+  coord_cartesian(ylim = c(1, 4))
+
+bl = gr %>%
+  filter(focal == "ACAM", water == 0.75) %>%
+  ggplot(aes(x=A_freq, y = igr, color = as.factor(dtot))) +
+  geom_point(size = 2) +
+  geom_line() +
+  xlab(" ") +
+  ylab(" ") +
+  labs(color = "Total Density") +
+  scale_color_manual(values = c("#fcf1e7", "#fbecdf", "#f9e8d7", "#f7dec6", "#f4d4b5", "#f3d0ae", "#d9b99b")) +
+  theme(text = element_text(size = 14)) +
+  coord_cartesian(ylim = c(1, 4))
+
+al = gr %>%
+  filter(focal == "ACAM", water == 0.6) %>%
+  ggplot(aes(x=A_freq, y = igr, color = as.factor(dtot))) +
+  geom_point(size = 2) +
+  geom_line() +
+  xlab(" ") +
+  ylab("Legume Growth rate ln(Nt1/Nt)") +
+  labs(color = "Total Density") +
+  scale_color_manual(values = c("#f7d8c8", "#f1c5ad", "#eebb9f", "#ebb192", "#e59e76", "#de8a5a", "#c67a4f")) +
+  theme(text = element_text(size = 14)) +
+  coord_cartesian(ylim = c(1, 4))
+
+
+ggsave("figures/final_diss/Fig6_ACAM_dens_freq_dep.png", width = 9, height = 3.5)
+
+
+ggarrange(ag, bg, cg, al, bl, cl, ncol = 3, nrow = 2, labels = "AUTO", legend = F)
+ggsave("figures/final_diss/Fig6_bothsp_dens_freq_dep.png", width = 9, height = 7.25)
+
+
+
+
+
+gr %>%
+  filter(focal == "ACAM", water == 1) %>%
+  ggplot(aes(x=A_freq, y = igr, group = (dtot), color = as.factor(dtot))) +
+  geom_point(size = 2) +
+  geom_line()
+
+gr %>%
+  filter(focal == "ACAM") %>%
+  ggplot(aes(x=A_freq, y = igr, group = (dtot), color = as.factor(dtot))) +
+  geom_point(size = 2) +
+  geom_line() +
+  facet_wrap(~water)
+ 
+gr %>%
+  filter(focal == "ACAM", water == 0.6) %>%
+  ggplot(aes(x=A_freq, group = (dtot), y=igr )) +
+  geom_point() +
+  geom_line()
+
+  
+  
+  
+Atest = gr %>%
+  filter(focal == "ACAM", dtot == 12, water == 1) 
+
+
+  
+  
+  
+  
+  
+  
+  
+
+gr %>%
+  filter(focal == "ACAM", water == 0.6) %>%
+  ggplot(aes(x=a_ij, y = igr, color = as.factor(dtot))) +
+  geom_point(size = 2) +
+  geom_line() +
+  geom_vline(xintercept = gr[gr$focal == "ACAM" & gr$water == 0.6,]$a_ii)
+
+gr %>%
+  filter(focal == "ACAM", water == 0.6) %>%
+  ggplot(aes(x=a_ii, y = igr, color = as.factor(dtot))) +
+  geom_point(size = 2) +
+  geom_line() 
+
+
+gr %>%
+  filter(focal == "ACAM", water == 0.6) %>%
+  ggplot(aes(x=B_freq, y = igr, color = as.factor(dtot), shape = focal)) +
+  geom_point(size = 2) +
+  geom_line()
+
+
+#+
+  xlab(" ") +
+  ylab("Grass Growth rate ln(Nt1/Nt)") +
+  labs(color = "Total Density") +
+  scale_color_manual(values = c("#f7d8c8", "#f1c5ad", "#eebb9f", "#ebb192", "#e59e76", "#de8a5a", "#c67a4f")) #+
+  #coord_cartesian(ylim = c(4.2, 6.3))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+log(6)
+
+exp(6)
+exp(5.5)
+
 
 gr %>%
   filter(focal == "BRHO") %>%
@@ -154,17 +350,7 @@ ggplot(aes(x=B_freq, y = igr, color = as.factor(dtot))) +
 
 ggsave("Adler_freq_dens_dep_BRHO.png", width = 5, height = 3.5)
 
-gr %>%
-  filter(focal == "BRHO") %>%
-  ggplot(aes(x=A_freq, y = igr, color = as.factor(dtot))) +
-  # facet_wrap(~dtot) +
-  geom_point() +
-  geom_line() +
-  xlab("ACAM Frequency") +
-  ylab("Growth rate") +
-  labs(color = "Density") +
-  ggtitle("BRHO sig") +
-  scale_color_manual(values = c("#d4d4d5", "#bfbfc1", "#aaaaad", "#828386", "#5c5d61", "#393a3f"))
+
 
 gr %>%
   filter(focal == "ACAM") %>%

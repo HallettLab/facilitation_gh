@@ -7,8 +7,8 @@ theme_set(theme_classic())
 
 ## read in models
 # statposts = read.csv("data/model_posteriors/stat_posts_20250401.csv")
-aposts = read.csv("data/model_posteriors/acam_soil_comp_posts_20250420.csv")
-bposts = read.csv("data/model_posteriors/brho_soil_comp_posts_20250420.csv")
+acam = read.csv("data/model_posteriors/acam_soil_comp_posts_final_20250424.csv")
+brho = read.csv("data/model_posteriors/brho_soil_comp_posts_final_20250424.csv")
 
 ## germination data
 germ = read.csv("data/germination_data.csv")
@@ -18,7 +18,7 @@ seedsurv = read.csv("data/seed_survival_sumdat.csv")
 
 # Prep data ####
 ## don't filter at this step because m1 and m0 still together, don't necessarily want to filter ,0 and m1 together in case it really constrains distribs??
-acam = aposts %>%
+aposts = acam %>%
   mutate(alpha_intra = alpha_acam,
          alpha_inter = alpha_brho,
          alpha_intra_m0 = alpha_acam_m0,
@@ -29,7 +29,7 @@ acam = aposts %>%
          focal = "ACAM") %>%
   select(-alpha_acam, -alpha_brho, -alpha_acam_m0, -alpha_acam_dev, -alpha_brho_m0, -alpha_brho_dev, -X, -disp)
 
-brho = bposts %>%
+bposts = brho %>%
   mutate(alpha_intra = alpha_brho,
          alpha_inter = alpha_acam, 
          alpha_intra_m0 = alpha_brho, ## PURPOSELY leaving this as alpha_brho as I don't trust the dev term
@@ -37,7 +37,7 @@ brho = bposts %>%
          focal = "BRHO") %>%
   select(-alpha_acam, -alpha_brho, -alpha_acam_m0, -alpha_acam_dev, -alpha_brho_m0, -alpha_brho_dev, -X, -disp)
 
-stat2 = rbind(acam, brho) %>%
+stat2 = rbind(aposts, bposts) %>%
   group_by(focal, water) %>%
   mutate(post_num = c(1:n()))
 
