@@ -22,6 +22,8 @@ calcSE<-function(x){
 
 ## Read in data ####
 file_loc = "/Users/carme/University of Oregon Dropbox/Carmen Watkins/Facilitation_GH/data/biomass/Adult/"
+#file_loc = "~/University of Oregon Dropbox/Lauren Hallett/Facilitation_GH/data/biomass/Adult/"
+
 
 ## for BRHO models
 brho = read.csv(paste0(file_loc, "BRHO_focal_individual_processing_20250214.csv"))
