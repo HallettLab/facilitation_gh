@@ -24,7 +24,7 @@ a = brho_RII %>%
   geom_line() +
   geom_point(aes(fill = water), colour = "black", pch = 21, size = 3.5) +
   scale_fill_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
-  xlab(" ") +
+  xlab("Legume Density") +
   ylab("Additive Intensity Index") +
   labs(fill = "Water") +
   theme(text = element_text(size = 15)) +
@@ -58,7 +58,7 @@ b = igr_sig %>%
   scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
   scale_fill_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
   ylab("Interspecific Alpha") +
-  xlab(" ") +
+  xlab("Legume Density") +
   labs(color = "Water", linetype = "Focal Species") +
   geom_line(data = bigr_mean[bigr_mean$focal == "BRHO",], aes(x=dens, y=mean.alpha, group = water.text, color = water.text), linewidth = 1.25, color = "black") +
   geom_line(data = bigr_mean[bigr_mean$focal == "BRHO",], aes(x=dens, y=mean.alpha, group = water.text, color = water.text), linewidth = 0.75) +
@@ -67,7 +67,46 @@ b = igr_sig %>%
   coord_cartesian(xlim = c(0, 42))
 
 ## the df for this figure comes from leaf_nutrient_figs.R
-c = CN_bio %>%
+c = CN_RII %>%
+  filter(microbe.x == 1) %>%
+  mutate(water.text = ifelse(water.x == 1, "High",
+                             ifelse(water.x == 0.75, "Intermediate",
+                                    "Low"))) %>%
+  ggplot(aes(x=delta13C, y=NIntA, color = water.text)) +
+  geom_point() +
+  geom_smooth(method = "lm", alpha = 0.15) +
+  theme(text = element_text(size = 15)) +
+  
+  scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(color = "Water") +
+ # facet_wrap(~microbe.x) +
+  ylab("Additive Intensity Index") +
+  xlab("Delta 13C")
+
+d = CN_RII %>%
+  filter(microbe.x == 1) %>%
+  mutate(water.text = ifelse(water.x == 1, "High",
+                             ifelse(water.x == 0.75, "Intermediate",
+                                    "Low"))) %>%
+  ggplot(aes(x=WtN, y=NIntA, color = water.text)) +
+  geom_point() +
+  theme(text = element_text(size = 15)) +
+  
+  scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  geom_smooth(method = "lm", alpha = 0.15) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(color = "Water") +
+  ylab("Additive Intensity Index") +
+  #facet_wrap(~microbe.x) +
+  xlab("Leaf % N")
+
+ggarrange(a, b, c, d, ncol = 2, nrow = 2, common.legend = T, legend = "bottom", align = "hv", labels = "AUTO")
+
+ggsave("figures/final_diss/Fig4_density_dep_interactions_mech.png", width = 8, height = 7)
+
+# Fig SXX ####
+sa = CN_bio %>%
   filter(microbe == 1) %>%
   mutate(water.text = ifelse(water == 1, "High",
                              ifelse(water == 0.75, "Intermediate", "Low")),
@@ -84,7 +123,7 @@ c = CN_bio %>%
   labs(color = "Water", shape = "Soil Treatment") +
   theme(text = element_text(size = 15))
 
-d = CN_bio %>%
+sb = CN_bio %>%
   filter(microbe == 1) %>%
   mutate(water.text = ifelse(water == 1, "High",
                              ifelse(water == 0.75, "Intermediate", "Low")),
@@ -100,21 +139,6 @@ d = CN_bio %>%
   labs(color = "Water", shape = "Soil Treatment") +
   theme(text = element_text(size = 15))
 
-ggarrange(a, b, c, d, ncol = 2, nrow = 2, common.legend = T, legend = "bottom", align = "hv", labels = "AUTO")
+ggarrange(sa, sb, ncol = 2, common.legend = T, legend = "bottom", labels = "AUTO")
 
-ggsave("figures/final_diss/Fig4_density_dep_interactions.png", width = 8, height = 7)
-
-
-
-
-
-
-
-
-
-
-
-
-ggarrange(a, b, c, ncol = 3, common.legend = T, legend = "bottom", labels = "AUTO")
-
-ggsave("figures/Apr2025/final/Fig2_nL_interactions_mech.png", width = 8.5, height = 3.5)
+ggsave("figures/final_diss/supp/leafnut_dens.png", width = 8, height = 4)

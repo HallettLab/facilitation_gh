@@ -80,7 +80,7 @@ ricker_stat_func = function(surv, germ, lambda, alpha_intra, Nt, germ_inter, int
 ## can set these params outside of the loop as they won't change with dens
 
 
-dens = c(4, 6, 8, 12, 16, 20, 30)
+dens = c(4, 6, 8, 12, 16, 20, 30, 100)
 rain = c(1, 0.75, 0.6)
 species = c("ACAM", "BRHO")
 
@@ -154,76 +154,82 @@ for(i in 1:length(dens)) {
 }
   
 }
-
+gr_fin = gr %>%
+  mutate(self_freq = ifelse(focal == "ACAM", A_freq, B_freq),
+         hetero_freq = ifelse(focal == "BRHO", A_freq, B_freq))
+  
+  
 # Fig 5 ####
-cg = gr %>%
+## brho ####
+cg = gr_fin %>%
   filter(focal == "BRHO", water == 1) %>%
-  ggplot(aes(x=A_freq, y = igr, color = as.factor(dtot))) +
+  ggplot(aes(x=self_freq, y = igr, color = as.factor(dtot))) +
   # facet_wrap(~dtot) +
   geom_point(size = 2) +
   geom_line() +
   xlab(" ") +
   ylab(" ") +
   labs(color = "Total Density") +
-  scale_color_manual(values = c("#d4e3de", "#c5dad3", "#b7d1c8", "#9bbfb3", "#8db6a9", "#70a494", "#639283")) +
-  theme(text = element_text(size = 14)) +
+  scale_color_manual(values = c("#d4e3de", "#c5dad3", "#b7d1c8", "#9bbfb3", "#8db6a9", "#70a494", "#639283", "black")) +
+  theme(text = element_text(size = 14),
+        axis.text.x=element_blank()) +
   
   coord_cartesian(ylim = c(4.2, 6.3))
 
-bg = gr %>%
+bg = gr_fin %>%
   filter(focal == "BRHO", water == 0.75) %>%
-  ggplot(aes(x=A_freq, y = igr, color = as.factor(dtot))) +
+  ggplot(aes(x=self_freq, y = igr, color = as.factor(dtot))) +
   geom_point(size = 2) +
   geom_line() +
   xlab(" ") +
   ylab(" ") +
   labs(color = "Total Density") +
   scale_color_manual(values = c("#fcf1e7", "#fbecdf", "#f9e8d7", "#f7dec6", "#f4d4b5", "#f3d0ae", "#d9b99b")) +
-  theme(text = element_text(size = 14)) +
+  theme(text = element_text(size = 14),
+        axis.text.x=element_blank()) +
   
   coord_cartesian(ylim = c(4.2, 6.3))
 
-ag = gr %>%
+ag = gr_fin %>%
   filter(focal == "BRHO", water == 0.6) %>%
-  ggplot(aes(x=A_freq, y = igr, color = as.factor(dtot))) +
+  ggplot(aes(x=self_freq, y = igr, color = as.factor(dtot))) +
   geom_point(size = 2) +
   geom_line() +
   xlab(" ") +
   ylab("Grass Growth rate ln(Nt1/Nt)") +
   labs(color = "Total Density") +
   scale_color_manual(values = c("#f7d8c8", "#f1c5ad", "#eebb9f", "#ebb192", "#e59e76", "#de8a5a", "#c67a4f")) +
-  theme(text = element_text(size = 14)) +
+  theme(text = element_text(size = 14),
+        axis.text.x=element_blank()) +
   
   coord_cartesian(ylim = c(4.2, 6.3))
 
-ggarrange(ag, bg, cg, ncol = 3, nrow = 1, labels = "AUTO", legend = F)
+#ggarrange(ag, bg, cg, ncol = 3, nrow = 1, labels = "AUTO", legend = F)
 
-ggsave("figures/final_diss/Fig5_dens_freq_dep.png", width = 9, height = 3.5)
+#ggsave("figures/final_diss/Fig5_dens_freq_dep.png", width = 9, height = 3.5)
 
 ## create a legend
-ggarrange(ag, bg, cg, ncol = 3, nrow = 1, labels = "AUTO")
-ggsave("figures/final_diss/Fig5_for legend.png", width = 5, height = 3.5)
+#ggarrange(ag, bg, cg, ncol = 3, nrow = 1, labels = "AUTO")
+#ggsave("figures/final_diss/Fig5_for legend.png", width = 5, height = 3.5)
 
-
-
-# Fig 5 ####
-cl = gr %>%
+## acam ####
+cl = gr_fin %>%
   filter(focal == "ACAM", water == 1) %>%
-  ggplot(aes(x=A_freq, y = igr, color = as.factor(dtot))) +
+  ggplot(aes(x=self_freq, y = igr, color = as.factor(dtot))) +
   # facet_wrap(~dtot) +
   geom_point(size = 2) +
   geom_line() +
   xlab(" ") +
   ylab(" ") +
   labs(color = "Total Density") +
-  scale_color_manual(values = c("#d4e3de", "#c5dad3", "#b7d1c8", "#9bbfb3", "#8db6a9", "#70a494", "#639283")) +
+  scale_color_manual(values = c("#d4e3de", "#c5dad3", "#b7d1c8", "#9bbfb3", "#8db6a9", "#70a494", "#639283", "black")) +
   theme(text = element_text(size = 14)) +
   
   coord_cartesian(ylim = c(1, 4))
 
-bl = gr %>%
+bl = gr_fin %>%
   filter(focal == "ACAM", water == 0.75) %>%
-  ggplot(aes(x=A_freq, y = igr, color = as.factor(dtot))) +
+  ggplot(aes(x=self_freq, y = igr, color = as.factor(dtot))) +
   geom_point(size = 2) +
   geom_line() +
   xlab(" ") +
@@ -233,29 +239,24 @@ bl = gr %>%
   theme(text = element_text(size = 14)) +
   coord_cartesian(ylim = c(1, 4))
 
-al = gr %>%
+al = gr_fin %>%
   filter(focal == "ACAM", water == 0.6) %>%
-  ggplot(aes(x=A_freq, y = igr, color = as.factor(dtot))) +
+  ggplot(aes(x=self_freq, y = igr, color = as.factor(dtot))) +
   geom_point(size = 2) +
   geom_line() +
   xlab(" ") +
   ylab("Legume Growth rate ln(Nt1/Nt)") +
   labs(color = "Total Density") +
-  scale_color_manual(values = c("#f7d8c8", "#f1c5ad", "#eebb9f", "#ebb192", "#e59e76", "#de8a5a", "#c67a4f")) +
+  scale_color_manual(values = c("#f7d8c8", "#f1c5ad", "#eebb9f", "#ebb192", "#e59e76", "#de8a5a", "#c67a4f", "black")) +
   theme(text = element_text(size = 14)) +
   coord_cartesian(ylim = c(1, 4))
 
-
-ggsave("figures/final_diss/Fig6_ACAM_dens_freq_dep.png", width = 9, height = 3.5)
-
-
-ggarrange(ag, bg, cg, al, bl, cl, ncol = 3, nrow = 2, labels = "AUTO", legend = F)
-ggsave("figures/final_diss/Fig6_bothsp_dens_freq_dep.png", width = 9, height = 7.25)
+ggarrange(ag, bg, cg, al, bl, cl, ncol = 3, nrow = 2, labels = "AUTO", legend = F, align = "v")
+ggsave("figures/final_diss/Fig5_bothsp_dens_freq_dep.png", width = 9, height = 7.25)
 
 
 
-
-
+# Old ####
 gr %>%
   filter(focal == "ACAM", water == 1) %>%
   ggplot(aes(x=A_freq, y = igr, group = (dtot), color = as.factor(dtot))) +

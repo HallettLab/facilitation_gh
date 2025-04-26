@@ -55,7 +55,7 @@ aL = acam %>%
     size = 4,
     shape = 21, aes(fill = soil)) +
   ylab("Intrinsic Growth Rate") +
-  xlab(NULL)  +
+  xlab(" ")  +
   labs(fill = "Soil", color = "Soil") +
   #guides(color = guide_legend("Soil", override.aes = list(linewidth = 1))) +
   theme(text = element_text(size=15),
@@ -130,11 +130,10 @@ aa = acam %>%
     shape = 21, aes(fill = soil)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   ylab("INTRAspecific alpha") +
-  xlab(" ")  +
+  xlab("Water Level")  +
   labs(fill = "Soil", color = "Soil") +
   #guides(color = guide_legend("Soil Treatment", override.aes = list(linewidth = 1))) +
-    theme(text = element_text(size=15),
-          axis.text.x=element_blank()) +
+    theme(text = element_text(size=15)) +
   coord_cartesian(ylim = c(-0.085, 0))
 
 ## brho inter ####
@@ -232,22 +231,21 @@ bb = brho %>%
     size = 4,
     shape = 21, fill = "white") +
   ylab(" ") +
-  xlab(" ")  +
+  xlab("Water Level")  +
   geom_hline(yintercept = 0, linetype = "dashed") +
   
  # guides(color = guide_legend("Soil Treatment", override.aes = list(linewidth = 1))) +
-  theme(text = element_text(size=15),
-        axis.text.x=element_blank()) +
+  theme(text = element_text(size=15)) +
   coord_cartesian(ylim = c(-0.085, 0))
 
 
 ## put together ####
-a = ggarrange(aL, ab, aa, aigr, ncol = 1, nrow = 4, common.legend = TRUE, legend = "bottom", align = "v")
-b = ggarrange(bL, ba, bb, bigr, ncol = 1, nrow = 4, common.legend = TRUE, legend = "bottom", align = "v")
+a = ggarrange(aL, ab, aa, ncol = 1, nrow = 3, common.legend = TRUE, legend = "bottom", align = "v")
+b = ggarrange(bL, ba, bb, ncol = 1, nrow = 3, common.legend = TRUE, legend = "bottom", align = "v")
 
-ggarrange(a, b, ncol = 2)
+ggarrange(a, b, ncol = 2, align = "h")
 
-ggsave("figures/final_diss/Fig2_mutualism_params.png", width = 8, height = 12)
+ggsave("figures/final_diss/Fig2_mutualism_params.png", width = 7, height = 8)
 
 
 
@@ -281,7 +279,7 @@ aigr = gr_df %>%
   ylab("Growth Rate") +
   xlab("Water Level") +
   guides(fill = guide_legend("Soil", override.aes = list(shape = 21))) +
-  theme(text = element_text(size=15))
+  theme(text = element_text(size=14))
 
 ## brho igr ####
 mBGR = gr_df %>%
@@ -307,13 +305,18 @@ bigr = gr_df %>%
     aes(fill = soil, shape = type)) +
   scale_shape_manual(values = c(21, 22)) +
   
-  labs(fill = "Soil", color = "Soil", shape = "Type") +
+  labs(fill = " ", color = " ", shape = "Type") +
   ylab(" ") +
   xlab("Water Level") +
-  guides(fill = guide_legend("Soil", override.aes = list(shape = 21))) +
-  theme(text = element_text(size=15))
+  guides(fill = guide_legend(" ", override.aes = list(shape = 21))) +
+  theme(text = element_text(size=14)) +
+  guides(shape = "none")
 
 ## put together ####
+ggarrange(aigr, bigr, ncol = 2, nrow = 1, legend = "bottom", align = "h", labels = "AUTO")
+
+ggsave("figures/final_diss/Fig3_mutualism_igrs.png", width = 8, height = 4)
+
 
 
 
