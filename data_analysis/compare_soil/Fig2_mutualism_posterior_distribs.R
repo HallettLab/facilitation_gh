@@ -12,6 +12,27 @@ brho = read.csv("data/model_posteriors/brho_soil_comp_posts_final_20250424.csv")
 ## invasion growth rates
 igr_microbe = read.csv("data_analysis/compare_soil/igr_20250424_final_models.csv") 
 
+## sigmoidal model igr
+igr_sig = read.csv("data_analysis/MCT/output/igr_sigmoidal_20250428.csv")
+
+max_int = igr_sig %>%
+  filter(dens == 1) %>%
+  mutate(alpha_inter = ifelse(dens == 0, 0, alpha_inter)) %>%
+  group_by(water, focal, post_num) %>%
+  summarise(max_a = max(alpha_inter)) %>%
+  mutate(water.text = as.factor(ifelse(water == 1, "High", 
+                             ifelse(water == 0.75, "Intermediate", "Low"))),
+         water.text = fct_relevel(water.text, "Low", "Intermediate", "High")) %>%
+  filter(focal == "BRHO") %>%
+  mutate(soil = "Live")
+
+m_MI = max_int %>%
+  ungroup() %>%
+  select(focal, water.text, max_a, soil) %>%
+  group_by(focal, water.text, soil) %>%
+  summarise(mma = mean(max_a)) %>%
+  filter(focal == "BRHO")
+
 ## prep igr df
 gr_df = igr_microbe %>%
   mutate(log_lambda = log(lambda)) %>%
@@ -44,10 +65,10 @@ aL = acam %>%
          water.text = fct_relevel(water.text, "Low", "Intermediate", "High")) %>%
   
   ggplot(aes(x = water.text, y=lam, group = soil, color = soil)) +
-  scale_color_manual(values = c("#400227", "#d2a2a7")) +
-  scale_fill_manual(values = c("#400227", "#d2a2a7")) +
+  scale_color_manual(values = c("#020202", "#969696")) +
+  scale_fill_manual(values = c("#020202", "#dbdbdb")) +
   geom_point(alpha = 0.15) +
-  geom_line(data = mAL, aes(x=water.text, y=mean_lam, color = soil)) +
+  geom_line(data = mAL, aes(x=water.text, y=mean_lam)) +
   stat_summary(
     fun = "mean",        
     geom = "point",
@@ -56,10 +77,12 @@ aL = acam %>%
     shape = 21, aes(fill = soil)) +
   ylab("Intrinsic Growth Rate") +
   xlab(" ")  +
-  labs(fill = "Soil", color = "Soil") +
+  labs(fill = "Soil", color = "Soil", linetype = "Soil") +
   #guides(color = guide_legend("Soil", override.aes = list(linewidth = 1))) +
   theme(text = element_text(size=15),
-        axis.text.x=element_blank())
+        axis.text.x=element_blank()) +
+  ggtitle("A. americanus")  +
+  theme(plot.title = element_text(face = "italic"))
 
 ## brho lambda ####
 mBL = brho %>% 
@@ -81,10 +104,10 @@ bL = brho %>%
          water.text = fct_relevel(water.text, "Low", "Intermediate", "High")) %>%
   
   ggplot(aes(x = water.text, y=lam, group = soil, color = soil)) +
-  scale_color_manual(values = c("#02401B", "#81A88D")) +
-  scale_fill_manual(values = c("#02401B", "#81A88D")) +
+  scale_color_manual(values = c("#020202", "#969696")) +
+  scale_fill_manual(values = c("#020202", "#dbdbdb")) +
   geom_point(alpha = 0.15) +
-  geom_line(data = mBL, aes(x=water.text, y=mean_lam, color = soil)) +
+  geom_line(data = mBL, aes(x=water.text, y=mean_lam)) +
   stat_summary(
     fun = "mean",        
     geom = "point",
@@ -93,10 +116,12 @@ bL = brho %>%
     shape = 21, aes(fill = soil)) +
   ylab(" ") +
   xlab(" ")  +
-  labs(fill = "Soil", color = "Soil") +
- # guides(color = guide_legend("Soil Treatment", override.aes = list(linewidth = 1))) +
+  labs(fill = "Soil", color = "Soil", linetype = "Soil") +
   theme(text = element_text(size=15),
-        axis.text.x=element_blank())
+        axis.text.x=element_blank()) +
+  ggtitle("B. hordeaceus")  +
+  theme(plot.title = element_text(face = "italic"))
+
 
 ## acam intra ####
 mAA = acam %>% 
@@ -118,8 +143,8 @@ aa = acam %>%
          water.text = fct_relevel(water.text, "Low", "Intermediate", "High")) %>%
   
   ggplot(aes(x = water.text, y=alpha, group = soil, color = soil)) +
-  scale_color_manual(values = c("#400227", "#d2a2a7")) +
-  scale_fill_manual(values = c("#400227", "#d2a2a7")) +
+  scale_color_manual(values = c("#020202", "#969696")) +
+  scale_fill_manual(values = c("#020202", "#dbdbdb")) +
   geom_point(alpha = 0.15) +
   geom_line(data = mAA, aes(x=water.text, y=mean_alpha, color = soil)) +
   stat_summary(
@@ -132,8 +157,7 @@ aa = acam %>%
   ylab("INTRAspecific alpha") +
   xlab("Water Level")  +
   labs(fill = "Soil", color = "Soil") +
-  #guides(color = guide_legend("Soil Treatment", override.aes = list(linewidth = 1))) +
-    theme(text = element_text(size=15)) +
+  theme(text = element_text(size=15)) +
   coord_cartesian(ylim = c(-0.085, 0))
 
 ## brho inter ####
@@ -156,8 +180,8 @@ ba = brho %>%
          water.text = fct_relevel(water.text, "Low", "Intermediate", "High")) %>%
   
   ggplot(aes(x = water.text, y=alpha, group = soil, color = soil)) +
-  scale_color_manual(values = c("#02401B", "#81A88D")) +
-  scale_fill_manual(values = c("#02401B", "#81A88D")) +
+  scale_color_manual(values = c("#020202", "#969696")) +
+  scale_fill_manual(values = c("#020202", "#dbdbdb")) +
   geom_point(alpha = 0.15) +
   geom_line(data = mBA, aes(x=water.text, y=mean_alpha, color = soil)) +
   stat_summary(
@@ -170,10 +194,22 @@ ba = brho %>%
   xlab(" ")  +
   labs(fill = "Soil", color = "Soil") +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  #guides(color = guide_legend("Soil Treatment", override.aes = list(linewidth = 1))) +
   theme(text = element_text(size=15),
         axis.text.x=element_blank()) +
-  coord_cartesian(ylim = c(-0.085, 0.02))
+ # coord_cartesian(ylim = c(-0.085, 0.02))
+  
+  ## code to add max value of sigmoidal in
+  coord_cartesian(ylim = c(-0.085, 0.21)) +
+  geom_point(data = max_int, aes(x=water.text, y=max_a), alpha =  0.15) +
+  geom_line(data = m_MI, aes(x=water.text, y=mma)) +
+  stat_summary(data = max_int, aes(x=water.text, y=max_a),
+    fun = "mean",        
+    geom = "point",
+    col = "black",
+    size = 4,
+   shape = 21, fill = "white") 
+  
+  
 
 
 ## acam inter ####
@@ -191,7 +227,7 @@ ab = acam %>%
          water.text = fct_relevel(water.text, "Low", "Intermediate", "High")) %>%
    
   ggplot(aes(x = water.text, y=alpha_brho )) +
-  geom_point(alpha = 0.15) +
+  geom_point(alpha = 0.15, color = "#565656") +
   geom_line(data = mAB, aes(x=water.text, y=mean_alpha, group = 1)) +
   stat_summary(
     fun = "mean",        
@@ -205,7 +241,8 @@ ab = acam %>%
  # guides(color = guide_legend("Soil Treatment", override.aes = list(linewidth = 1))) +
   theme(text = element_text(size=15),
         axis.text.x=element_blank()) +
-  coord_cartesian(ylim = c(-0.085, 0.02))
+  coord_cartesian(ylim = c(-0.085, 0.21)) 
+  #coord_cartesian(ylim = c(-0.085, 0.02))
 
 ## brho intra ####
 mBB = brho %>% 
@@ -222,7 +259,7 @@ bb = brho %>%
          water.text = fct_relevel(water.text, "Low", "Intermediate", "High")) %>%
   
   ggplot(aes(x = water.text, y=alpha_brho )) +
-  geom_point(alpha = 0.15) +
+  geom_point(alpha = 0.15, color = "#565656") +
   geom_line(data = mBB, aes(x=water.text, y=mean_alpha, group = 1)) +
   stat_summary(
     fun = "mean",        
@@ -240,12 +277,9 @@ bb = brho %>%
 
 
 ## put together ####
-a = ggarrange(aL, ab, aa, ncol = 1, nrow = 3, common.legend = TRUE, legend = "bottom", align = "v")
-b = ggarrange(bL, ba, bb, ncol = 1, nrow = 3, common.legend = TRUE, legend = "bottom", align = "v")
+ggarrange(aL, bL, ab, ba, aa,bb, ncol = 2, nrow = 3, common.legend = TRUE, legend = "bottom", align = "v", labels = "AUTO")
 
-ggarrange(a, b, ncol = 2, align = "h")
-
-ggsave("figures/final_diss/Fig2_mutualism_params.png", width = 7, height = 8)
+ggsave("figures/final_diss/Fig2_mutualism_params_with_sigmax.png", width = 7, height = 9)
 
 
 
@@ -259,13 +293,11 @@ mAGR = gr_df %>%
 aigr = gr_df %>%
   filter(focal == "ACAM") %>%
   mutate(int = interaction(soil, type)) %>%
-  ggplot(aes(x=water.text, y=growth_rate, group = interaction(soil, type), color = soil, shape = type)) +
+  ggplot(aes(x=water.text, y=growth_rate, group = interaction(soil, type), shape = type, linetype = type)) +
   geom_point(alpha = 0.15) +
-  geom_line(data = mAGR, aes(x=water.text, y=mean_gr, color = soil)) +
-  
-  
-  scale_color_manual(values = c("#400227", "#d2a2a7")) +
-  scale_fill_manual(values = c("#400227", "#d2a2a7")) +
+  geom_line(data = mAGR, aes(x=water.text, y=mean_gr)) +
+  #scale_color_manual(values = c("black", "white")) +
+  scale_fill_manual(values = c("black", "white")) +
   stat_summary(
     fun = "mean",        
     geom = "point",
@@ -273,13 +305,17 @@ aigr = gr_df %>%
     size = 4,
     aes(fill = soil, shape = type)) +
   scale_shape_manual(values = c(21, 22)) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_hline(yintercept = 0, linetype = "dotted") +
   
-  labs(fill = "Soil", color = "Soil", shape = "Type") +
+  labs(fill = "Soil", color = "Soil", shape = "Type", linetype = "Type") +
   ylab("Growth Rate") +
   xlab("Water Level") +
   guides(fill = guide_legend("Soil", override.aes = list(shape = 21))) +
-  theme(text = element_text(size=14))
+  guides(shape = guide_legend("Type", override.aes = list(size = 4))) +
+  theme(text = element_text(size=14)) +
+  scale_linetype_manual(values = c("dashed", "solid")) +
+  ggtitle("A. americanus") +
+  theme(plot.title = element_text(face = "italic"))
 
 ## brho igr ####
 mBGR = gr_df %>%
@@ -290,13 +326,11 @@ mBGR = gr_df %>%
 bigr = gr_df %>%
   filter(focal == "BRHO") %>%
   mutate(int = interaction(soil, type)) %>%
-  ggplot(aes(x=water.text, y=growth_rate, group = interaction(soil, type), color = soil, shape = type)) +
+  ggplot(aes(x=water.text, y=growth_rate, group = interaction(soil, type), shape = type, linetype = type)) +
   geom_point(alpha = 0.15) +
-  geom_line(data = mBGR, aes(x=water.text, y=mean_gr, color = soil)) +
-  
-  
-  scale_color_manual(values = c("#02401B", "#81A88D")) +
-  scale_fill_manual(values = c("#02401B", "#81A88D")) +
+  geom_line(data = mBGR, aes(x=water.text, y=mean_gr)) +
+ # scale_color_manual(values = c("#02401B", "#81A88D")) +
+  scale_fill_manual(values = c("black", "white")) +
   stat_summary(
     fun = "mean",        
     geom = "point",
@@ -305,224 +339,17 @@ bigr = gr_df %>%
     aes(fill = soil, shape = type)) +
   scale_shape_manual(values = c(21, 22)) +
   
-  labs(fill = " ", color = " ", shape = "Type") +
+  labs(fill = " ", color = " ", shape = "Type", linetype = "Type") +
   ylab(" ") +
   xlab("Water Level") +
   guides(fill = guide_legend(" ", override.aes = list(shape = 21))) +
   theme(text = element_text(size=14)) +
-  guides(shape = "none")
+  guides(shape = "none") +
+  scale_linetype_manual(values = c("dashed", "solid")) +
+  ggtitle("B. hordeaceus") +
+  theme(plot.title = element_text(face = "italic"))
 
 ## put together ####
-ggarrange(aigr, bigr, ncol = 2, nrow = 1, legend = "bottom", align = "h", labels = "AUTO")
+ggarrange(aigr, bigr, ncol = 2, nrow = 1, legend = "bottom", align = "h", labels = "AUTO", common.legend = T)
 
 ggsave("figures/final_diss/Fig3_mutualism_igrs.png", width = 8, height = 4)
-
-
-
-
-
-
-
-# Fig 2 old ####
-## acam lambda ####
-aL = acam %>%
-  select(water, lambda, lambda_m0) %>%
-  pivot_longer(cols = c("lambda", "lambda_m0"), names_to = "soil", values_to = "lam") %>%
-  mutate(soil = ifelse(soil == "lambda", "Live", "Sterilized")) %>%
-  
-  mutate(water.text = ifelse(water == 1, "High", 
-                             ifelse(water == 0.75, "Intermediate", "Low")),
-         water.text = fct_relevel(water.text, "Low", "Intermediate", "High")) %>%
-  
-  ggplot(aes(x = soil, y=lam, color = soil)) +
-  scale_color_manual(values = c("#400227", "#d2a2a7")) +
-  geom_jitter(alpha = 0.25) +
-  geom_boxplot() +
-  ylab("Intrinsic Growth Rate") +
-  xlab(NULL)  +
-  facet_wrap(~water.text) +
-  #geom_hline(yintercept = 0, linetype = "dashed") +
-  labs(fill = "Soil", color = "Soil") +
-  guides(color = guide_legend("Soil Treatment", override.aes = list(linewidth = 1))) +
-  theme(text = element_text(size=15),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank())
-
-## brho lambda ####
-bL = brho %>%
-  select(water, lambda, lambda_m0) %>%
-  pivot_longer(cols = c("lambda", "lambda_m0"), names_to = "soil", values_to = "lam") %>%
-  mutate(soil = ifelse(soil == "lambda", "Live", "Sterilized")) %>%
-  
-  mutate(water.text = ifelse(water == 1, "High", 
-                             ifelse(water == 0.75, "Intermediate", "Low")),
-         water.text = fct_relevel(water.text, "Low", "Intermediate", "High")) %>%
-  
-  ggplot(aes(x = soil, y=lam, color = soil)) +
-  scale_color_manual(values = c("#02401B", "#81A88D")) +
-  geom_jitter(alpha = 0.25) +
-  geom_boxplot() +
-  ylab("Intrinsic Growth Rate") +
-  xlab(NULL)  +
-  facet_wrap(~water.text) +
-  labs(fill = "Soil", color = "Soil") +
-  guides(color = guide_legend("Soil Treatment", override.aes = list(linewidth = 1))) +
-  theme(text = element_text(size=15),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank())
-
-## acam intra ####
-aa = acam %>%
-  select(water, alpha_acam, alpha_acam_m0) %>%
-  pivot_longer(cols = c("alpha_acam", "alpha_acam_m0"), names_to = "soil", values_to = "alpha") %>%
-  mutate(soil = ifelse(soil == "alpha_acam", "Live", "Sterilized")) %>%
-  
-  mutate(water.text = ifelse(water == 1, "High", 
-                             ifelse(water == 0.75, "Intermediate", "Low")),
-         water.text = fct_relevel(water.text, "Low", "Intermediate", "High")) %>%
-  
-  ggplot(aes(x = soil, y=alpha, color = soil)) +
-  scale_color_manual(values = c("#400227", "#d2a2a7")) +
-  geom_jitter(alpha = 0.25) +
-  geom_boxplot() +
-  ylab("INTRA specific alpha") +
-  xlab(NULL)  +
-  facet_wrap(~water.text) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  labs(fill = "Soil", color = "Soil") +
-  guides(color = guide_legend("Soil Treatment", override.aes = list(linewidth = 1))) +
-  theme(text = element_text(size=15)) +
-  scale_y_continuous(breaks = seq(-0.08, 0, by = 0.04))
-
-## acam inter
-ab = acam %>%
- # select(water, alpha_acam, alpha_acam_m0) %>%
- # pivot_longer(cols = c("alpha_acam", "alpha_acam_m0"), names_to = "soil", values_to = "alpha") %>%
-#  mutate(soil = ifelse(soil == "alpha_acam", "Live", "Sterilized")) %>%
-  
-  mutate(water.text = ifelse(water == 1, "High", 
-                             ifelse(water == 0.75, "Intermediate", "Low")),
-         water.text = fct_relevel(water.text, "Low", "Intermediate", "High"),
-         soil = "Both") %>%
-  
-  ggplot(aes(x=soil, y=alpha_brho)) +
-  scale_color_manual(values = c("#400227", "#d2a2a7")) +
-  geom_jitter(alpha = 0.25) +
-  geom_boxplot() +
-  ylab("INTER specific alpha") +
-  xlab(NULL)  +
-  facet_wrap(~water.text) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  #labs(fill = "Soil", color = "Soil") +
-  guides(color = guide_legend("Soil Treatment", override.aes = list(linewidth = 1))) +
-  theme(text = element_text(size=15)) +
-  theme(#text = element_text(size=13),
-        axis.text.x = element_text(size = 9),
-        axis.text.y = element_text(size = 9))
-
-
-## brho inter ####
-ba = brho %>%
-  select(water, alpha_acam, alpha_acam_m0) %>%
-  pivot_longer(cols = c("alpha_acam", "alpha_acam_m0"), names_to = "soil", values_to = "alpha") %>%
-  mutate(soil = ifelse(soil == "alpha_acam", "Live", "Sterilized")) %>%
-  
-  mutate(water.text = ifelse(water == 1, "High", 
-                             ifelse(water == 0.75, "Intermediate", "Low")),
-         water.text = fct_relevel(water.text, "Low", "Intermediate", "High")) %>%
-
-  ggplot(aes(x = soil, y=alpha, color = soil)) +
-  scale_color_manual(values = c("#02401B", "#81A88D")) +
-  geom_jitter(alpha = 0.25) +
-  geom_boxplot() +
-  ylab("INTER specific alpha") +
-  xlab(NULL)  +
-  facet_wrap(~water.text) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  labs(fill = "Soil", color = "Soil") +
-  guides(color = guide_legend("Soil Treatment", override.aes = list(linewidth = 1))) +
-  theme(text = element_text(size=15))
-
-a = ggarrange(aL, aa, ncol = 1, nrow = 2, common.legend = TRUE, legend = "bottom", align = "v")
-b = ggarrange(bL, ba, ncol = 1, nrow = 2, common.legend = TRUE, legend = "bottom", align = "v")
-
-ggarrange(a, b, ncol = 2)
-
-ggsave("figures/final_diss/Fig2_mutualism_params.png", width = 12, height = 7)
-
-
-
-# OLD ####
-
-aL = acam %>%
-  select(water, lambda, lambda_m0) %>%
-  pivot_longer(cols = c("lambda", "lambda_m0"), names_to = "soil", values_to = "lambda") %>%
-  mutate(soil = ifelse(soil == "lambda", "Live", "Sterilized")) %>%
-  
-  mutate(water.text = ifelse(water == 1, "High", 
-                             ifelse(water == 0.75, "Intermediate", "Low")),
-         water.text = fct_relevel(water.text, "Low", "Intermediate", "High")) %>%
-  ggplot(aes(x=lambda, color = soil, fill = soil)) +
-  geom_density(aes(x=lambda), alpha = 0.5, linewidth = 1) +
- # geom_density(aes(x=lambda_m0), color = "#d2a2a7", fill = "#d2a2a7", alpha = 0.5, linewidth = 1) +
-  scale_color_manual(values = c("#400227", "#d2a2a7")) +
-  scale_fill_manual(values = c("#400227", "#d2a2a7")) +
-  facet_wrap(~water.text) +
-  xlab("Lambda") +
-  ylab(" ") +
-  theme(text = element_text(size=13),
-        axis.text.x = element_text(size = 9),
-        axis.text.y = element_text(size = 9)) +
-  labs(fill = "Soil", color = "Soil")
-
-ba = brho %>%
-  select(water, alpha_acam, alpha_acam_m0) %>%
-  pivot_longer(cols = c("alpha_acam", "alpha_acam_m0"), names_to = "soil", values_to = "alpha") %>%
-  mutate(soil = ifelse(soil == "alpha_acam", "Live", "Sterilized")) %>%
-  mutate(water.text = ifelse(water == 1, "High", 
-                             ifelse(water == 0.75, "Intermediate", "Low")),
-         water.text = fct_relevel(water.text, "Low", "Intermediate", "High")) %>%
-  ggplot(aes(x=alpha, color = soil, fill = soil)) +
-  geom_density(alpha = 0.5, linewidth = 1) +
- # geom_density(aes(x=alpha_acam_m0), color = "#81A88D", fill = "#81A88D", alpha = 0.5, linewidth = 1) +
-  scale_color_manual(values = c("#02401B", "#81A88D")) +
-  scale_fill_manual(values = c("#02401B", "#81A88D")) +
-  facet_wrap(~water.text) +
-  xlab("INTER specific alpha") +
-  ylab("Density")  +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  scale_x_continuous(breaks = seq(-0.08, 0, by = 0.02)) +
-  theme(text = element_text(size=13),
-        axis.text.x = element_text(size = 9),
-        axis.text.y = element_text(size = 9)) +
-  labs(fill = "Soil", color = "Soil") +
-  theme(legend.position="none")
-
-bL = brho %>%
-  select(water, lambda, lambda_m0) %>%
-  pivot_longer(cols = c("lambda", "lambda_m0"), names_to = "soil", values_to = "lambda") %>%
-  mutate(soil = ifelse(soil == "lambda", "Live", "Sterilized")) %>%
-  mutate(water.text = ifelse(water == 1, "High", 
-                             ifelse(water == 0.75, "Intermediate", "Low")),
-         water.text = fct_relevel(water.text, "Low", "Intermediate", "High")) %>%
-  ggplot(aes(x=lambda, color = soil, fill = soil)) +
-  geom_density(alpha = 0.5, linewidth = 1) +
-  #geom_density(aes(x=lambda_m0), color = "#81A88D", fill = "#81A88D", alpha = 0.15, linewidth = 1) +
-  scale_color_manual(values = c("#02401B", "#81A88D")) +
-  scale_fill_manual(values = c("#02401B", "#81A88D")) +
-  facet_wrap(~water.text) +
-  xlab("Lambda") +
-  ylab(" ")  +
-  theme(text = element_text(size=13),
-        axis.text.x = element_text(size = 9),
-        axis.text.y = element_text(size = 9)) +
-  labs(fill = "Soil", color = "Soil")
-
-alphas = ggarrange(aa, ba, ncol = 1, nrow = 2, labels = "AUTO", align = "h")
-lambdas = ggarrange(aL, bL, ncol = 1, nrow = 2, labels = "AUTO", align = "h")
-
-plot_grid(aa, aL, ba, bL, rel_widths = c(1, 1.25), labels = c('A', 'B', 'C', 'D'), align = "h")
-
-#ggarrange(aa, aL, ba, bL, ncol = 2, nrow = 2, labels = "AUTO", align = "h")
-ggsave("figures/Apr2025/final/mutualism_posteriors.png", width = 9, height = 4.5)
-

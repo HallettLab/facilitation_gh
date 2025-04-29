@@ -155,7 +155,7 @@ RII_sp %>%
   theme(legend.position = "bottom") #+
   #scale_shape_manual(values = c(22, 21))
 
-ggsave("figures/Apr2025/Fig2_NIntA_index.png", width = 7, height = 4)
+#ggsave("figures/Apr2025/Fig2_NIntA_index.png", width = 7, height = 4)
 
 
 # Fig 5 ####
@@ -180,23 +180,23 @@ RII_sp %>%
   scale_shape_manual(values = c(16, 1)) +
   labs(color = "Soil Treatment", shape = "Soil")
   
-ggsave("figures/Apr2025/Fig5_NIntA_index.png", width = 7, height = 3.5)
+#ggsave("figures/Apr2025/Fig5_NIntA_index.png", width = 7, height = 3.5)
 
 
 #798234,#a3ad62,#d0d3a2,#fdfbe4,#f0c6c3,#df91a3,#d46780
 
 ## save data for Tetianna
-datT = RII_sp %>%
-  filter(focal == "BRHO",
-         microbe == "Live", 
-         planted.bg %in% c(0, 12, 24), 
-         water != "Intermediate") %>%
-  mutate(water.text = water,
-         water = ifelse(water.text == "High", 1, 0.6),
-         microbe = 1, 
-         ACAM_density = planted.bg) %>%
-  select(-planted.bg)
+#datT = RII_sp %>%
+ # filter(focal == "BRHO",
+  #       microbe == "Live", 
+   #      planted.bg %in% c(0, 12, 24), 
+   #      water != "Intermediate") %>%
+ # mutate(water.text = water,
+  #       water = ifelse(water.text == "High", 1, 0.6),
+ #        microbe = 1, 
+  #       ACAM_density = planted.bg) %>%
+#  select(-planted.bg)
 
-write.csv(datT, "data/for_Tetianna/plant_interactions.csv", row.names = FALSE)
+#write.csv(datT, "data/for_Tetianna/plant_interactions.csv", row.names = FALSE)
 
-
+rm(acam_RII, brj, acj, RII_sp, controls, controlsA)

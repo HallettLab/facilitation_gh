@@ -80,7 +80,7 @@ ricker_stat_func = function(surv, germ, lambda, alpha_intra, Nt, germ_inter, int
 ## can set these params outside of the loop as they won't change with dens
 
 
-dens = c(4, 6, 8, 12, 16, 20, 30, 100)
+dens = c(4, 6, 8, 12, 16, 20, 30, 100, 150)
 rain = c(1, 0.75, 0.6)
 species = c("ACAM", "BRHO")
 
@@ -222,7 +222,7 @@ cl = gr_fin %>%
   xlab(" ") +
   ylab(" ") +
   labs(color = "Total Density") +
-  scale_color_manual(values = c("#d4e3de", "#c5dad3", "#b7d1c8", "#9bbfb3", "#8db6a9", "#70a494", "#639283", "black")) +
+  scale_color_manual(values = c("#d4e3de", "#c5dad3", "#b7d1c8", "#9bbfb3", "#8db6a9", "#70a494", "#639283", "black", "gray")) +
   theme(text = element_text(size = 14)) +
   
   coord_cartesian(ylim = c(1, 4))

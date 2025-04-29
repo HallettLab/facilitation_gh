@@ -1,4 +1,7 @@
 
+library(tidyverse)
+library(ggpubr)
+
 ## Plot IGR diffs with m0 and m1
 
 #source("data_analysis/compare_soil/calc_IGR.R")

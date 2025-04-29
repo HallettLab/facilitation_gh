@@ -204,3 +204,4 @@ igr_sig = igr_sig %>%
   filter(!is.na(focal)) %>%
   mutate(model = "sigmoidal")
 
+#write.csv(igr_sig, "data_analysis/MCT/output/igr_sigmoidal_20250428.csv", row.names = F)

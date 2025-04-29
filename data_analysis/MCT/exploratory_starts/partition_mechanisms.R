@@ -7,7 +7,7 @@ library(simts)
 
 ## read in data
 ### rainfall 
-source("data_analysis/MCT/historic_rainfall.R")
+source("data_analysis/MCT/exploratory_starts/historic_rainfall.R")
 
 ### model parameters
 # source('./Competition/Model-fit/import_posteriors_AM.R')
@@ -119,6 +119,8 @@ for (i in 1:length(species)){
     if(sp == "BRHO") {
       
       N_BRHO[t+1] = pop.equilibrium(N0 = N_BRHO[t], s=0, g=gb, a_intra=params$a_intra, lambda=params$lam)
+    
+      
       
     } else {
       
@@ -132,6 +134,11 @@ for (i in 1:length(species)){
 plot(seq(1:(time+1)), N_BRHO, type="l")
 plot(seq(1:(time+1)), N_ACAM, type="l")
 
+mean(N_BRHO)
+bgr = log(N_BRHO[-1]/N_BRHO[-122])
+plot(log(N_BRHO[-1]/N_BRHO[-122]))
+
+mean(bgr)
 
 
 # Species to loop across and time in years

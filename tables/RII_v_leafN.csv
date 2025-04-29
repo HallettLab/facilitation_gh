@@ -1,0 +1,5 @@
+"coeff","Sum Sq","Df","F value","Pr(>F)"
+"WtN",0.177,1,4.876,0.031
+"as.factor(water.x)",0.514,2,7.076,0.002
+"num.bg.indiv",0.65,1,17.918,0
+"Residuals",2.214,61,NA,NA
