@@ -135,6 +135,25 @@ acj = acam_RII %>%
 
 RII_sp = rbind(brj, acj)
 
+# Plot ####
+brho_RII %>%
+  filter(ACAM != 0) %>%
+  ggplot(aes(x=num.bg.indiv, y=NIntA, color = water, linetype = microbe, shape = microbe)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+#  geom_line() +
+  geom_point() +
+  #geom_point(aes(fill = water), colour = "black", pch = 21, size = 3.5) +
+  facet_wrap(~water) +
+  scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  geom_smooth(method = "lm", alpha = 0.15) +
+  xlab("Planted Legume Density") +
+  ylab("Additive Intensity Index") +
+  labs(fill = "Water") +
+  theme(text = element_text(size = 15)) +
+  theme(legend.position = "bottom") +
+  scale_shape_manual(values = c(19,1))
+
+
 # Fig 2 ####
 RII_sp %>%
   filter(focal == "BRHO") %>%

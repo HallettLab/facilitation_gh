@@ -1,0 +1,10 @@
+"rowname","Sum Sq","Df","F value","Pr(>F)","species","signif"
+"(Intercept)",4.513,1,32.415,0,"A. americanus","***"
+"num.focal.indiv",0.986,1,7.078,0.008,"A. americanus","**"
+"microbe",0.201,1,1.446,0.23,"A. americanus"," "
+"water",0.752,1,5.403,0.021,"A. americanus","*"
+"num.focal.indiv:microbe",0.001,1,0.004,0.947,"A. americanus"," "
+"num.focal.indiv:water",0.06,1,0.433,0.511,"A. americanus"," "
+"microbe:water",1.889,1,13.567,0,"A. americanus","***"
+"num.focal.indiv:microbe:water",0.27,1,1.937,0.165,"A. americanus"," "
+"Residuals",30.909,222,NA,NA,"A. americanus",NA

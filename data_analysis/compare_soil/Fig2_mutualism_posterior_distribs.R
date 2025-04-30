@@ -293,11 +293,13 @@ mAGR = gr_df %>%
 aigr = gr_df %>%
   filter(focal == "ACAM") %>%
   mutate(int = interaction(soil, type)) %>%
-  ggplot(aes(x=water.text, y=growth_rate, group = interaction(soil, type), shape = type, linetype = type)) +
+  ggplot(aes(x=water.text, y=growth_rate, group = interaction(soil, type), shape = type, linetype = type, color = soil)) +
   geom_point(alpha = 0.15) +
   geom_line(data = mAGR, aes(x=water.text, y=mean_gr)) +
   #scale_color_manual(values = c("black", "white")) +
-  scale_fill_manual(values = c("black", "white")) +
+ # scale_fill_manual(values = c("black", "white")) +
+  scale_color_manual(values = c("#020202", "#969696")) +
+  scale_fill_manual(values = c("#020202", "#dbdbdb")) +
   stat_summary(
     fun = "mean",        
     geom = "point",
@@ -326,11 +328,11 @@ mBGR = gr_df %>%
 bigr = gr_df %>%
   filter(focal == "BRHO") %>%
   mutate(int = interaction(soil, type)) %>%
-  ggplot(aes(x=water.text, y=growth_rate, group = interaction(soil, type), shape = type, linetype = type)) +
+  ggplot(aes(x=water.text, y=growth_rate, group = interaction(soil, type), shape = type, linetype = type, color = soil)) +
   geom_point(alpha = 0.15) +
   geom_line(data = mBGR, aes(x=water.text, y=mean_gr)) +
- # scale_color_manual(values = c("#02401B", "#81A88D")) +
-  scale_fill_manual(values = c("black", "white")) +
+  scale_color_manual(values = c("#020202", "#969696")) +
+  scale_fill_manual(values = c("#020202", "#dbdbdb")) +
   stat_summary(
     fun = "mean",        
     geom = "point",
@@ -352,4 +354,4 @@ bigr = gr_df %>%
 ## put together ####
 ggarrange(aigr, bigr, ncol = 2, nrow = 1, legend = "bottom", align = "h", labels = "AUTO", common.legend = T)
 
-ggsave("figures/final_diss/Fig3_mutualism_igrs.png", width = 8, height = 4)
+ggsave("figures/final_diss/diss_done/Fig3_mutualism_igrs.png", width = 8, height = 4)

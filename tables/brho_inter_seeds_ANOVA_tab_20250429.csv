@@ -1,0 +1,6 @@
+"rowname","Sum Sq","Df","F value","Pr(>F)","species","signif"
+"(Intercept)",291.891,1,3001.041,0,"B. hordeaceus","***"
+"num.bg.indiv",23.486,1,241.466,0,"B. hordeaceus","***"
+"microbe",1.797,1,18.474,0,"B. hordeaceus","***"
+"water",20.348,1,209.205,0,"B. hordeaceus","***"
+"Residuals",25.191,259,NA,NA,"B. hordeaceus",NA

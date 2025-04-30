@@ -66,7 +66,7 @@ d13C = CN_RII %>%
   geom_hline(yintercept = 0, linetype = "dashed") +
   labs(color = "Water") +
   ylab("Additive Intensity Index") +
-  xlab("Delta 13C")
+  xlab("Water Use Efficiency")
 
 d13C_m0 = CN_RII %>%
   filter(microbe.x == 0) %>%
@@ -82,17 +82,20 @@ d13C_m0 = CN_RII %>%
   xlab("Delta 13C")
 
 leafN = CN_RII %>%
-  filter(microbe.x == 1) %>%
-  ggplot(aes(x=WtN, y=NIntA, color = water.y)) +
+  filter(water.x != 0.75) %>%
+  ggplot(aes(x=WtN, y=NIntA, color = water.y, linetype = as.factor(microbe.y), shape = microbe.y)) +
   geom_point() +
   theme(text = element_text(size = 14)) +
   
-  scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
-  geom_smooth(method = "lm", alpha = 0.15) +
+  scale_color_manual(values = c("#70a494", "#de8a5a")) +
+  geom_smooth(method = "lm", alpha = 0.05) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   labs(color = "Water") +
   ylab(" ") +
-  xlab("Leaf % N")
+  xlab("Leaf % N") +
+  labs(linetype = "Soil") +
+  scale_shape_manual(values = c(19,1))
+  
 
 leafN_m0 = CN_RII %>%
   filter(microbe.x == 0) %>%
@@ -100,7 +103,8 @@ leafN_m0 = CN_RII %>%
   geom_point() +
   theme(text = element_text(size = 14)) +
   
-  scale_color_manual(values = c("#70a494", "#de8a5a")) +
+  scale_color_manual(values = c("#
+                                ", "#de8a5a")) +
   geom_smooth(method = "lm", alpha = 0.15) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   labs(color = "Water") +
@@ -110,32 +114,48 @@ leafN_m0 = CN_RII %>%
 
 ggarrange(aii_m1, aii_m0, d13C, leafN, labels = "AUTO", common.legend = T, legend =  "bottom")
 
-ggsave("figures/final_diss/Fig2_RII_Nutrients.png", width = 7, height = 7)
+ggsave("figures/final_diss/diss_done/Fig2_RII_Nutrients.png", width = 7, height = 7)
 
 # Model ####
 mod_dat = CN_RII %>%
   filter(num.bg.indiv != 0, microbe.x == 1)
 
+## delta 13C ####
 m1 = lm(NIntA ~ delta13C * as.factor(water.x) + num.bg.indiv, data = mod_dat)
 summary(m1)
+
+m1_coeff = as.data.frame(summary(m1)$coeff) %>%
+  rownames_to_column() %>%
+  mutate_if(is.numeric, round, digits = 3) 
+
+write.csv(m1_coeff, "tables/brho_AII_v_delta13C_tab_20250429.csv", row.names = F)
 
 Anova(m1, type = 3, test.statistic = "F")
 
 m1df = as.data.frame(Anova(m1, type = 3, test.statistic = "F")) %>%
   rownames_to_column(var = "coeff") %>%
   mutate_if(is.numeric, round, digits = 3)
-
   
 write.csv(m1df, "tables/RII_v_delta13c.csv", row.names = F)
 
-
+## %N ####
 m2 = lm(NIntA ~ WtN + as.factor(water.x) + num.bg.indiv, data = mod_dat)
 summary(m2)
 
 Anova(m2, type = 2, test.statistic = "F")
+
+m2_coeff = as.data.frame(summary(m2)$coeff) %>%
+  rownames_to_column() %>%
+  mutate_if(is.numeric, round, digits = 3) 
+
+write.csv(m2_coeff, "tables/brho_AII_v_percN_tab_20250429.csv", row.names = F)
 
 m2df = as.data.frame(Anova(m2, type = 2, test.statistic = "F")) %>%
   rownames_to_column(var = "coeff") %>%
   mutate_if(is.numeric, round, digits = 3)
 
 write.csv(m2df, "tables/RII_v_leafN.csv", row.names = F)
+
+
+#m3 = lm(NIntA ~ WtN + as.factor(water.x) + num.bg.indiv + microbe.y, data = CN_RII)
+#summary(m3)

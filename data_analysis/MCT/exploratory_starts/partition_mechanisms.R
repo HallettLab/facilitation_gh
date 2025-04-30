@@ -3,7 +3,7 @@
 ## load packages
 library(tidyverse)
 library(rstan)
-library(simts)
+#library(simts)
 
 ## read in data
 ### rainfall 

@@ -66,6 +66,7 @@ b = igr_sig %>%
   theme(text = element_text(size=15)) +
   coord_cartesian(xlim = c(0, 42))
 
+b
 ## the df for this figure comes from leaf_nutrient_figs.R
 c = CN_RII %>%
   filter(microbe.x == 1) %>%

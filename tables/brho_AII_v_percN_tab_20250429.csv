@@ -1,0 +1,6 @@
+"rowname","Estimate","Std. Error","t value","Pr(>|t|)"
+"(Intercept)",-0.573,0.107,-5.379,0
+"WtN",0.072,0.033,2.208,0.031
+"as.factor(water.x)0.75",-0.076,0.059,-1.303,0.197
+"as.factor(water.x)1",0.163,0.073,2.239,0.029
+"num.bg.indiv",-0.01,0.002,-4.233,0
