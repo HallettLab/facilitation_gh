@@ -15,6 +15,7 @@ CN_RII = left_join(CN_final, brho_RII, by = c("unique.ID", "block", "rep")) %>%
 
 
 # Plot ####
+## Fig 2 ####
 aii_m1 = brho_RII %>%
   filter(microbe == "Live") %>%
   group_by(ACAM, water, microbe) %>%
@@ -66,28 +67,15 @@ d13C = CN_RII %>%
   geom_hline(yintercept = 0, linetype = "dashed") +
   labs(color = "Water") +
   ylab("Additive Intensity Index") +
-  xlab("Water Use Efficiency")
-
-d13C_m0 = CN_RII %>%
-  filter(microbe.x == 0) %>%
-  ggplot(aes(x=delta13C, y=NIntA, color = water.y)) +
-  geom_point() +
-  geom_smooth(method = "lm", alpha = 0.15) +
-  theme(text = element_text(size = 14)) +
-  
-  scale_color_manual(values = c("#70a494", "#de8a5a")) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  labs(color = "Water") +
-  ylab("Additive Intensity Index") +
-  xlab("Delta 13C")
+  xlab("Leaf delta 13 C")
 
 leafN = CN_RII %>%
-  filter(water.x != 0.75) %>%
-  ggplot(aes(x=WtN, y=NIntA, color = water.y, linetype = as.factor(microbe.y), shape = microbe.y)) +
+  filter(microbe.x == 1) %>%
+  ggplot(aes(x=WtN, y=NIntA, color = water.y)) +
   geom_point() +
   theme(text = element_text(size = 14)) +
   
-  scale_color_manual(values = c("#70a494", "#de8a5a")) +
+  scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
   geom_smooth(method = "lm", alpha = 0.05) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   labs(color = "Water") +
@@ -96,7 +84,12 @@ leafN = CN_RII %>%
   labs(linetype = "Soil") +
   scale_shape_manual(values = c(19,1))
   
+ggarrange(aii_m1, aii_m0, d13C, leafN, labels = "AUTO", common.legend = T, legend =  "bottom")
 
+ggsave("figures/final_diss/diss_done/Fig2_RII_Nutrients.png", width = 7, height = 7)
+
+
+### Check m0 ####
 leafN_m0 = CN_RII %>%
   filter(microbe.x == 0) %>%
   ggplot(aes(x=WtN, y=NIntA, color = water.y)) +
@@ -111,10 +104,51 @@ leafN_m0 = CN_RII %>%
   ylab(" ") +
   xlab("Leaf % N")
 
+d13C_m0 = CN_RII %>%
+  filter(microbe.x == 0) %>%
+  ggplot(aes(x=delta13C, y=NIntA, color = water.y)) +
+  geom_point() +
+  geom_smooth(method = "lm", alpha = 0.15) +
+  theme(text = element_text(size = 14)) +
+  
+  scale_color_manual(values = c("#70a494", "#de8a5a")) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(color = "Water") +
+  ylab("Additive Intensity Index") +
+  xlab("Delta 13C")
 
-ggarrange(aii_m1, aii_m0, d13C, leafN, labels = "AUTO", common.legend = T, legend =  "bottom")
+## Fig S5 ####
+CN_RII_w_d0 = left_join(CN_final, brho_RII, by = c("unique.ID", "block", "rep")) 
 
-ggsave("figures/final_diss/diss_done/Fig2_RII_Nutrients.png", width = 7, height = 7)
+wue_dens = CN_RII_w_d0 %>%
+  filter(microbe.x == 1) %>%
+  ggplot(aes(x=num.bg.indiv, y=delta13C, color = water.y)) +
+  geom_point() +
+  geom_smooth(method = "gam", alpha = 0.15) +
+  theme(text = element_text(size = 14)) +
+  
+  scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  #geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(color = "Water") +
+  ylab("Leaf delta 13 C") +
+  xlab("Legume Density")
+
+N_dens = CN_RII_w_d0 %>%
+  filter(microbe.x == 1) %>%
+  ggplot(aes(x=num.bg.indiv, y=WtN, color = water.y)) +
+  geom_point() +
+  geom_smooth(method = "gam", alpha = 0.15) +
+  theme(text = element_text(size = 14)) +
+  
+  scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  #geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(color = "Water") +
+  ylab("Leaf %N") +
+  xlab("Legume Density")
+
+ggarrange(wue_dens, N_dens, common.legend = T, labels = "AUTO", legend = "bottom")
+
+ggsave("figures/final_diss/diss_done/FigS5_wue_percN_dens.png", width = 7, height = 4)
 
 # Model ####
 mod_dat = CN_RII %>%
