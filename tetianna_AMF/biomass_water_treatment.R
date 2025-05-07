@@ -13,7 +13,7 @@
 library(tidyverse)
 theme_set(theme_classic())
 
-dat = read.csv("data/biomass_seed_data_for_Tetianna.csv")
+dat = read.csv("tetianna_AMF/biomass_seed_data_for_Tetianna.csv")
 
 ## read in Data here!! 
 
@@ -21,10 +21,23 @@ dat = read.csv("data/biomass_seed_data_for_Tetianna.csv")
 ## plot biomass by water treatment
 dat %>%
   mutate(trt = paste0(water, "_", ACAM)) %>%
-ggplot(aes(x=as.factor(water), y=total.bio.percap, color = as.factor(ACAM))) +
+ggplot(aes(x=as.factor(ACAM), y=total.bio.percap)) +
   geom_boxplot() +
   geom_jitter() +
-  xlab("Water") +
-  ylab("Aboveground Biomass per-capita (g)")
+  xlab("Acmispon Density") +
+  ylab("Aboveground Biomass per-capita (g)") +
+  facet_wrap(~water) 
 
 ggsave("biomass_water.png", width = 4, height = 3)
+
+mb= aov(total.bio.percap ~ as.factor(ACAM) + as.factor(water), data = dat)
+summary(mb)
+
+b.anova.df = as.data.frame(Anova(mb)) %>%
+  mutate_if(is.numeric, round, digits = 3) 
+
+write.csv(b.anova.df, "tetianna_AMF/tables/anova_biomass.csv")
+
+
+
+

@@ -32,9 +32,9 @@ theme_set(theme_classic())
 
 
 ## READ THE DATA FILE IN HERE! 
-CN_final = read.csv("leaf_CN_data_for_Tetianna.csv")
+CN_final = read.csv("tetianna_AMF/leaf_CN_data_for_Tetianna.csv")
 
-ints = read.csv("plant_interactions.csv")
+ints = read.csv("tetianna_AMF/plant_interactions.csv")
 
 ##plot CN by water
 ggplot(CN_final, aes(x=as.factor(water), y=CN)) +
@@ -52,18 +52,33 @@ ggplot(CN_final, aes(x=as.factor(ACAM), y=CN)) +
 
 ## plot CN by interaction of water x dens
 CN_final %>%
-  mutate(w_d = paste0(water, "_", ACAM),
-         w_d = as.factor(w_d),
-         w_d = fct_relevel(w_d, "0.6_0", "1_0", "0.6_12", "1_12", "0.6_24", "1_24")) %>%
-  ggplot(aes(x=w_d, y=CN, color = as.factor(water))) +
+  ggplot(aes(x=as.factor(ACAM), y=CN)) +
   geom_boxplot() +
   geom_jitter() +
-  xlab("Water x Density") +
+  xlab("Acmispon Density") +
   ylab("C:N Ratio") +
-  scale_color_manual(values = c("#de8a5a", "#008080")) +
-  labs(color = "Water")
+  labs(color = "Water") +
+  facet_wrap(~water)
+ggsave("tetianna_AMF/figures/CN_ratio.png", width = 7, height = 3) ## code to save the figure
 
-#ggsave("CN_ratio.png", width = 5, height = 3) ## code to save the figure
+mcn = aov(CN ~ as.factor(ACAM) + as.factor(water), data = CN_final)
+summary(mcn)
+
+cn.anova.df = as.data.frame(Anova(mcn)) %>%
+  mutate_if(is.numeric, round, digits = 3) 
+
+write.csv(cn.anova.df, "tetianna_AMF/tables/anova_leaf_cn.csv")
+
+CN_final %>%
+  ggplot(aes(x=as.factor(ACAM), y=delta_15N)) +
+  geom_boxplot() +
+  geom_jitter() +
+  xlab("Acmispon Density") +
+  ylab("C:N Ratio") +
+  labs(color = "Water") +
+  facet_wrap(~water)
+
+
 
 AMF_CN = left_join(AMF_results, CN_final, by = c("unique.ID", "block", "water", "microbe", "rep", "bkgrd", "num.bg.indiv"))
 

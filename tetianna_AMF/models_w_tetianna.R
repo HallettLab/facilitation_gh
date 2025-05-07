@@ -2,6 +2,7 @@
 ## load data in
 source("calculating_perc_colonization.R")
 
+library(car)
 
 ## use AMF Results df
 
@@ -36,13 +37,17 @@ set.seed(0)
 m1 = aov(percent_colonization ~ as.factor(water)*as.factor(ACAM_density), data = AMF_results)
 
 summary(m1)
+AIC(m1)
 ## why are anova vals slightly different?
 
 m2 = aov(percent_colonization ~ as.factor(water)+as.factor(ACAM_density), data = AMF_results)
 
 summary(m2)
+AIC(m2)
+anova.df = as.data.frame(Anova(m2)) %>%
+  mutate_if(is.numeric, round, digits = 3) 
 
-
+write.csv(anova.df, "tetianna_AMF/tables/anova_perc_coln.csv")
 ## other response variables
 ## leaf N data
 ## biomass data
