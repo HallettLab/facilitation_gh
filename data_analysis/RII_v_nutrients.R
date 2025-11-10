@@ -88,6 +88,88 @@ ggarrange(aii_m1, aii_m0, d13C, leafN, labels = "AUTO", common.legend = T, legen
 
 ggsave("figures/final_diss/diss_done/Fig2_RII_Nutrients.png", width = 7, height = 7)
 
+## Talk Version ####
+### interaction v d13C ####
+CN_RII %>%
+  filter(microbe.x == 1) %>%
+  ggplot(aes(x=delta13C, y=NIntA, color = water.y)) +
+  geom_point() +
+  geom_smooth(method = "lm", alpha = 0.15) +
+  theme(text = element_text(size = 16)) +
+  
+  scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(color = "Water") +
+  ylab("Interaction") +
+  xlab("Leaf Water Stress")# +
+#  facet_wrap(~water.y)
+
+ggsave("figures/dissertation_talk/AII_v_delta13C.png", width = 6, height = 4)
+
+### d13C v density ####
+
+CN_RII2 = left_join(CN_final, brho_RII, by = c("unique.ID", "block", "rep")) #%>%
+  #filter(num.bg.indiv != 0)
+
+CN_RII2 %>%
+  filter(microbe.x == 1) %>%
+  ggplot(aes(x=num.bg.indiv, y=delta13C, color = water.y)) +
+  geom_point() +
+  geom_smooth(method = "gam", alpha = 0.15) +
+  theme(text = element_text(size = 16)) +
+  
+  scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  #geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(color = "Water") +
+  xlab("Legume Density") +
+  ylab("Leaf Water Stress")
+
+ggsave("figures/dissertation_talk/dens_v_delta13C.png", width = 6, height = 4)
+
+
+### interaction v %N ####
+CN_RII %>%
+  filter(microbe.x == 1) %>%
+  ggplot(aes(x=WtN, y=NIntA, color = water.y)) +
+  geom_point() +
+  geom_smooth(method = "lm", alpha = 0.15) +
+  theme(text = element_text(size = 16)) +
+  
+  scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(color = "Water") +
+  ylab("Interaction") +
+  xlab("Leaf %N")# +
+#  facet_wrap(~water.y)
+
+ggsave("figures/dissertation_talk/AII_v_percN.png", width = 6, height = 4)
+
+### %N v density ####
+
+#CN_RII2 = left_join(CN_final, brho_RII, by = c("unique.ID", "block", "rep")) #%>%
+#filter(num.bg.indiv != 0)
+
+CN_RII2 %>%
+  filter(microbe.x == 1) %>%
+  ggplot(aes(x=num.bg.indiv, y=WtN, color = water.y)) +
+  geom_point() +
+  geom_smooth(method = "gam", alpha = 0.15) +
+  theme(text = element_text(size = 16)) +
+  
+  scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  #geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(color = "Water") +
+  xlab("Legume Density") +
+  ylab("Leaf %N")
+
+ggsave("figures/dissertation_talk/dens_v_percN.png", width = 6, height = 4)
+
+
+
+
+
+
+
 
 ### Check m0 ####
 leafN_m0 = CN_RII %>%

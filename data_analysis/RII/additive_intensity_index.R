@@ -176,6 +176,27 @@ RII_sp %>%
 
 #ggsave("figures/Apr2025/Fig2_NIntA_index.png", width = 7, height = 4)
 
+## Talk Version ####
+RII_sp %>%
+  filter(focal == "BRHO", microbe == "Live") %>%
+  group_by(planted.bg, water, microbe, focal) %>%
+  summarise(mean.NIntA = mean(NIntA, na.rm = T),
+            se.NIntA = calcSE(NIntA)) %>%
+  ggplot(aes(x=planted.bg, y=mean.NIntA, fill = water)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_errorbar(aes(ymin = mean.NIntA - se.NIntA, ymax = mean.NIntA + se.NIntA)) +
+  geom_line() +
+  geom_point(size = 3.5, pch = 21) +
+  #facet_wrap(~microbe) +
+  scale_fill_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  xlab("Planted Legume Density") +
+  ylab("Interaction") +
+  labs(fill = "Water", shape = "Species") +
+  theme(text = element_text(size = 16)) +
+  theme(legend.position = "bottom") 
+
+ggsave("figures/dissertation_talk/AII_v_density.png", width = 5, height = 4)
+
 
 # Fig 5 ####
 ## plot both together

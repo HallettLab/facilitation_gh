@@ -2,6 +2,8 @@
 library(tidyverse)
 library(lubridate)
 
+theme_set(theme_classic())
+
 ## Pull in the prism data and clean
 rain = read_csv("data/PRISM_brownsvalley_long.csv", skip = 10) %>%
   mutate(ppt = `ppt (inches)`*2.54*10) %>% ## change to mm
@@ -30,11 +32,15 @@ last50 = rainsummary %>%
 #pdf("Rainfal history.pdf", width = 10, height = 8)
 
 ggplot(rainsummary, aes(x=year, y=ppt)) +
-  geom_line()+
-  geom_point(aes(color = raintype), size = 3) + 
-  theme_bw() + 
+  geom_line(linewidth = 1)+
+  #geom_point(aes(color = raintype), size = 3) + 
+  #theme_bw() + 
   labs(x="Year", y="Annual rainfall (mm)") +
-  scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a"))
+  theme(text = element_text(size = 16))
+
+ggsave("figures/dissertation_talk/hist_rainfall.png", width = 12, height = 4.5)
+  
+  #scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a"))
 
 #ggsave("data_analysis/MCT/figures/historic_rainfall.png", width = 10, height = 3)
 

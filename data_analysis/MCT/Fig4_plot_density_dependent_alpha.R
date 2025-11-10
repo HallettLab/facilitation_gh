@@ -1,3 +1,31 @@
+igr_sig = read.csv("data_analysis/MCT/output/igr_sigmoidal_20250428.csv")
+
+calcSE<-function(x){
+  x2<-na.omit(x)
+  sd(x2)/sqrt(length(x2))
+}
+
+library(tidyverse)
+
+theme_set(theme_classic())
+
+## create mean df ####
+bigr_mean = igr_sig %>%
+  mutate(alpha_inter = ifelse(dens == 0, 0, alpha_inter)) %>%
+  # filter(focal == "BRHO") %>%
+  group_by(model, focal, water, dens) %>%
+  
+  summarise(mean.igr = mean(igr), 
+            se.igr = calcSE(igr),
+            mean.alpha = mean(alpha_inter), 
+            se.alpha = calcSE(alpha_inter)) %>%
+  mutate(water.text = ifelse(water == 1, "High",
+                             ifelse(water == 0.75, "Intermediate",
+                                    "Low")),
+         focal = as.factor(focal), 
+         focal = fct_relevel(focal, "BRHO", "ACAM"))
+
+# Talk Figure ####
 ## Plot density dependent interactions & IGRs from sigmoidal models
 igr_sig %>%
   filter(focal == "BRHO") %>%
@@ -13,12 +41,40 @@ igr_sig %>%
   scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
   scale_fill_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
   ylab("Interspecific Alpha") +
-  xlab(" ") +
+  xlab("Legume Density") +
   labs(color = "Water", linetype = "Focal Species") +
   geom_line(data = bigr_mean[bigr_mean$focal == "BRHO",], aes(x=dens, y=mean.alpha, group = water.text, color = water.text), linewidth = 1.25, color = "black") +
   geom_line(data = bigr_mean[bigr_mean$focal == "BRHO",], aes(x=dens, y=mean.alpha, group = water.text, color = water.text), linewidth = 0.75) +
   guides(fill = guide_legend("Water", override.aes = list(size = 3, alpha = 0.95))) +
   theme(text = element_text(size=15))
+
+ggsave("figures/dissertation_talk/dens_dep_alpha.png", width = 7, height = 3.5)
+
+## with restricted x-axis
+igr_sig %>%
+  filter(focal == "BRHO") %>%
+  mutate(alpha_inter = ifelse(dens == 0, 0, alpha_inter)) %>%
+  mutate(water.text = ifelse(water == 1, "High",
+                             ifelse(water == 0.75, "Intermediate",
+                                    "Low"))) %>%
+  ggplot(aes(x=dens, y = alpha_inter,  fill = as.factor(water.text))) +
+  # geom_point(alpha = 0.15, size = 0.25, pch = 21, color = "white") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  #facet_wrap(~focal) +
+  geom_line(alpha = 0.15, aes(color = water.text, group = interaction(water.text, post_num))) +
+  scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  scale_fill_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
+  ylab("Interspecific Alpha") +
+  xlab("Legume Density") +
+  labs(color = "Water", linetype = "Focal Species") +
+  geom_line(data = bigr_mean[bigr_mean$focal == "BRHO",], aes(x=dens, y=mean.alpha, group = water.text, color = water.text), linewidth = 1.25, color = "black") +
+  geom_line(data = bigr_mean[bigr_mean$focal == "BRHO",], aes(x=dens, y=mean.alpha, group = water.text, color = water.text), linewidth = 0.75) +
+  guides(fill = guide_legend("Water", override.aes = list(size = 3, alpha = 0.95))) +
+  theme(text = element_text(size=15)) +
+  coord_cartesian(xlim = c(0,75))
+
+ggsave("figures/dissertation_talk/dens_dep_alpha_restrict_x.png", width = 6, height = 3.5)
+
 
 
 # OLD ####

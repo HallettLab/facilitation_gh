@@ -78,23 +78,27 @@ AMF_results = left_join(draftAMF_long, AMF_key, by = c("unique.ID", "root.sp.ID"
          microbe == 1)
 
 ggplot(AMF_results, aes(x=as.factor(ACAM_density), y=percent_colonization)) +
-  geom_boxplot() +
-  geom_jitter() +
+  geom_boxplot(linewidth = 1) +
+  geom_jitter(size = 3) +
   theme_classic() +
   xlab("Acmispon Density") +
-  ylab("Percent Colonization")
+  ylab("Percent Colonization") +
+  theme(text = element_text(size = 30))
 
-## ggsave("figures/ACAM_dens_perc_coln.png", width = 5, height = 3)
+ggsave("tetianna_AMF/figures/ACAM_dens_perc_coln.png", width = 10, height = 6)
 
 ## Colonization in Water Levels Fig
-ggplot(AMF_results, aes(x=as.factor(water), y=percent_colonization)) +
-  geom_boxplot() +
-  geom_jitter() +
+AMF_results %>%
+  mutate(water.text = ifelse(water == 1, "High", "Low")) %>%
+ggplot(aes(x=as.factor(water.text), y=percent_colonization)) +
+  geom_boxplot(linewidth = 1) +
+  geom_jitter(size = 3) +
   theme_classic() +
   xlab("Water Level") +
-  ylab("Percent Colonization")
+  ylab("Percent Colonization") +
+  theme(text = element_text(size = 30))
 
-ggsave("figures/waterlevel_perc_coln.png", width = 5, height = 3)
+ggsave("tetianna_AMF/figures/waterlevel_perc_coln.png", width = 10, height = 6)
 
 
 ggplot(AMF_results, aes(x=as.factor(water), group = interaction(water, ACAM_density), y=percent_colonization, color = as.factor(ACAM_density))) +

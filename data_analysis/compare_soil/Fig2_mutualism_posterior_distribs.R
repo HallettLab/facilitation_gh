@@ -282,6 +282,77 @@ ggarrange(aL, bL, ab, ba, aa,bb, ncol = 2, nrow = 3, common.legend = TRUE, legen
 ggsave("figures/final_diss/Fig2_mutualism_params_with_sigmax.png", width = 7, height = 9)
 
 
+# Fig 2 Talk ####
+## lambda ####
+acam %>%
+  select(water, lambda, lambda_m0) %>%
+  pivot_longer(cols = c("lambda", "lambda_m0"), names_to = "soil", values_to = "lam") %>%
+  mutate(soil = ifelse(soil == "lambda", "Live", "Sterilized")) %>%
+  
+  mutate(water.text = ifelse(water == 1, "High", 
+                             ifelse(water == 0.75, "Intermediate", "Low")),
+         water.text = fct_relevel(water.text, "Low", "Intermediate", "High")) %>%
+  
+  ggplot(aes(x = water.text, y=lam, group = soil, color = soil)) +
+  scale_color_manual(values = c("#020202", "#969696")) +
+  scale_fill_manual(values = c("#020202", "#dbdbdb")) +
+  geom_point(alpha = 0.15) +
+  geom_line(data = mAL, aes(x=water.text, y=mean_lam)) +
+  stat_summary(
+    fun = "mean",        
+    geom = "point",
+    col = "black",
+    size = 4,
+    shape = 21, aes(fill = soil)) +
+  ylab("Intrinsic Growth Rate") +
+  xlab("Water Level")  +
+  labs(fill = "Soil", color = "Soil", linetype = "Soil") +
+  #guides(color = guide_legend("Soil", override.aes = list(linewidth = 1))) +
+  theme(text = element_text(size=16)) +
+#  ggtitle("A. americanus")  +
+  theme(plot.title = element_text(face = "italic"))
+
+ggsave("figures/dissertation_talk/acam_lambda.png", width = 6, height = 4)
+
+## alpha ####
+mBA = brho %>% 
+  select(water, alpha_acam, alpha_acam_m0) %>%
+  pivot_longer(cols = c("alpha_acam", "alpha_acam_m0"), names_to = "soil", values_to = "alpha") %>%
+  mutate(soil = ifelse(soil == "alpha_acam", "Live", "Sterilized")) %>%
+  group_by(water, soil) %>%
+  summarise(mean_alpha = mean(alpha)) %>%
+  mutate(water.text = ifelse(water == 1, "High", 
+                             ifelse(water == 0.75, "Intermediate", "Low")))
+
+brho %>%
+  select(water, alpha_acam, alpha_acam_m0) %>%
+  pivot_longer(cols = c("alpha_acam", "alpha_acam_m0"), names_to = "soil", values_to = "alpha") %>%
+  mutate(soil = ifelse(soil == "alpha_acam", "Live", "Sterilized")) %>%
+  
+  mutate(water.text = ifelse(water == 1, "High", 
+                             ifelse(water == 0.75, "Intermediate", "Low")),
+         water.text = fct_relevel(water.text, "Low", "Intermediate", "High")) %>%
+  
+  ggplot(aes(x = water.text, y=alpha, group = soil, color = soil)) +
+  scale_color_manual(values = c("#020202", "#969696")) +
+  scale_fill_manual(values = c("#020202", "#dbdbdb")) +
+  geom_point(alpha = 0.15) +
+  geom_line(data = mBA, aes(x=water.text, y=mean_alpha, color = soil)) +
+  stat_summary(
+    fun = "mean",        
+    geom = "point",
+    col = "black",
+    size = 4,
+    shape = 21, aes(fill = soil)) +
+  ylab("Interaction Coefficient") +
+  xlab("Water Level")  +
+  labs(fill = "Soil", color = "Soil") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  theme(text = element_text(size=16))
+
+ggsave("figures/dissertation_talk/brho_inter_alpha.png", width = 6, height = 4)
+
+
 
 # Fig 3 ####
 ## acam igr ####
@@ -355,3 +426,141 @@ bigr = gr_df %>%
 ggarrange(aigr, bigr, ncol = 2, nrow = 1, legend = "bottom", align = "h", labels = "AUTO", common.legend = T)
 
 ggsave("figures/final_diss/diss_done/Fig3_mutualism_igrs.png", width = 8, height = 4)
+
+# Fig 3 Talk ####
+## acam igr ####
+mAGR = gr_df %>%
+  filter(focal == "ACAM") %>%
+  group_by(water.text, soil, type) %>%
+  summarise(mean_gr = mean(growth_rate))
+
+gr_df %>%
+  filter(focal == "ACAM") %>%
+  mutate(int = interaction(soil, type)) %>%
+  ggplot(aes(x=water.text, y=growth_rate, group = interaction(soil, type), shape = type, linetype = type, color = soil)) +
+  geom_point(alpha = 0.15) +
+  geom_line(data = mAGR, aes(x=water.text, y=mean_gr)) +
+  scale_color_manual(values = c("#020202", "#969696")) +
+  scale_fill_manual(values = c("#020202", "#dbdbdb")) +
+  stat_summary(
+    fun = "mean",        
+    geom = "point",
+    col = "black",
+    size = 4,
+    aes(fill = soil, shape = type)) +
+  scale_shape_manual(values = c(21, 22)) +
+  geom_hline(yintercept = 0, linetype = "dotted") +
+  
+  labs(fill = "Soil", color = "Soil", shape = "Type", linetype = "Type") +
+  ylab("Growth Rate") +
+  xlab("Water Level") +
+  guides(fill = guide_legend("Soil", override.aes = list(shape = 21))) +
+  guides(shape = guide_legend("Type", override.aes = list(size = 4))) +
+  theme(text = element_text(size=16)) +
+  scale_linetype_manual(values = c("dashed", "solid")) +
+  coord_cartesian(ylim = c(-2.5, 4.25))
+
+ggsave("figures/dissertation_talk/acam_igr.png", width = 6, height = 4)
+
+### no invasion ####
+mAGR2 = gr_df %>%
+  filter(focal == "ACAM", type == "Intrinsic") %>%
+  group_by(water.text, soil, type) %>%
+  summarise(mean_gr = mean(growth_rate)) 
+
+gr_df %>%
+  filter(focal == "ACAM", 
+         type == "Intrinsic") %>%
+  mutate(int = interaction(soil, type)) %>%
+  ggplot(aes(x=water.text, y=growth_rate, group = interaction(soil, type), shape = type, linetype = type, color = soil)) +
+  geom_point(alpha = 0.15) +
+  geom_line(data = mAGR2, aes(x=water.text, y=mean_gr)) +
+  scale_color_manual(values = c("#020202", "#969696")) +
+  scale_fill_manual(values = c("#020202", "#dbdbdb")) +
+  stat_summary(
+    fun = "mean",        
+    geom = "point",
+    col = "black",
+    size = 4,
+    aes(fill = soil, shape = type)) +
+  scale_shape_manual(values = c(21, 22)) +
+  geom_hline(yintercept = 0, linetype = "dotted") +
+  labs(fill = "Soil", color = "Soil", shape = "Type", linetype = "Type") +
+  ylab("Growth Rate") +
+  xlab("Water Level") +
+  guides(fill = guide_legend("Soil", override.aes = list(shape = 21))) +
+  guides(shape = guide_legend("Type", override.aes = list(size = 4))) +
+  theme(text = element_text(size=16)) +
+  scale_linetype_manual(values = c("dashed", "solid"))  +
+  coord_cartesian(ylim = c(-2.5, 4.25))
+ggsave("figures/dissertation_talk/acam_igr_intrin_only.png", width = 6, height = 4)
+
+
+## brho igr ####
+mBGR = gr_df %>%
+  filter(focal == "BRHO") %>%
+  group_by(water.text, soil, type) %>%
+  summarise(mean_gr = mean(growth_rate))
+
+gr_df %>%
+  filter(focal == "BRHO") %>%
+  mutate(int = interaction(soil, type)) %>%
+  ggplot(aes(x=water.text, y=growth_rate, group = interaction(soil, type), shape = type, linetype = type, color = soil)) +
+  geom_point(alpha = 0.15) +
+  geom_line(data = mBGR, aes(x=water.text, y=mean_gr)) +
+  scale_color_manual(values = c("#020202", "#969696")) +
+  scale_fill_manual(values = c("#020202", "#dbdbdb")) +
+  stat_summary(
+    fun = "mean",        
+    geom = "point",
+    col = "black",
+    size = 4,
+    aes(fill = soil, shape = type)) +
+  scale_shape_manual(values = c(21, 22)) +
+  
+  labs(fill = " ", color = " ", shape = "Type", linetype = "Type") +
+  ylab("Growth Rate") +
+  xlab("Water Level") +
+  guides(fill = guide_legend(" ", override.aes = list(shape = 21))) +
+  guides(shape = guide_legend("Type", override.aes = list(size = 4))) +
+  
+  theme(text = element_text(size=16)) +
+  #guides(shape = "none") +
+  scale_linetype_manual(values = c("dashed", "solid")) +
+  coord_cartesian(ylim = c(3.75, 7))
+
+ggsave("figures/dissertation_talk/brho_igr.png", width = 6, height = 4)
+
+### no invasion ####
+mBGR2 = gr_df %>%
+  filter(focal == "BRHO", type == "Intrinsic") %>%
+  group_by(water.text, soil, type) %>%
+  summarise(mean_gr = mean(growth_rate)) 
+
+gr_df %>%
+  filter(focal == "BRHO", 
+         type == "Intrinsic") %>%
+  mutate(int = interaction(soil, type)) %>%
+  ggplot(aes(x=water.text, y=growth_rate, group = interaction(soil, type), shape = type, linetype = type, color = soil)) +
+  geom_point(alpha = 0.15) +
+  geom_line(data = mBGR2, aes(x=water.text, y=mean_gr)) +
+  scale_color_manual(values = c("#020202", "#969696")) +
+  scale_fill_manual(values = c("#020202", "#dbdbdb")) +
+  stat_summary(
+    fun = "mean",        
+    geom = "point",
+    col = "black",
+    size = 4,
+    aes(fill = soil, shape = type)) +
+  scale_shape_manual(values = c(21, 22)) +
+  #geom_hline(yintercept = 0, linetype = "dotted") +
+  labs(fill = "Soil", color = "Soil", shape = "Type", linetype = "Type") +
+  ylab("Growth Rate") +
+  xlab("Water Level") +
+  guides(fill = guide_legend("Soil", override.aes = list(shape = 21))) +
+  guides(shape = guide_legend("Type", override.aes = list(size = 4))) +
+  theme(text = element_text(size=16)) +
+  scale_linetype_manual(values = c("dashed", "solid")) +
+  coord_cartesian(ylim = c(3.75, 7))
+
+ggsave("figures/dissertation_talk/brho_igr_intrin_only.png", width = 6, height = 4)

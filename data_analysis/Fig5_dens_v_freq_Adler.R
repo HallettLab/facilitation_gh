@@ -86,7 +86,7 @@ ricker_sig_func = function(surv, germ, lambda, alpha_intra, Nt, germ_inter, inte
 ## can set these params outside of the loop as they won't change with dens
 
 
-dens = c(1,4, 6, 8, 12, 16, 20, 30, 100, 130)
+dens = c(1,4, 6, 8, 12, 16, 20, 30)
 rain = c(1, 0.75, 0.6)
 species = c("ACAM", "BRHO")
 
@@ -373,23 +373,192 @@ ggsave("figures/final_diss/diss_done/Fig5_dd_int_dens_freq.png", width = 10, hei
 
 
 
+# Fig 5 Talk ####
+cg = gr_fin %>%
+  filter(water == 1, !dtot %in% c(1, 100, 130)) %>%
+  ggplot(aes(x=self_freq, y = igr, color = as.factor(dtot), linetype = focal)) +
+  # facet_wrap(~focal) +
+  # geom_point(size = 2) +
+  geom_line(linewidth = 1) +
+  xlab(" ") +
+  ylab(" ") +
+  labs(color = "Total Density") +
+  scale_color_manual(values = c(#"#d4e3de", 
+    "#c5dad3", 
+    #"#b7d1c8", 
+    "#9bbfb3", 
+    "#8db6a9", 
+    "#70a494", 
+    "#639283", 
+    "#51796d", 
+    "#273d36", 
+    "#1a2b26")) +
+  theme(text = element_text(size = 14))  +
+  coord_cartesian(ylim = c(1, 6.3))
+
+#geom_hline(yintercept = 0, linetype = "dotted", color = "gray") +
+#coord_cartesian(ylim = c(-2, 7))
+#,
+#axis.text.x=element_blank())
+# +
+#
+
+bg = gr_fin %>%
+  filter(water == 0.75, !dtot %in% c(1, 100, 130)) %>%
+  ggplot(aes(x=self_freq, y = igr, color = as.factor(dtot), linetype = focal)) +
+  #geom_point(size = 2) +
+  geom_line(linewidth = 1) +
+  xlab("Self Frequency") +
+  ylab(" ") +
+  labs(color = "Total Density") +
+  scale_color_manual(values = c("#fcf1e7", "#fbecdf", 
+                                "#f9e8d7", 
+                                "#f7dec6", 
+                                "#f4d4b5", 
+                                "#f3d0ae", 
+                                "#d9b99b")) +
+  theme(text = element_text(size = 14)) +
+  coord_cartesian(ylim = c(1, 6.3))
+# geom_hline(yintercept = 0, linetype = "dotted", color = "gray") +
+# coord_cartesian(ylim = c(-2, 7)) #,
+# axis.text.x=element_blank()) #+
+
+#coord_cartesian(ylim = c(4.2, 6.3))
+
+ag = gr_fin %>%
+  filter(water == 0.6, !dtot %in% c(1, 100, 130)) %>%
+  ggplot(aes(x=self_freq, y = igr, color = as.factor(dtot), linetype = focal)) +
+  # geom_point(size = 2) +
+  geom_line(linewidth = 1) +
+  xlab(" ") +
+  ylab("Growth rate") +
+  labs(color = "Total Density") +
+  scale_color_manual(values = c("#f7d8c8", "#f1c5ad", "#eebb9f", "#ebb192", "#e59e76", "#de8a5a", "#c67a4f")) +
+  theme(text = element_text(size = 14)) +
+  coord_cartesian(ylim = c(1, 6.3)) +
+  labs(linetype = "Focal")
+
+ggarrange(ag, bg, cg, ncol = 3, common.legend = T, legend = "right")
 
 
+## BRHO alone ####
+bL = gr_fin %>%
+  filter(water == 0.6, !dtot %in% c(1, 100, 130), focal == "BRHO") %>%
+  ggplot(aes(x=self_freq, y = igr, color = as.factor(dtot), linetype = focal)) +
+  # geom_point(size = 2) +
+  geom_line(linewidth = 1) +
+  xlab(" ") +
+  ylab("Growth rate") +
+  labs(color = "Total Density") +
+  scale_color_manual(values = c("#f7d8c8", "#f1c5ad", "#eebb9f", "#ebb192", "#e59e76", "#de8a5a", "#c67a4f")) +
+  theme(text = element_text(size = 16)) +
+  coord_cartesian(ylim = c(4.3, 6.3)) +
+  labs(linetype = "Focal")
+
+bI = gr_fin %>%
+  filter(water == 0.75, !dtot %in% c(1, 100, 130), focal == "BRHO") %>%
+  ggplot(aes(x=self_freq, y = igr, color = as.factor(dtot), linetype = focal)) +
+  #geom_point(size = 2) +
+  geom_line(linewidth = 1) +
+  xlab("Self Frequency") +
+  ylab(" ") +
+  labs(color = "Total Density") +
+  scale_color_manual(values = c("#fcf1e7", "#fbecdf", 
+                                "#f9e8d7", 
+                                "#f7dec6", 
+                                "#f4d4b5", 
+                                "#f3d0ae", 
+                                "#d9b99b")) +
+  theme(text = element_text(size = 14)) +
+  coord_cartesian(ylim = c(4.3, 6.3))
 
 
+bH = gr_fin %>%
+  filter(water == 1, !dtot %in% c(1, 100, 130), focal == "BRHO") %>%
+  ggplot(aes(x=self_freq, y = igr, color = as.factor(dtot), linetype = focal)) +
+  # facet_wrap(~focal) +
+  # geom_point(size = 2) +
+  geom_line(linewidth = 1) +
+  xlab(" ") +
+  ylab(" ") +
+  labs(color = "Total Density") +
+  scale_color_manual(values = c(#"#d4e3de", 
+    "#c5dad3", 
+    #"#b7d1c8", 
+    "#9bbfb3", 
+    "#8db6a9", 
+    "#70a494", 
+    "#639283", 
+    "#51796d", 
+    "#273d36", 
+    "#1a2b26")) +
+  theme(text = element_text(size = 14))  +
+  coord_cartesian(ylim = c(4.3, 6.3))
 
 
+ggarrange(bL, bI, bH, common.legend = T, legend = "right", ncol = 3)
+
+ggsave("figures/dissertation_talk/freq_dependence_BRHO.png", width = 10, height = 4)
 
 
+## ACAM alone ####
+aL = gr_fin %>%
+  filter(water == 0.6, !dtot %in% c(1, 100, 130), focal == "ACAM") %>%
+  ggplot(aes(x=self_freq, y = igr, color = as.factor(dtot))) +
+  # geom_point(size = 2) +
+  geom_line(linewidth = 1) +
+  xlab(" ") +
+  ylab("Growth rate") +
+  labs(color = "Total Density") +
+  scale_color_manual(values = c("#f7d8c8", "#f1c5ad", "#eebb9f", "#ebb192", "#e59e76", "#de8a5a", "#c67a4f")) +
+  theme(text = element_text(size = 16)) +
+  coord_cartesian(ylim = c(1, 4)) +
+  labs(linetype = "Focal")
+
+aI = gr_fin %>%
+  filter(water == 0.75, !dtot %in% c(1, 100, 130), focal == "ACAM") %>%
+  ggplot(aes(x=self_freq, y = igr, color = as.factor(dtot))) +
+  #geom_point(size = 2) +
+  geom_line(linewidth = 1) +
+  xlab("Self Frequency") +
+  ylab(" ") +
+  labs(color = "Total Density") +
+  scale_color_manual(values = c("#fcf1e7", "#fbecdf", 
+                                "#f9e8d7", 
+                                "#f7dec6", 
+                                "#f4d4b5", 
+                                "#f3d0ae", 
+                                "#d9b99b")) +
+  theme(text = element_text(size = 14)) +
+  coord_cartesian(ylim = c(1, 4))
 
 
+aH = gr_fin %>%
+  filter(water == 1, !dtot %in% c(1, 100, 130), focal == "ACAM") %>%
+  ggplot(aes(x=self_freq, y = igr, color = as.factor(dtot), linetype = focal)) +
+  # facet_wrap(~focal) +
+  # geom_point(size = 2) +
+  geom_line(linewidth = 1) +
+  xlab(" ") +
+  ylab(" ") +
+  labs(color = "Total Density") +
+  scale_color_manual(values = c(#"#d4e3de", 
+    "#c5dad3", 
+    #"#b7d1c8", 
+    "#9bbfb3", 
+    "#8db6a9", 
+    "#70a494", 
+    "#639283", 
+    "#51796d", 
+    "#273d36", 
+    "#1a2b26")) +
+  theme(text = element_text(size = 14))  +
+  coord_cartesian(ylim = c(1, 4))
 
 
+ggarrange(aL, aI, aH, common.legend = T, legend = "right", ncol = 3)
 
-
-
-
-
+ggsave("figures/dissertation_talk/freq_dependence_ACAM.png", width = 10, height = 4)
 
 
 
