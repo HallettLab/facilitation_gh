@@ -1,4 +1,0 @@
-"","Sum Sq","Df","F value","Pr(>F)"
-"as.factor(ACAM)",48.21,2,0.967,0.394
-"as.factor(water)",76.068,1,3.053,0.093
-"Residuals",622.952,25,NA,NA
