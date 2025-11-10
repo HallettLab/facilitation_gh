@@ -1,7 +1,0 @@
-"coeff","Sum Sq","Df","F value","Pr(>F)"
-"(Intercept)",0.4,1,11.499,0.001
-"delta13C",0.31,1,8.922,0.004
-"as.factor(water.x)",0.185,2,2.656,0.079
-"num.bg.indiv",0.544,1,15.658,0
-"delta13C:as.factor(water.x)",0.199,2,2.86,0.065
-"Residuals",2.051,59,NA,NA
