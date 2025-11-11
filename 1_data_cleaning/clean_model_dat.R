@@ -115,61 +115,53 @@ binter_for_AII = brho_clean %>%
 
 ### Make Model DF ####
 #### brho intersp ####
-## Fix df for modeling ONLY
+
+## prep brho interspecific focals for modelling by removing m0, and tweaking column names for consistency
 binter = binter_for_RII_seed_analyses %>%
   filter(microbe == 1) %>%
   mutate(num.focal.indiv = total.focal.indiv,
          seeds.out = seeds.out.ALL.focals) %>%
   select(unique.ID, block, water, microbe, rep, num.focal.indiv, num.bg.indiv, ACAM, seeds.out, seeds.out.percap) 
 
-## plot distribution of seeds out
-ggplot(binter, aes(x=seeds.out)) +
-  geom_histogram(bins = 100)
-
-## take the log of seeds out
-ggplot(binter, aes(x=log(seeds.out))) +
-  geom_histogram(bins = 100)
-
-### bintra for model ####
-## change brho bkgrd data to use as intraspecific brho data
+#### brho intrasp ####
+## use brho bkgrd data as intraspecific brho focal data
 bintra = bbkgrd %>%
-  filter(!is.na(num.bg.indiv), num.bg.indiv != 0) %>% ## get rid of 0 brho backgrounds
+  ## get rid of 0 brho backgrounds
+  filter(!is.na(num.bg.indiv), num.bg.indiv != 0) %>% 
+  ## select needed columns
   select(unique.ID, block, water, microbe, rep, num.bg.indiv, total.biomass.g, num.focal.indiv, ACAM) %>%
+  ## translate from biomass to seeds
   mutate(seeds.out = total.biomass.g*alloB) %>%
   select(-total.biomass.g) %>%
   
   ## swap focal and bg columns to make it fit in brho models
-  mutate(num.focal.indiv2 = num.bg.indiv,
-         num.bg.indiv2 = num.focal.indiv,
-         seeds.out.percap = seeds.out / num.focal.indiv2) %>%
-  select(-num.bg.indiv, -num.focal.indiv)
+  mutate(num.focal.indiv2 = num.bg.indiv, ## bg brho individuals become 'focals'
+         num.bg.indiv2 = num.focal.indiv, ## acam focals become 'bg'
+         
+         ## calculate percap seeds out
+         seeds.out.percap = seeds.out / num.focal.indiv2) %>% 
+  select(-num.bg.indiv, -num.focal.indiv) ## remove old column names
 
 names(bintra)
 ## change col names
 names(bintra) = c("unique.ID", "block", "water", "microbe", "rep", "ACAM", "seeds.out", "num.focal.indiv", "num.bg.indiv", "seeds.out.percap")
 
+#### join ####
 ## join brho focal and brho bkgrd data
 brho.model = rbind(binter, bintra) %>%
   select(-ACAM) ## this col is only needed for analyses with RII not for pop models; although potentially we want to use seeds in??
 
-## acam ####
+## ACAM ####
 names(abkgrd)
 names(acam)
 ## already have num.bg.indiv; don't need to join bbkgrd with acam because of this
-
-## Necessary columns
-## unique.ID
-## block, water, microbe, rep, 
-## num.focal.indiv
-## total.biomass.g
-## num.bg.indiv
 
 ## select necessary columns; translate biomass to seeds out
 alloAf = allo[allo$Species == "ACAM",]$slope
 alloAs = allo[allo$Species == "ACAM",]$seeds_C
 #alloAsD = allo[allo$Species == "ACAM",]$seeds_D
 
-### ainter for model ####
+### acam intersp ####
 ainter = acam %>%
   
   ## select needed columns
@@ -195,10 +187,8 @@ ggplot(ainter, aes(x=seeds.out, fill = as.factor(water))) +
   geom_histogram(bins = 50) +
   facet_wrap(~water)
 
-### aintra for model ####
+### acam intrasp ####
 ## change acam bkgrd data to use as intraspecific acam data
-names(abkgrd)
-
 aintra = abkgrd %>%
   
   ## get rid of 0 background pots
@@ -237,6 +227,8 @@ names(aintra) = c("unique.ID", "block", "water", "microbe", "rep", "seeds.out", 
 
 names(ainter)
 
+### join ####
+## join into one df for model
 ainter2 = ainter %>%
   select(-BRHO)
 aintra2 = aintra %>%
