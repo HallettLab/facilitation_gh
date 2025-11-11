@@ -2,7 +2,7 @@
 ## 
 ## Clean Model Data
 ##
-## Purpose: clean biomass data, calculate seed output from allometric relationship, put in correct format for population models; also create a df for use in calculating RII later on
+## Purpose: clean biomass data, calculate seed output from allometric relationship, put in correct format for population models; also create a df for use in calculating AII 
 ## 
 ## Author: Carmen Watkins
 
@@ -24,7 +24,6 @@ calcSE<-function(x){
 file_loc = "/Users/carmenwatkins/Dropbox-UniversityofOregon/Carmen Watkins/Facilitation_GH/data/biomass/Adult/"
 #file_loc = "~/University of Oregon Dropbox/Lauren Hallett/Facilitation_GH/data/biomass/Adult/"
 
-
 ## for BRHO models
 brho = read.csv(paste0(file_loc, "BRHO_focal_individual_processing_20250214.csv"))
 bbkgrd = read.csv(paste0(file_loc, "BRHO_bkgrd_sample_processing_20241117.csv"))
@@ -37,45 +36,55 @@ abkgrd = read.csv(paste0(file_loc, "ACAM_bkgrd_sample_processing_20240903.csv"))
 allo = read.csv("data/allometry_for_GH_facilMS.csv")
 
 # Clean Data ####
-## brho ####
-### join with acam bg dat ####
+## BRHO ####
+
+### join brho focal data with acam bg data
+  ### first, select only the eneded columns from the acam bg data.
 abkgrd.join = abkgrd %>%
   select(unique.ID, water, microbe, rep, num.bg.indiv, num.dead.bg.indiv, num.resprouted.BRHO.focals, notes)
 
+## join
 brho_clean = brho %>%
   left_join(abkgrd.join, by = c("unique.ID", "water", "microbe", "rep"))
 
-### check brho focal nums ####
+### check the number of brho focal individuals
+    ## num.focal.indiv.in.bag = number collected at final harvest and number weighed
+    ## additional focals could be ones that weren't collected due to not being ready yet
+    ## resprouted focals were also not collected but should be counted
 ggplot(brho_clean, aes(x=num.focal.indiv.in.bag, y = num.addl.focals)) +
   geom_point()
 
 ggplot(brho_clean, aes(x=num.focal.indiv.in.bag, y = num.resprouted.BRHO.focals)) +
   geom_point()
 
-## to account for indiv that grew but weren't collected in pots: 
-    ## create a per-capita seed output 
-    ## multiply the per-cap amt by the total num of focal indiv
+## Create Data Frames ## 
+## Necessary modifications: 
+    ## translate biomass to seeds out
+        ## using allometric relationship
+    ## remove contaminated individuals
+    ## to account for indiv that grew but weren't collected in pots: 
+        ## create a per-capita seed output 
+        ## multiply the per-cap amt by the total num of focal indiv
+    ## select necessary columns
+        ## unique.ID
+        ## block, water, microbe, rep, 
+        ## ACAM - the planted density
+        ## num.focal.indiv
+        ## total.biomass.g
+        ## num.bg.indiv
 
-## Necessary columns
-## unique.ID
-## block, water, microbe, rep, 
-## ACAM - the planted density
-## num.focal.indiv
-## total.biomass.g
-## num.bg.indiv
-
-## select necessary columns; translate biomass to seeds out
-alloB = allo[allo$Species == "BRHO",]$slope ## get slope of allo relationship
+## get slope of allo relationship
+alloB = allo[allo$Species == "BRHO",]$slope 
 
 ## contaminated samples to remove
 rm.contaminated = c(15, 25, 84, 85, 114, 103)
     ## some contamination info in the nodule counts data sheet
     ## some in the experimental design spreadsheet still located in the google drive
     ## this will eventually be updated when nodule counts are finished
-## 84 is taken from AMF colonization data sheet
+    ## 84 is taken from AMF colonization data sheet
 
-### create RII df ####
-binter_for_RII_seed_analyses = brho_clean %>%
+### Make AII DF ####
+binter_for_AII = brho_clean %>%
   
   ## select needed cols
   select(unique.ID, block, water, microbe, rep, num.focal.indiv.in.bag,num.addl.focals, num.resprouted.BRHO.focals, total.biomass.g, num.bg.indiv, ACAM) %>%
@@ -83,14 +92,17 @@ binter_for_RII_seed_analyses = brho_clean %>%
   ## fill bg.indiv with 0's where there are NA's
   mutate(num.bg.indiv = ifelse(is.na(num.bg.indiv), 0, num.bg.indiv)) %>%
   
+  ## remove NA values and contaminated individuals
   filter(!is.na(total.biomass.g), !unique.ID %in% rm.contaminated) %>% 
   ## there is one NA value, remove & figure out why it is missing later!
 
   ## create per-cap total biomass col
   mutate(total.bio.percap = total.biomass.g/num.focal.indiv.in.bag,
+         
+         ## translate to seeds 
          seeds.out.percap = total.bio.percap*alloB,
          
-         ## determine correct num focals
+         ## determine correct num focal indiv
          ## replace NA's with 0 in focal columns
          num.addl.focals = ifelse(is.na(num.addl.focals), 0, num.addl.focals),
          num.resprouted.BRHO.focals = ifelse(is.na(num.resprouted.BRHO.focals), 0, num.resprouted.BRHO.focals),
@@ -98,10 +110,11 @@ binter_for_RII_seed_analyses = brho_clean %>%
          ## sum all focal columns to get total #
          total.focal.indiv = num.focal.indiv.in.bag + num.addl.focals + num.resprouted.BRHO.focals,
         
-        ## calc seeds out of all focals
+        ## multiply per cap seeds out by total num focals to get total seeds out
          seeds.out.ALL.focals = seeds.out.percap*total.focal.indiv)
-  
-### binter for model ####
+
+### Make Model DF ####
+#### brho intersp ####
 ## Fix df for modeling ONLY
 binter = binter_for_RII_seed_analyses %>%
   filter(microbe == 1) %>%

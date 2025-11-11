@@ -21,7 +21,7 @@ source("1_data_cleaning/clean_model_dat.R")
 ## BRHO ####
 ## start with Bromus hordeaceus focal individuals in Acmispon americanus backgrounds
 ## calculate mean control seeds out for use in calculations
-controlsB = binter_for_RII_seed_analyses %>%
+controlsB = binter_for_AII %>%
   filter(ACAM == 0) %>% ## only want planted 0's
   group_by(water, microbe) %>%
   summarise(mean.control = mean(seeds.out.percap))
