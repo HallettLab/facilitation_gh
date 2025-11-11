@@ -21,7 +21,7 @@ calcSE<-function(x){
 }
 
 ## Read in data ####
-file_loc = "/Users/carme/University of Oregon Dropbox/Carmen Watkins/Facilitation_GH/data/biomass/Adult/"
+file_loc = "/Users/carmenwatkins/Dropbox-UniversityofOregon/Carmen Watkins/Facilitation_GH/data/biomass/Adult/"
 #file_loc = "~/University of Oregon Dropbox/Lauren Hallett/Facilitation_GH/data/biomass/Adult/"
 
 

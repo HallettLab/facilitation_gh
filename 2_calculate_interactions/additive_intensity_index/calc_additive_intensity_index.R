@@ -8,7 +8,7 @@
 
 # SET UP ####
 ## read in cleaned data 
-source("data_cleaning/clean_model_dat.R")
+source("1_data_cleaning/clean_model_dat.R")
 
 ## Additive Intensity Index (Diaz-Sierra et al. 2017)
 ## 2 * (deltaP / P^-N + abs(deltaP))

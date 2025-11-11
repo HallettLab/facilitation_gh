@@ -1,6 +1,15 @@
+## Header ##
+## 
+## Additive Intensity Index Linear Models
+##
+## Purpose: Run Linear models to test the effect of density, water, and microbial treatment on the additive intensity index
+##
+## Author: Carmen Watkins
+
+
 # Set up ####
 ## read in data
-source("data_cleaning/clean_model_dat.R")
+source("1_data_cleaning/calc_additive_intensity_index.R")
 
 ## load packages
 library(lmerTest)

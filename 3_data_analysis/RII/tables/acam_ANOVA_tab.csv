@@ -1,4 +1,0 @@
-"species","rowname","Sum Sq","Df","F value","Pr(>F)","signif"
-"A. americanus","num.bg.indiv",3.414,1,22.031,0,"***"
-"A. americanus","water",0.013,2,0.043,0.958," "
-"A. americanus","Residuals",8.367,54,NA,NA,NA
