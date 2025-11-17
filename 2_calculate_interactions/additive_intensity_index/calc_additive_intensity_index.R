@@ -27,7 +27,7 @@ controlsB = binter_for_AII %>%
   summarise(mean.control = mean(seeds.out.percap))
 
 ## calculate AII and RII comparing 0 background to all other densities
-brho_RII = left_join(binter_for_RII_seed_analyses, controlsB, by = c("water", "microbe")) %>%
+brho_AII = left_join(binter_for_AII, controlsB, by = c("water", "microbe")) %>%
   ## join average control biomass values in with main df
   
   ## calculate the additive interaction intensity (NIntA)
@@ -55,7 +55,7 @@ controlsA = ainter %>%
   summarise(mean.control = mean(seeds.percap))
 
 ## calculate RII comparing 0 background to all other densities
-acam_RII = left_join(ainter, controlsA, by = c("water")) %>%
+acam_AII = left_join(ainter, controlsA, by = c("water")) %>%
  
   ## first calculate per-capita seed output
   mutate(seeds.percap = seeds.out/num.focal.indiv,
@@ -76,4 +76,4 @@ acam_RII = left_join(ainter, controlsA, by = c("water")) %>%
          BRHO = ifelse(BRHO == 48, 60, BRHO)) 
 
 ## clean up env 
-rm(controlsB, controlsA)
+rm(controlsB, controlsA, acam.model, ainter, aintra, binter, binter_for_AII, bintra, brho.model)

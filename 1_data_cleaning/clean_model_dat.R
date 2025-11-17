@@ -117,7 +117,7 @@ binter_for_AII = brho_clean %>%
 #### brho intersp ####
 
 ## prep brho interspecific focals for modelling by removing m0, and tweaking column names for consistency
-binter = binter_for_RII_seed_analyses %>%
+binter = binter_for_AII %>%
   filter(microbe == 1) %>%
   mutate(num.focal.indiv = total.focal.indiv,
          seeds.out = seeds.out.ALL.focals) %>%
