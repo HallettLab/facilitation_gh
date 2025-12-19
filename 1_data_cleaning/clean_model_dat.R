@@ -157,7 +157,11 @@ names(bintra) = c("unique.ID", "block", "water", "microbe", "rep", "ACAM",
 #### join ####
 ## join brho focal and brho bkgrd data
 brho.model = rbind(binter, bintra) %>%
-  select(-ACAM) ## this col is only needed for analyses with RII not for models
+  select(-ACAM) %>% ## this col is only needed for RII analyses not for models
+  mutate(soil = ifelse(microbe == 1, 0, 1))
+  ## flip the microbe treatment indicators for modeling; 
+    ## want default (0) to be live soil condition while 1 should indicate 
+    ## sterilized so it calcs the deviation parameter for sterilized soil.
 
 ## ACAM ####
 names(abkgrd)
@@ -247,7 +251,11 @@ ainter2 = ainter %>%
 aintra2 = aintra %>%
   filter(microbe == 1) ## need to filter here, because aintra have microbe 0, 
                       ## while ainter do not
-acam.model = rbind(ainter2, aintra2)
+acam.model = rbind(ainter2, aintra2) %>%
+  mutate(soil = ifelse(microbe == 1, 0, 1))
+## flip the microbe treatment indicators for modeling; 
+## want default (0) to be live soil condition while 1 should indicate 
+## sterilized so it calcs the deviation parameter for sterilized soil.
 
 # clean env ####
 rm(abkgrd, abkgrd.join, acam, aintra2, ainter2, allo, bbkgrd, brho, brho_clean, 
