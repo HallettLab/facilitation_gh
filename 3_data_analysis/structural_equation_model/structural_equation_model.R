@@ -12,6 +12,7 @@ library(piecewiseSEM)
 library(lmerTest)
 library(lme4)
 library(GGally)
+library(multcompView)
 
 ## load AII & treatment data
 source("2_calculate_interactions/additive_intensity_index/calc_additive_intensity_index.R")
@@ -22,8 +23,10 @@ rm(CN_clean) ## this contains multiple timepoints; use only final time point in 
 
 ## prep data ####
 ## join intrxn & nutrient data together
-test = left_join(brho_AII, CN_final[,1:7], by = c("unique.ID"))
-
+test = left_join(brho_AII, CN_final[,1:7], by = c("unique.ID")) %>%
+  filter(!is.na(delta13C))
+## get rid of these data for the moment... 
+## can't think of a way of including them yet
 
 ## will be using only brho AII for this as we do not have leaf nutrient data for ACAM
 
@@ -47,18 +50,24 @@ ggpairs(test,
     ## currently starting with an additive model and seeing if water level affects the multigroup analysis
     ## shoudl think if there is scientific reason for interactions between factors and justify before running model either way...
 
-psem(lm(NIntA ~ water + microbe + num.bg.indiv + delta13C + WtN, data = test),
+sem1 = psem(lmer(NIntA ~ water + microbe + num.bg.indiv + delta13C + WtN + (1|block), data = test),
 
-     lm(WtN ~ water + microbe + num.bg.indiv, data = test),
+    # lm(NIntA ~ delta13C + WtN, data = test),
+     
+     lmer(WtN ~ water + microbe + num.bg.indiv + (1|block), data = test),
 
-     lm(delta13C ~ water + microbe + num.bg.indiv, data = test),
+     lmer(delta13C ~ water + microbe + num.bg.indiv + (1|block), data = test),
 
-     lm(num.bg.indiv ~ water, data = test),
+     lmer(num.bg.indiv ~ water + (1|block), data = test),
      
      data = test)
+summary(sem1)
 
 (pmultigroup <- multigroup(pmodel, group = "group"))
 
+
+t1 = lmer(NIntA ~ water + microbe + num.bg.indiv + delta13C + WtN + (1|block), data = test)
+summary(t1)
 
 
 ### Multi-group analysis
