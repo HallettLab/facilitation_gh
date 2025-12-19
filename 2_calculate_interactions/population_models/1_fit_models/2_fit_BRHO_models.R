@@ -2,7 +2,10 @@
 ## 
 ## Fit BRHO Models
 ##
-## Purpose: run Stan code to fit bayesian models for all 3 water conditions with both static alphas and sigmoidal alphas
+## Purpose: run Stan code to fit bayesian models for: 
+## 1) static models LIVE ONLY
+## 2) sigmoidal models LIVE ONLY
+## 3) static models, BOTH live and sterilized, with deviation params
 ## 
 ## Author: Carmen Watkins
 
@@ -25,27 +28,33 @@ library(tidyverse)
 library(bayesplot)
 library(rstan)
 library(here)
+
+## set rstan settings
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
 
 ## read in data 
 source("data_cleaning/clean_model_dat.R")
+## remove outputs not needed for modeling 
+rm(ainter, aintra, binter, binter_for_AII, bintra)
 
 ## set seed
 set.seed(25)
 
-# Static Fit ####
+# Static - LIVE ONLY ####
 ## make treatment vectors
 rainfall = c(1, 0.75, 0.6)
-date = 20250401
-static.output <- list() ## make a list for model output
+date = 20251219
+stlive.out = list() ## make a list for model output
 
 for(i in rainfall){
   
     ## select data 
     dat = brho.model[brho.model$water == i,] %>%
-      filter(!is.na(num.focal.indiv))
-    ## get rid of any NA's
+      filter(microbe == 1, ## REMOVE m0
+             !is.na(num.focal.indiv), ## get rid of any NA's
+             !is.na(seeds.out),
+             !is.na(num.bg.indiv))
   
     ## print model to keep track of progress during loop
     print(paste0("brho_w", i))
@@ -54,41 +63,49 @@ for(i in rainfall){
     Fecundity = as.integer(round(dat$seeds.out.percap)) ## seeds out PER-CAP
     N = as.integer(length(Fecundity)) ## number of observations
     N_i = as.integer(dat$num.focal.indiv) ## stem # of focal species
-    acam <- as.integer(dat$num.bg.indiv) ## background stem # data
+    acam = as.integer(dat$num.bg.indiv) ## background stem # data
     
     ## make a vector of data inputs to model
-    data_vec <- c("N", "Fecundity", "N_i", "acam")
+    data_vec = c("N", "Fecundity", "N_i", "acam")
     
     ## set initial values 
-    initials1 <- list(lambda=200, alpha_acam = 0.03, alpha_brho = -0.08)
-    initials2 <- list(lambda=150, alpha_acam = 0.05, alpha_brho = -0.06)
-    initials3 <- list(lambda=250, alpha_acam = -0.01, alpha_brho = -0.04)
-    initials4 <- list(lambda=300, alpha_acam = -0.04, alpha_brho = -0.01)
+    initials1 = list(lambda=200, alpha_acam = 0.03, alpha_brho = -0.08)
+    initials2 = list(lambda=150, alpha_acam = 0.05, alpha_brho = -0.06)
+    initials3 = list(lambda=250, alpha_acam = -0.01, alpha_brho = -0.04)
+    initials4 = list(lambda=300, alpha_acam = -0.04, alpha_brho = -0.01)
     
-    initialsall<- list(initials1, initials2, initials3, initials4)
+    initialsall = list(initials1, initials2, initials3, initials4)
     
     ## run the model
-    static.output[[paste0("brho_w", i)]] = stan(file = 'data_analysis/models/fit_models/ricker_nb_static.stan', data = data_vec, init = initialsall, iter = 5000, chains = 4, thin = 2, control = list(adapt_delta = 0.9, max_treedepth = 18))
+    stlive.out[[paste0("brho_w", i)]] = stan(file = 'data_analysis/models/fit_models/BRHO_ricker_nb_static.stan', 
+                                             data = data_vec, init = initialsall, 
+                                             iter = 8000, chains = 4, thin = 2, 
+                                             control = list(adapt_delta = 0.9, 
+                                                            max_treedepth = 18))
     
-    PrelimFit <- static.output[[paste0("brho_w", i)]]
+    PrelimFit = stlive.out[[paste0("brho_w", i)]]
     
     ## save model output
-    save(PrelimFit, file = paste0("data_analysis/models/output/static/", date, "/brho_nb_static_w", i, "_", date, "_final.rdata"))
+    save(PrelimFit, file = paste0("../outputs/posteriors/", date, 
+                                  "/brho_static_m1_w", i, "_", date, ".rdata"))
    
 }
 
-# Sigmoidal ####
+# Sigmoidal - LIVE ONLY ####
 
 ## make a list for model output
 rainfall = c(1, 0.75, 0.6)
-sigmoidal.output <- list()
-date = 20250401
+siglive.out = list()
+date = 20251219
 
 for(i in rainfall){
   
     ## select data 
     dat = brho.model[brho.model$water == i,] %>%
-      filter(!is.na(num.focal.indiv))
+      filter(microbe == 1, ## REMOVE m0
+             !is.na(num.focal.indiv), ## get rid of any NA's
+             !is.na(seeds.out),
+             !is.na(num.bg.indiv))
   
     ## print model to keep track of progress during loop
     print(paste0("w", i))
@@ -97,28 +114,30 @@ for(i in rainfall){
     Fecundity = as.integer(round(dat$seeds.out.percap)) ## seeds out PER CAP
     N = as.integer(length(Fecundity)) ## number of observations
     N_i = as.integer(dat$num.focal.indiv) ## stem # of focal species
-    acam <- as.integer(dat$num.bg.indiv) ## background stem # data
+    acam = as.integer(dat$num.bg.indiv) ## background stem # data
 
     ## make a vector of data inputs to model
-    data_vec <- c("N", "Fecundity", "N_i", "acam")
+    data_vec = c("N", "Fecundity", "N_i", "acam")
   
     ## set initial values 
-    initials1 <- list(lambda=200, N_opt = 1, c = -0.05, alpha_slope = -0.1, alpha_initial = 0.03, alpha_brho = -0.08)
-    initials2 <- list(lambda=150, N_opt = 0.5, c = -0.06, alpha_slope = -0.15, alpha_initial = 0.05, alpha_brho = -0.06)
-    initials3 <- list(lambda=250, N_opt = 2, c = -0.02, alpha_slope = -0.25, alpha_initial = -0.01, alpha_brho = -0.04)
-    initials4 <- list(lambda=300, N_opt = 1.5, c = -0.03, alpha_slope = -0.2, alpha_initial = -0.04, alpha_brho = -0.01)
-
+    initials1 = list(lambda=200, N_opt = 1, c = -0.05, alpha_slope = -0.1, 
+                      alpha_initial = 0.03, alpha_brho = -0.08)
+    initials2 = list(lambda=150, N_opt = 0.5, c = -0.06, alpha_slope = -0.15, 
+                      alpha_initial = 0.05, alpha_brho = -0.06)
+    initials3 = list(lambda=250, N_opt = 2, c = -0.02, alpha_slope = -0.25, 
+                      alpha_initial = -0.01, alpha_brho = -0.04)
+    initials4 = list(lambda=300, N_opt = 1.5, c = -0.03, alpha_slope = -0.2, 
+                      alpha_initial = -0.04, alpha_brho = -0.01)
     ## try 0 for N_opt; 
-    ## cld try means of priors for init values
     
-    ## issues with chain 4 initial values; changed lambda from 100->400 and alpha_initial from 0.5 to 0.3
-    ## chain 4 initial values having issues again... 
-    ## changed c from 0 -> -0.3; see if this helps? 
-  
-    initialsall<- list(initials1, initials2, initials3, initials4)
+    initialsall = list(initials1, initials2, initials3, initials4)
   
     ## run the model
-    sigmoidal.output[[paste0("brho_w", i)]] = stan(file = 'data_analysis/models/fit_models/ricker_nb_sigmoidal.stan', data = data_vec, init = initialsall, iter = 5000, chains = 4, thin = 2, control = list(adapt_delta = 0.99, max_treedepth = 18))
+    siglive.out[[paste0("brho_w", i)]] = stan(file = '2_calculate_interactions/population_models/1_fit_models/model_stan_scripts/BRHO_ricker_nb_sigmoidal.stan', 
+                                              data = data_vec, init = initialsall, 
+                                              iter = 8000, chains = 4, thin = 2, 
+                                              control = list(adapt_delta = 0.99, 
+                                                             max_treedepth = 18))
     
     ## adjusted iter from 5000 -> 8000 and adapt_delta from 0.9 -> 0.95 on 1/13
     ## running just for m1_w0.6
@@ -136,9 +155,71 @@ for(i in rainfall){
     ## look at pairs plot to see sampling problems
     
     
-    PrelimFit <- sigmoidal.output[[paste0("brho_w", i)]]
+    PrelimFit = siglive.out[[paste0("brho_w", i)]]
     
     ## save model output
-    save(PrelimFit, file = paste0("data_analysis/models/output/sigmoidal/", date, "/brho_nb_sigmoidal_w", i, "_", date, "_final.rdata"))
+    save(PrelimFit, file = paste0("../outputs/posteriors/", date, 
+                                  "/brho_sigmoidal_m1_w", i, "_", date, ".rdata"))
     
 }
+
+
+# Static - BOTH ####
+# BRHO ####
+## make a list for model output
+rainfall = c(1, 0.75, 0.6)
+# rainfall = c(0.6, 0.75)
+brho.stat.output <- list()
+date = 20250424
+
+for(i in rainfall){
+  
+  ## select data 
+  dat = brho.model[brho.model$water == i,] %>%
+    filter(!is.na(num.focal.indiv),
+           !is.na(seeds.out))
+  
+  ## print model to keep track of progress during loop
+  print(paste0("w", i))
+  
+  ## create vectors of data inputs
+  Fecundity = as.integer(round(dat$seeds.out.percap)) ## seeds out PER CAP
+  N = as.integer(length(Fecundity)) ## number of observations
+  N_i = as.integer(dat$num.focal.indiv) ## stem # of focal species
+  acam <- as.integer(dat$num.bg.indiv) ## background stem # data
+  trt <- as.integer(dat$soil) ## microbial treatment (binary)
+  ## live soil = 0 = the default case. No deviation param calc'ed for this trt
+  ## sterilized soil = 1; deviation param will be calc'ed for this trt
+  
+  ## make a vector of data inputs to model
+  data_vec <- c("N", "Fecundity", "N_i", "acam", "trt") # , "trt"
+  
+  ## set initial values 
+  initials1 <- list(lambda=50, lambda_dev = 10, alpha_acam = 0.05,  alpha_acam_dev = -0.005, 
+                    alpha_brho = -0.06, alpha_brho_dev = -0.006) 
+  
+  initials2 <- list(lambda=60, lambda_dev = 5, alpha_acam = 0.01,  alpha_acam_dev = 0.002, 
+                    alpha_brho = -0.09, alpha_brho_dev = 0.001)
+  
+  initials3 <- list(lambda=65, lambda_dev = -5, alpha_acam = -0.01,  alpha_acam_dev = 0.001, 
+                    alpha_brho = -0.01, alpha_brho_dev = 0.003)
+  
+  initials4 <- list(lambda=45, lambda_dev = -8, alpha_acam = 0.02,  alpha_acam_dev = -0.002, 
+                    alpha_brho = -0.03, alpha_brho_dev = -0.001)
+  
+  initialsall<- list(initials1, initials2, initials3, initials4)
+  
+  ## run the model
+  brho.stat.output[[paste0("brho_w", i)]] = stan(file = 'data_analysis/models/fit_models/live_v_sterilized_soil/BRHO_ricker_nb_static_soil_comp.stan', data = data_vec, init = initialsall, iter = 8000, chains = 4, thin = 2, control = list(adapt_delta = 0.99, max_treedepth = 15))
+  
+  PrelimFit <- brho.stat.output[[paste0("brho_w", i)]]
+  
+  ## save model output
+  save(PrelimFit, file = paste0("data_analysis/models/output/m0_models/", date, "/brho_nb_stat_w", i, "_", date, "_soil_comp_final.rdata"))
+  
+}
+
+
+
+
+

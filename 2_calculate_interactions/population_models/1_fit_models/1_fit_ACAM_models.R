@@ -49,7 +49,7 @@ for(i in rainfall){
              !is.na(num.bg.indiv))
     
     ## print model to keep track of progress during loop
-    print(paste0("w", i))
+    print(paste0("acam_w", i))
     
     ## create vectors of data inputs
     Fecundity = as.integer(round(dat$seeds.out.percap)) ## seeds out PER-CAP
@@ -78,7 +78,7 @@ for(i in rainfall){
     PrelimFit = stlive.out[[paste0("acam_w", i)]]
     
     ## save model output
-    save(PrelimFit, file = paste0("../outputs/posteriors/static/", date, 
+    save(PrelimFit, file = paste0("../outputs/posteriors/", date, 
                                   "/acam_static_m1_w", i, "_", date, ".rdata"))
 
 }
@@ -101,7 +101,7 @@ for(i in rainfall){
              !is.na(num.bg.indiv))
     
     ## print model to keep track of progress during loop
-    print(paste0("w", i))
+    print(paste0("acam_w", i))
     
     ## create vectors of data inputs
     Fecundity = as.integer(round(dat$seeds.out.percap)) ## seeds out PER CAP
@@ -135,7 +135,7 @@ for(i in rainfall){
     PrelimFit = siglive.out[[paste0("acam_w", i)]]
 
     ## save model output
-    save(PrelimFit, file = paste0("../outputs/posteriors/sigmoidal/", date, 
+    save(PrelimFit, file = paste0("../outputs/posteriors/", date, 
                                   "/acam_sigmoidal_m1_w", i, "_", date, ".rdata"))
     
 }
@@ -156,7 +156,7 @@ for(i in rainfall){
            !is.na(num.bg.indiv))
   
   ## print model to keep track of progress during loop
-  print(paste0("w", i))
+  print(paste0("acam_w", i))
   
   ## create vectors of data inputs
   Fecundity = as.integer(round(dat$seeds.out.percap)) ## seeds out PER CAP
@@ -199,7 +199,7 @@ for(i in rainfall){
   PrelimFit = stboth.output[[paste0("acam_w", i)]]
 
   ## save model output
-  save(PrelimFit, file = paste0("../outputs/posteriors/static/", date, 
+  save(PrelimFit, file = paste0("../outputs/posteriors/", date, 
                                 "/acam_stat_mboth_w", i, "_", date, ".rdata"))
   
   
