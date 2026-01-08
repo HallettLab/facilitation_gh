@@ -276,7 +276,7 @@ write.csv(acam_sig_diagnostics, paste0(output_loc, "/", date,
 
 ## Static - BOTH ####
 rain = c(1, 0.75, 0.6)
-date = 20260107
+date = 20260108
 acam_stat_both_posts = list()
 
 ## create empty df for diagnostics

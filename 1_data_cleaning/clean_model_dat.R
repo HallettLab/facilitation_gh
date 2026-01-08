@@ -204,8 +204,9 @@ ggplot(ainter, aes(x=seeds.out, fill = as.factor(water))) +
 ## change acam bkgrd data to use as intraspecific acam data
 aintra = abkgrd %>%
   
-  ## get rid of 0 background pots
-  filter(!is.na(num.bg.indiv), num.bg.indiv != 0, num.bg.indiv != 1) %>%
+  ## get rid of 0 background pots and contaminated pots
+  filter(!is.na(num.bg.indiv), num.bg.indiv != 0, num.bg.indiv != 1,
+         !unique.ID %in% rm.contaminated) %>%
   
   ## select only needed columns
   select(unique.ID, block, water, microbe, rep, num.bg.indiv, 
@@ -248,15 +249,15 @@ names(ainter)
 ## join into one df for model
 ainter2 = ainter %>%
   select(-BRHO)
-aintra2 = aintra %>%
-  filter(microbe == 1) ## need to filter here, because aintra have microbe 0, 
-                      ## while ainter do not
-acam.model = rbind(ainter2, aintra2) %>%
+#aintra2 = aintra %>%
+ # filter(microbe == 1) ## do NOT filter out m0's
+
+acam.model = rbind(ainter2, aintra) %>%
   mutate(soil = ifelse(microbe == 1, 0, 1))
 ## flip the microbe treatment indicators for modeling; 
 ## want default (0) to be live soil condition while 1 should indicate 
 ## sterilized so it calcs the deviation parameter for sterilized soil.
 
 # clean env ####
-rm(abkgrd, abkgrd.join, acam, aintra2, ainter2, allo, bbkgrd, brho, brho_clean, 
+rm(abkgrd, abkgrd.join, acam, ainter2, allo, bbkgrd, brho, brho_clean, 
    alloB, alloAf, alloAs)

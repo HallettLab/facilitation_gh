@@ -145,7 +145,7 @@ for(i in rainfall){
 ## make a list for model output
 rainfall = c(1, 0.75, 0.6)
 stboth.output = list()
-date = 20260107
+date = 20260108
 
 for(i in rainfall){
   
