@@ -1,7 +1,21 @@
+## Header ##
+## 
+## Clean Posteriors
+##
+## Purpose: reformat posteriors to prepare for use in analyses
+## save a clean .csv file of posteriors to avoid needing to re-run
+## every time
+## 
+## Author: Carmen Watkins
 
 
-#aposts = read.csv("data/model_posteriors/acam_soil_comp_posts_20250419.csv")
-#bposts = read.csv("data/model_posteriors/brho_soil_comp_posts_20250419.csv")
+## load models
+source("2_calculate_interactions/population_models/2_evaluate/load_models.R")
+
+## save posterior distributions
+brho_stat_posts[[paste0("brho_w", i)]] = tmp
+
+## Static - BOTH ####
 
 ggplot(acam_stat_posteriors, aes(x=lambda)) +
   geom_density()
