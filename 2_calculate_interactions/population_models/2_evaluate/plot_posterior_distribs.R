@@ -1,9 +1,9 @@
 
 ## load models
-source("data_analysis/models/evaluate/load_models.R")
+source("2_calculate_interactions/population_models/2_evaluate/2_load_models.R")
 
 # Set up ####
-ppd_fig_loc = "data_analysis/models/evaluate/plot_posteriors/"
+ppd_fig_loc = "../output/diagnostics/20260107/posterior_distributions"
 
 theme_set(theme_classic())
 

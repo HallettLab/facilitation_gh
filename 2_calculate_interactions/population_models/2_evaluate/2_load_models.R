@@ -241,7 +241,7 @@ write.csv(acam_stat_posteriors_LO,
 
 ### Static - BOTH ####
 rain = c(1, 0.75, 0.6)
-date = 20260107
+date = 20260108
 acam_stat_posts_B = list()
 
 for(i in rain){
@@ -285,6 +285,6 @@ micA = acam_stat_posteriors_B %>%
          alpha_acam_m0 = alpha_acam + alpha_acam_dev)
 
 ## save .csv file version of posteriors for easier use later on.
-write.csv(micA, "../outputs/posteriors/acam_stat_posts_B_20260107.csv")
+write.csv(micA, "../outputs/posteriors/acam_stat_posts_B_20260108.csv")
 
 
