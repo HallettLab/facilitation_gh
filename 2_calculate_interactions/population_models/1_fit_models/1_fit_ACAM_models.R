@@ -30,13 +30,13 @@ source("1_data_cleaning/clean_model_dat.R")
 ## remove outputs not needed for modeling 
 rm(ainter, aintra, binter, binter_for_AII, bintra)
 
-## set seed ####
+## set seed 
 set.seed(25)
 
 # Static - LIVE ONLY ####
 ## make treatment vector
 rainfall = c(1, 0.75, 0.6)
-date = 20251219 ## set date
+date = 20260107 ## set date
 stlive.out = list() ## make a list for model output
 
 for(i in rainfall){
@@ -89,7 +89,7 @@ for(i in rainfall){
 ## make a list for model output
 rainfall = c(1, 0.75, 0.6)
 siglive.out = list()
-date = 20251219
+date = 20260107
 
 for(i in rainfall){
   
@@ -145,7 +145,7 @@ for(i in rainfall){
 ## make a list for model output
 rainfall = c(1, 0.75, 0.6)
 stboth.output = list()
-date = 20251219
+date = 20260107
 
 for(i in rainfall){
   
