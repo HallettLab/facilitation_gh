@@ -109,10 +109,14 @@ for (j in 1:length(rain)) {
       alpha_ij = dat_filt[dat_filt$post_num == p,]$alpha_inter
       
       ## calc IGR
-      igr_tmp = igr_stat_func(surv = s_i, germ = g_i, lambda = lambda_i, alpha_intra = alpha_ii, Nt = 1, alpha_inter = alpha_ij, germ_inter = g_j, inter_abund = n_star)
+      igr_tmp = igr_stat_func(surv = s_i, germ = g_i, lambda = lambda_i, 
+                              alpha_intra = alpha_ii, Nt = 1, 
+                              alpha_inter = alpha_ij, germ_inter = g_j, 
+                              inter_abund = n_star)
       
       ## fill in data 
-      tmp = data.frame(focal = focal, water = r, post_num = p, igr = igr_tmp, alpha_inter = alpha_ij, equil = n_star, lambda = lambda_i)
+      tmp = data.frame(focal = focal, water = r, post_num = p, igr = igr_tmp, 
+                       alpha_inter = alpha_ij, equil = n_star, lambda = lambda_i)
       
       ## append
       igr_m0 = rbind(igr_m0, tmp)
@@ -130,7 +134,8 @@ igr_m0 = igr_m0 %>%
 
 ## m1 ####
 ## create empty df
-igr_m1 = data.frame(focal = NA, water = NA, post_num = NA, igr = NA, equil = NA, alpha_inter = NA, lambda = NA)
+igr_m1 = data.frame(focal = NA, water = NA, post_num = NA, igr = NA, equil = NA, 
+                    alpha_inter = NA, lambda = NA)
 
 ## set post draw list from equil df
 # posts_stat = unique(m0equil$post_num)
@@ -205,10 +210,14 @@ for(i in 1:length(species)) {
       alpha_ij = dat_filt[dat_filt$post_num == p,]$alpha_inter
       
       ## calc IGR
-      igr_tmp = igr_stat_func(surv = s_i, germ = g_i, lambda = lambda_i, alpha_intra = alpha_ii, Nt = 1, alpha_inter = alpha_ij, germ_inter = g_j, inter_abund = n_star)
+      igr_tmp = igr_stat_func(surv = s_i, germ = g_i, lambda = lambda_i, 
+                              alpha_intra = alpha_ii, Nt = 1, 
+                              alpha_inter = alpha_ij, germ_inter = g_j, 
+                              inter_abund = n_star)
       
       ## fill in data 
-      tmp = data.frame(focal = focal, water = r, post_num = p, igr = igr_tmp, alpha_inter = alpha_ij, equil = n_star, lambda = lambda_i)
+      tmp = data.frame(focal = focal, water = r, post_num = p, igr = igr_tmp, 
+                       alpha_inter = alpha_ij, equil = n_star, lambda = lambda_i)
       
       ## append
       igr_m1 = rbind(igr_m1, tmp)
@@ -222,3 +231,8 @@ for(i in 1:length(species)) {
 igr_m1 = igr_m1 %>%
   filter(!is.na(focal)) %>%
   mutate(microbe = 1)
+
+## Save ####
+igr_microbe = rbind(igr_m1, igr_m0)
+
+write.csv(igr_microbe, "../outputs/analysis_outputs/igr_mboth_20260109.csv", row.names = F)

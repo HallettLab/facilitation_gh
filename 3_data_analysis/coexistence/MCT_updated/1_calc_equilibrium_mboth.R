@@ -13,7 +13,7 @@ library(HDInterval)
 
 theme_set(theme_classic())
 
-## read in models
+## read in model posteriors
 acam = read.csv("../outputs/posteriors/acam_stat_posts_B_20260108.csv")
 brho = read.csv("../outputs/posteriors/brho_stat_posts_B_20260107.csv")
 
@@ -24,16 +24,13 @@ germ = read.csv("data/germination_data.csv")
 seedsurv = read.csv("data/seed_survival_sumdat.csv")
 
 # Prep data ####
-## don't filter at this step because m1 and m0 are still together, 
-## don't necessarily want to filter ,0 and m1 together in case it 
-## really constrains distribs??
 aposts = acam %>%
   mutate(alpha_intra = alpha_acam,
          alpha_inter = alpha_brho,
          alpha_intra_m0 = alpha_acam_m0,
          alpha_inter_m0 = alpha_brho, 
-         ## the dev term is a fairly wide distribution, but see how using it goes??
-         ## no, too wide, leave as alpha_brho
+         ## use ONLY the live soil alpha_brho term as deviation term 
+         ## had too wide of a distribution
          
          focal = "ACAM") %>%
   select(-alpha_acam, -alpha_brho, -alpha_acam_m0, -alpha_acam_dev, 
@@ -95,7 +92,8 @@ rain = c(0.6, 0.75, 1)
 
 ## create empty df
 m1equil = as.data.frame(matrix(ncol = 8, nrow = 1))
-names(m1equil) =c("species", "water", "post_num", "n_star", "lambda", "alpha_ii", "g_i", "s_i")
+names(m1equil) =c("species", "water", "post_num", "n_star", "lambda",
+                  "alpha_ii", "g_i", "s_i")
 
 
 for(i in 1:length(species)) {
