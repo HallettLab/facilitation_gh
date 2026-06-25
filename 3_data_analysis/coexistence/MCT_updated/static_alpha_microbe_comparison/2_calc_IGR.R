@@ -8,8 +8,7 @@
 library(tidyverse)
 
 ## get equilibrium values
-# source("data_analysis/MCT/find_equilibrium.R")
-source("3_data_analysis/coexistence/MCT_updated/1_calc_equilibrium_mboth.R")
+source("3_data_analysis/coexistence/MCT_updated/static_alpha_microbe_comparison/1_calc_equilibrium.R")
 
 theme_set(theme_classic())
 
@@ -36,9 +35,6 @@ igr_stat_func = function(surv, germ, lambda, alpha_intra, Nt, alpha_inter,
 igr_m0 = data.frame(focal = NA, water = NA, post_num = NA, igr = NA, 
                     equil = NA, alpha_inter = NA, lambda = NA)
 
-## set post draw list from equil df
-# posts_stat = unique(m0equil$post_num)
-
 ## create treatment vectors
 species = c("ACAM", "BRHO")
 rain = c(0.6, 0.75, 1)
@@ -50,44 +46,44 @@ for (j in 1:length(rain)) {
   
   ## focal & resident
   if(sp == "ACAM") { 
-    
     focal = "ACAM"  
     resident = "BRHO"
-    
   } else { 
-    
     focal = "BRHO"  
     resident = "ACAM"}
     
     ## select water treat
     r = rain[j]
     
-    ## select data
-    ## want data from 80% hdi
+    ## select data from 80% hdi
     dat = m0statposts80[m0statposts80$focal == focal & m0statposts80$water == r,]
     
     ## set treatment
     if(r == 1) { trt = "C" 
     } else { trt = "D" }
     
-    ## set post draw list from equil df
+    ## set post draw list from equilibrium df
+        ## important to align the posterior numbers to match model runs
     posts_stat = unique(m0equil[m0equil$species == focal & m0equil$water == r,]$post_num)
     ## should be 400 vals
     
+    ## filter equilibrium runs df by species and water level
     m0eq = m0equil %>%
       filter(species == resident, water == r)
     
+    ## filter posterior dataset with posterior draws
     dat_filt = dat %>%
       filter(post_num %in% posts_stat)
     
     ## loop thru each posterior draw
     for (k in 1:length(dat_filt$post_num)) {
       
+      ## select posterior draw
       p = posts_stat[k]
       
+      ## set equilibrium value
       n_star = as.integer(m0eq[k,]$n_star)
-      #meq = 
-      
+
       ## define params
       if (sp == "ACAM") {
         
@@ -103,7 +99,6 @@ for (j in 1:length(rain)) {
         
       }
        
-      #N_eq_v = c(0:n_star) ## just use one equilibrium value for the moment
       lambda_i = dat_filt[dat_filt$post_num == p,]$lambda
       alpha_ii = dat_filt[dat_filt$post_num == p,]$alpha_intra
       alpha_ij = dat_filt[dat_filt$post_num == p,]$alpha_inter
@@ -137,13 +132,6 @@ igr_m0 = igr_m0 %>%
 igr_m1 = data.frame(focal = NA, water = NA, post_num = NA, igr = NA, equil = NA, 
                     alpha_inter = NA, lambda = NA)
 
-## set post draw list from equil df
-# posts_stat = unique(m0equil$post_num)
-
-## create treatment vectors
-species = c("ACAM", "BRHO")
-rain = c(0.6, 0.75, 1)
-
 for(i in 1:length(species)) {
   for (j in 1:length(rain)) {
     
@@ -151,27 +139,24 @@ for(i in 1:length(species)) {
     
     ## focal & resident
     if(sp == "ACAM") { 
-      
       focal = "ACAM"  
       resident = "BRHO"
-      
     } else { 
-      
       focal = "BRHO"  
       resident = "ACAM"}
     
     ## select water treat
     r = rain[j]
     
-    ## select data
-    ## want data from 80% hdi
+    ## select data from 80% hdi
     dat = m1statposts80[m1statposts80$focal == focal & m1statposts80$water == r,]
     
     ## set treatment
     if(r == 1) { trt = "C" 
     } else { trt = "D" }
     
-    ## set post draw list from equil df
+    ## set post draw list from equilibrium df
+    ## important to align the posterior numbers to match model runs
     posts_stat = unique(m1equil[m1equil$species == focal & m1equil$water == r,]$post_num)
     ## should be 400 vals
     

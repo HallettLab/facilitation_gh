@@ -57,7 +57,8 @@ rain = c(0.6, 0.75, 1)
 
 ## create empty df
 equil_sig = as.data.frame(matrix(ncol = 8, nrow = 1))
-names(equil_sig) = c("species", "water", "post_num", "n_star", "lambda", "alpha_ii", "g_i", "s_i")
+names(equil_sig) = c("species", "water", "post_num", "n_star", "lambda", 
+                     "alpha_ii", "g_i", "s_i")
 
 ## run loop
 for(i in 1:length(species)) {

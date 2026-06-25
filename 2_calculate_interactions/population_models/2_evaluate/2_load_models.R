@@ -236,7 +236,7 @@ for(i in rain){
 rm(tmp, PrelimFit)
 
 ## save .csv file version of posteriors for easier use later on.
-write.csv(acam_stat_posteriors_LO, 
+write.csv(acam_sig_posteriors, 
           "../outputs/posteriors/acam_sig_posts_LO_20260107.csv")
 
 ### Static - BOTH ####

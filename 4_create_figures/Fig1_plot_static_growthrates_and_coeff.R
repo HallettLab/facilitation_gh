@@ -269,3 +269,57 @@ alph = ggarrange(aa, ab, bb, ba, ncol = 4, nrow = 1, common.legend = TRUE,
 
 plot_grid(grs, alph, nrow = 2, align = "v", rel_heights = c(1, 0.5))
 
+ggsave("../outputs/figures/Fig1_static_microbe_MCT_and_params.png", width = 10, height = 6, bg = "white")
+
+# Talk Figs ####
+## plot
+brho %>%
+  select(water, alpha_acam, alpha_acam_m0) %>%
+  pivot_longer(cols = c("alpha_acam", "alpha_acam_m0"), names_to = "soil", 
+               values_to = "alpha") %>%
+  mutate(soil = ifelse(soil == "alpha_acam", "Live", "Sterilized")) %>%
+  mutate(water.text = ifelse(water == 1, "High", 
+                             ifelse(water == 0.75, "Int", "Low")),
+         water.text = fct_relevel(water.text, "Low", "Int", "High")) %>%
+  
+  ggplot(aes(x = water.text, y=alpha, group = soil, color = soil)) +
+  scale_color_manual(values = c("#020202", "#969696")) +
+  scale_fill_manual(values = c("#020202", "#dbdbdb")) +
+  geom_point(alpha = 0.15) +
+  geom_line(data = mBA, aes(x=water.text, y=mean_alpha, color = soil)) +
+  stat_summary(
+    fun = "mean",        
+    geom = "point",
+    col = "black",
+    size = 2.5,
+    shape = 21, aes(fill = soil)) +
+  ylab("Interaction") +
+  xlab(NULL)  +
+  labs(fill = "Soil", color = "Soil") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  theme(text = element_text(size=13.5)) 
+
+ggsave("../outputs/binter.png", width = 5, height = 3)
+
+acam %>%
+  mutate(water.text = ifelse(water == 1, "High", 
+                             ifelse(water == 0.75, "Int", "Low")),
+         water.text = fct_relevel(water.text, "Low", "Int", "High")) %>%
+  
+  ggplot(aes(x = water.text, y=alpha_brho )) +
+  geom_point(alpha = 0.15, color = "#565656") +
+  geom_line(data = mAB, aes(x=water.text, y=mean_alpha, group = 1)) +
+  stat_summary(
+    fun = "mean",        
+    geom = "point",
+    col = "black",
+    size = 2.5,
+    shape = 21, fill = "white") +
+  ylab("Interaction") +
+  xlab(NULL)  +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  theme(text = element_text(size=13.5)) +
+  #      axis.text.x=element_blank()) +
+  coord_cartesian(ylim = c(-0.085, 0.021)) 
+
+ggsave("../outputs/ainter.png", width = 4, height = 3)

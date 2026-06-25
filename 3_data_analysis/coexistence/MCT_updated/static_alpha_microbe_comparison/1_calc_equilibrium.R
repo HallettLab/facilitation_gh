@@ -1,16 +1,19 @@
 ## Header ##
-## 
-## Script Name: Calculate Equilibrium
-##
-## Purpose: Calculate population equilibrium values to be used in invasion 
-## analyses
-## 
-## Author: Carmen Watkins
+##' 
+##' Script Name: Calculate Equilibrium
+##'
+##' Purpose: Calculate population equilibrium values with static alpha 
+##' coefficients to be used in invasion analyses. Calculate equilibrium 
+##' values separately for each microbial treatment.
+##' 
+##' Author: Carmen Watkins
 
 # Set up ####
+## load packages
 library(tidyverse)
 library(HDInterval)
 
+## set up graphics
 theme_set(theme_classic())
 
 ## read in model posteriors
@@ -39,19 +42,24 @@ aposts = acam %>%
 bposts = brho %>%
   mutate(alpha_intra = alpha_brho,
          alpha_inter = alpha_acam, 
-         alpha_intra_m0 = alpha_brho, ## PURPOSELY leaving this as alpha_brho as I don't trust the dev term
+         alpha_intra_m0 = alpha_brho, 
+         ## PURPOSELY leaving this as alpha_brho 
+         ## as I don't trust the dev term
          alpha_inter_m0 = alpha_acam_m0,
          focal = "BRHO") %>%
   select(-alpha_acam, -alpha_brho, -alpha_acam_m0, -alpha_acam_dev,
          -alpha_brho_m0, -alpha_brho_dev, -X, -disp)
 
+## join focal species together
 stat2 = rbind(aposts, bposts) %>%
   group_by(focal, water) %>%
   mutate(post_num = c(1:n()))
 
+## separate by microbial treatment
 m0 = stat2 %>%
   select(focal, water, lambda_m0, alpha_intra_m0, alpha_inter_m0, post_num)
-names(m0) = c("focal", "water", "lambda", "alpha_intra", "alpha_inter", "post_num")
+names(m0) = c("focal", "water", "lambda", "alpha_intra", "alpha_inter", 
+              "post_num")
 
 m1 = stat2 %>%
   select(focal, water, lambda, alpha_intra, alpha_inter, post_num)
@@ -95,7 +103,7 @@ m1equil = as.data.frame(matrix(ncol = 8, nrow = 1))
 names(m1equil) =c("species", "water", "post_num", "n_star", "lambda",
                   "alpha_ii", "g_i", "s_i")
 
-
+## loop over species x water level x posterior draw
 for(i in 1:length(species)) {
   
   ## select species
@@ -103,6 +111,7 @@ for(i in 1:length(species)) {
   
   for (j in 1:length(rain)) {
     
+    ## select water level
     r = rain[j]
     
     ## select data
@@ -115,8 +124,11 @@ for(i in 1:length(species)) {
     ## create list of unique posterior draws
     posts = unique(dat$post_num)
     
-    ## select 400 random posterior draws - ok to have different draws for each water x focal combination as they were run in separate models.
-    ## selected 400 runs to smooth out equil posterior densities - they were a little weirdly bumpy with just 200 or 300 draws
+    ## select 400 random posterior draws - 
+        ## it is ok to have different draws for each water x focal combination 
+        ## as they were run in separate models.
+        ## selected 400 runs to smooth out equil posterior densities - 
+        ## they were a little weirdly bumpy with just 200 or 300 draws
     post_list = sample(posts, 400, replace = FALSE)
     
     ## loop thru each posterior draw
@@ -141,11 +153,12 @@ for(i in 1:length(species)) {
       alpha_ii = dat[dat$post_num == p,]$alpha_intra
       
       ## solve for equilibrium
-      N_star = (1/(alpha_ii*g_i)) * log( (1 - ((1-g_i)*s_i )) / (g_i * lambda_i) )
+      N_star = (1/(alpha_ii*g_i)) * log((1 - ((1-g_i)*s_i )) / (g_i * lambda_i))
       
       ## fill in data 
-      tmp = data.frame(species = sp, water = r, post_num = p, n_star = N_star, lambda = lambda_i, 
-                       alpha_ii = alpha_ii, g_i = g_i, s_i = s_i)
+      tmp = data.frame(species = sp, water = r, post_num = p, n_star = N_star,
+                       lambda = lambda_i, alpha_ii = alpha_ii, g_i = g_i, 
+                       s_i = s_i)
       
       ## append
       m1equil = rbind(m1equil, tmp)
@@ -159,11 +172,8 @@ for(i in 1:length(species)) {
 m1equil = m1equil %>%
   filter(!is.na(species))
 
-## write.csv(equil, "data_analysis/MCT/output/equil_stat.csv", row.names = F)
-
 # Plot ####
 ggplot(m1equil, aes(x=n_star, color = as.factor(water))) +
-  # geom_histogram() +
   geom_density(linewidth = 1) +
   facet_wrap(~species) +
   scale_color_manual(values = c("#de8a5a", "#f3d0ae", "#70a494")) +
@@ -171,17 +181,12 @@ ggplot(m1equil, aes(x=n_star, color = as.factor(water))) +
   labs(color = "Water") +
   ylab("Density")
 
-## ggsave("data_analysis/MCT/figures/equilibrium_dens_postdraws.png", width = 7, height = 3)
-
 ## m0 ####
-species = c("ACAM", "BRHO")
-rain = c(0.6, 0.75, 1)
-
 ## create empty df
 m0equil = as.data.frame(matrix(ncol = 8, nrow = 1))
 names(m0equil) =c("species", "water", "post_num", "n_star", "lambda", "alpha_ii", "g_i", "s_i")
 
-
+## loop over species x water level x posterior draw
 for(i in 1:length(species)) {
   
   ## select species
@@ -201,8 +206,11 @@ for(i in 1:length(species)) {
     ## create list of unique posterior draws
     posts = unique(dat$post_num)
     
-    ## select 400 random posterior draws - ok to have different draws for each water x focal combination as they were run in separate models.
-    ## selected 400 runs to smooth out equil posterior densities - they were a little weirdly bumpy with just 200 or 300 draws
+    ## select 400 random posterior draws - 
+        ## it is ok to have different draws for each water x focal combination 
+        ## as they were run in separate models.
+        ## selected 400 runs to smooth out equil posterior densities - 
+        ## they were a little weirdly bumpy with just 200 or 300 draws
     post_list = sample(posts, 400, replace = FALSE)
     
     ## loop thru each posterior draw
@@ -227,14 +235,12 @@ for(i in 1:length(species)) {
       alpha_ii = dat[dat$post_num == p,]$alpha_intra
       
       ## solve for equilibrium
-    #  N_star = (1/(-0.01691412*0.5161111)) * log( (1 - ((1-0.5161111)*0.16 )) / (0.5161111 * 62.50656) )
-      
-      ## solve for equilibrium
-      N_star = (1/(alpha_ii*g_i)) * log( (1 - ((1-g_i)*s_i )) / (g_i * lambda_i) )
+      N_star = (1/(alpha_ii*g_i)) * log((1 - ((1-g_i)*s_i )) / (g_i * lambda_i))
       
       ## fill in data 
-      tmp = data.frame(species = sp, water = r, post_num = p, n_star = N_star, lambda = lambda_i, 
-                       alpha_ii = alpha_ii, g_i = g_i, s_i = s_i)
+      tmp = data.frame(species = sp, water = r, post_num = p, n_star = N_star, 
+                       lambda = lambda_i, alpha_ii = alpha_ii, g_i = g_i,
+                       s_i = s_i)
       
       ## append
       m0equil = rbind(m0equil, tmp)
@@ -248,11 +254,8 @@ for(i in 1:length(species)) {
 m0equil = m0equil %>%
   filter(!is.na(species))
 
-## write.csv(equil, "data_analysis/MCT/output/equil_stat.csv", row.names = F)
-
 # Plot ####
 ggplot(m0equil, aes(x=n_star, color = as.factor(water))) +
-  # geom_histogram() +
   geom_density(linewidth = 1) +
   facet_wrap(~species) +
   scale_color_manual(values = c("#de8a5a", "#f3d0ae", "#70a494")) +

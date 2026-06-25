@@ -5,7 +5,8 @@
 source("data_analysis/MCT/find_equilibrium_sigmoidal.R")
 
 # Create Functions ####
-igr_sig = function(surv, germ, lambda, alpha_intra, Nt, germ_inter, inter_abund, alpha_0, alpha_slope, N0, c) {
+igr_sig = function(surv, germ, lambda, alpha_intra, Nt, germ_inter, inter_abund, 
+                   alpha_0, alpha_slope, N0, c) {
   
   ## Nt = abund of focal
   

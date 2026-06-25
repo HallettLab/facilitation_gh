@@ -1,10 +1,11 @@
 ## Header ##
+##' 
+##' Script Name: Plot Sigmoidal Function
+##'
+##' Purpose: Use medians of posterior distributions to visualize alpha 
+##' values and fecundity along a density of ACAM
 ## 
-## Script Name: Plot Sigmoidal Function
-##
-## Purpose: Use medians of posterior distributions to visualize alpha values and fecundity along a density of ACAM
-## 
-## Author: Code adapted from Lisa Buche
+##' Author: Code adapted from Lisa Buche
 
 # Set up ####
 ## load packages
