@@ -8,7 +8,7 @@ library(car)
 
 ## read in data
 source("1_data_cleaning/clean_CN_dat.R")
-source("1_data_cleaning/calc_additive_intensity_index.R")
+source("2_calculate_interactions/additive_intensity_index/calc_additive_intensity_index.R")
 
 ## join nutrient data with interactions
 CN_final2 = CN_final %>%
@@ -21,7 +21,7 @@ test = left_join(brho_AII, CN_final2, by = c("unique.ID", "block", "water",
                                             "microbe", "rep"))
 
 
-## water stress predict interacitons?
+## water stress predict interactions?
 ggplot(test, aes(x=delta13C, y=NIntA)) +
   geom_point(aes(color = water)) +
   geom_hline(yintercept = 0, linetype = "dashed") +

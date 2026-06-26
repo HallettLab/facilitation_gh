@@ -129,6 +129,7 @@ for(i in 1:length(species)) {
 alpha_sig = alpha_sig %>%
   filter(!is.na(focal))
 
+# Plot ####
 ## calculate the mean alpha value at each density
 alpha_mean = alpha_sig %>%
   group_by(focal, water, dens) %>%
@@ -140,53 +141,6 @@ alpha_mean = alpha_sig %>%
          focal = as.factor(focal), 
          focal = fct_relevel(focal, "BRHO", "ACAM"),
          realised_alpha = dens*mean.alpha)
-
-
-b_plot = alpha_sig %>%
-  filter(focal == "BRHO") %>%
-  mutate(water.text = ifelse(water == 1, "High",
-                             ifelse(water == 0.75, "Intermediate",
-                                    "Low"))) %>%
-  ggplot(aes(x=dens, y=alpha_inter, color = as.factor(water))) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  geom_line(alpha = 0.15, aes(color = water.text, group = interaction(water.text, post_num))) +
-  scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
-  geom_line(data = alpha_mean[alpha_mean$focal == "BRHO",], 
-            aes(x=dens, y=mean.alpha, group = water.text, color = water.text), 
-            linewidth = 1.25, color = "black") +
-  geom_line(data = alpha_mean[alpha_mean$focal == "BRHO",], 
-            aes(x=dens, y=mean.alpha, group = water.text, color = water.text), 
-            linewidth = 0.75) +
-  ylab("Raw Interspecific Interaction") +
-  xlab("Legume Density") +
-  labs(color = "Water Level") +
-  ggtitle("B. hordeaceus") +
-  theme(text = element_text(size=13))
-
-a_plot = alpha_sig %>%
-  filter(focal == "ACAM") %>%
-  mutate(water.text = ifelse(water == 1, "High",
-                             ifelse(water == 0.75, "Intermediate",
-                                    "Low"))) %>%
-  ggplot(aes(x=dens, y=alpha_inter, color = as.factor(water))) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  geom_line(alpha = 0.15, aes(color = water.text, group = interaction(water.text, post_num))) +
-  scale_color_manual(values = c("#70a494", "#f3d0ae", "#de8a5a")) +
-  geom_line(data = alpha_mean[alpha_mean$focal == "ACAM",], 
-            aes(x=dens, y=mean.alpha, group = water.text, color = water.text), 
-            linewidth = 1.25, color = "black") +
-  geom_line(data = alpha_mean[alpha_mean$focal == "ACAM",], 
-            aes(x=dens, y=mean.alpha, group = water.text, color = water.text), 
-            linewidth = 0.75) +
-  ylab(" ") +
-  xlab("Grass Density") +
-  labs(color = "Water Level") +
-  ggtitle("A. americanus") +
-  theme(text = element_text(size=13))
-
-ggarrange(b_plot, a_plot, common.legend = TRUE, legend = "right")
-
-ggsave("raw_alpha_sigmoidal_plots.png", width = 10, height = 4.5, bg = "white")
 
 
 ## realised interaction
@@ -237,9 +191,4 @@ ar_plot = alpha_sig %>%
 ggarrange(br_plot, ar_plot, common.legend = TRUE, legend = "right")
 
 ggsave("realised_interaction_sigmoidal_plots.png", width = 10, height = 4.5, bg = "white")
-
-
-
-
-
 

@@ -11,7 +11,7 @@
 source("2_calculate_interactions/additive_intensity_index/calc_additive_intensity_index.R")
 
 
-brho_RII %>%
+brho_AII %>%
   group_by(ACAM, water, microbe) %>%
   summarise(mean.NIntA = mean(NIntA, na.rm = T),
             se.NIntA = calcSE(NIntA)) %>%
@@ -30,7 +30,7 @@ brho_RII %>%
   theme(text = element_text(size = 15)) +
   theme(legend.position = "bottom")
 
-brho_RII %>%
+brho_AII %>%
   #  group_by(ACAM, water, microbe) %>%
   #  summarise(mean.NIntA = mean(NIntA, na.rm = T),
   #            se.NIntA = calcSE(NIntA)) %>%
@@ -54,7 +54,7 @@ brho_RII %>%
   geom_smooth(method = "lm", alpha = 0.25) +
   geom_jitter(size = 2.5)
 
-brho_RII %>%
+brho_AII %>%
   group_by(ACAM, water, microbe) %>%
   summarise(mean.NIntA = mean(NIntA, na.rm = T),
             se.NIntA = calcSE(NIntA)) %>%
@@ -74,22 +74,22 @@ brho_RII %>%
   theme(legend.position = "bottom")
 
 ## Join ####
-brj = brho_RII %>%
+brj = brho_AII %>%
   select(unique.ID, water, microbe, rep, ACAM, num.bg.indiv, RII, NIntA) %>%
   mutate(planted.bg = ACAM,
          focal = "BRHO") %>%
   select(-ACAM)
 
-acj = acam_RII %>% 
+acj = acam_AII %>% 
   select(unique.ID, water, microbe, rep, BRHO, num.bg.indiv, RII, NIntA) %>%
   mutate(planted.bg = BRHO,
          focal = "ACAM") %>%
   select(-BRHO)
 
-RII_sp = rbind(brj, acj)
+AII_sp = rbind(brj, acj)
 
 # Plot ####
-brho_RII %>%
+brho_AII %>%
   filter(ACAM != 0) %>%
   ggplot(aes(x=num.bg.indiv, y=NIntA, color = water, linetype = microbe, shape = microbe)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
@@ -108,7 +108,7 @@ brho_RII %>%
 
 
 # Fig 2 ####
-RII_sp %>%
+AII_sp %>%
   filter(focal == "BRHO") %>%
   group_by(planted.bg, water, microbe, focal) %>%
   summarise(mean.NIntA = mean(NIntA, na.rm = T),
@@ -130,7 +130,7 @@ RII_sp %>%
 #ggsave("figures/Apr2025/Fig2_NIntA_index.png", width = 7, height = 4)
 
 ## Talk Version ####
-RII_sp %>%
+AII_sp %>%
   filter(focal == "BRHO", microbe == "Live") %>%
   group_by(planted.bg, water, microbe, focal) %>%
   summarise(mean.NIntA = mean(NIntA, na.rm = T),
@@ -148,12 +148,12 @@ RII_sp %>%
   theme(text = element_text(size = 16)) +
   theme(legend.position = "bottom") 
 
-ggsave("figures/dissertation_talk/AII_v_density.png", width = 5, height = 4)
+#ggsave("figures/dissertation_talk/AII_v_density.png", width = 5, height = 4)
 
 
 # Fig 5 ####
 ## plot both together
-RII_sp %>%
+AII_sp %>%
   mutate(focal = fct_relevel(focal, "BRHO", "ACAM")) %>%
   #filter(planted.bg != 0) %>%
   filter(focal == "BRHO") %>%

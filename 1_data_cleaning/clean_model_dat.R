@@ -23,7 +23,7 @@ calcSE<-function(x){
 }
 
 ## Read in data ####
-file_loc = "~/Dropbox-UniversityofOregon/Carmen Watkins/Facilitation_GH/data/biomass/Adult/"
+file_loc = "../../../PhD_Projects/UO_Dropbox_Files/Facilitation_GH/data/biomass/Adult/"
 #file_loc = "~/University of Oregon Dropbox/Lauren Hallett/Facilitation_GH/data/biomass/Adult/"
 
 ## for BRHO models

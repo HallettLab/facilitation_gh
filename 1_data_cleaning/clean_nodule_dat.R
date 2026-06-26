@@ -16,7 +16,7 @@ library(tidyverse)
 theme_set(theme_classic())
 
 ## Read in data ####
-nod_loc = "~/Dropbox-UniversityofOregon/Carmen Watkins/Facilitation_GH/data/"
+nod_loc = "../../../PhD_Projects/UO_Dropbox_Files/Facilitation_GH/data/"
 
 ## most contaminant data in the nodule counts file
 nods = read.csv(paste0(nod_loc, "nodules/nodule_counts_20251219.csv"))
