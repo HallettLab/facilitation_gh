@@ -114,7 +114,7 @@ bigr = gr_df %>%
 
 ### put together ####
 grs = ggarrange(aigr, bigr, ncol = 2, nrow = 1, legend = "right", align = "h", 
-          labels = "AUTO", common.legend = T)
+          labels = "auto", common.legend = T)
 
 
 ## Alphas ####
@@ -263,13 +263,25 @@ bb = brho %>%
   coord_cartesian(ylim = c(-0.085, 0.021))
 
 ### put together ####
+grs = ggarrange(aigr, bigr, ncol = 2, nrow = 1, legend = "right", align = "h", 
+                labels = "auto", common.legend = T)
+
 alph = ggarrange(aa, ab, bb, ba, ncol = 4, nrow = 1, common.legend = TRUE, 
-          legend = "none", align = "h", labels = c("C", "D", "E", "F"))
+          legend = "none", align = "h", labels = c("c", "d", "e", "f"))
 
 
 plot_grid(grs, alph, nrow = 2, align = "v", rel_heights = c(1, 0.5))
 
-ggsave("../outputs/figures/Fig1_static_microbe_MCT_and_params.png", width = 10, height = 6, bg = "white")
+ggsave("../outputs/figures/Fig1_static_microbe_MCT_and_params.png", 
+       width = 10, height = 6, bg = "white")
+
+
+a3 = ggarrange(aa, ab, common.legend = T, legend = "none")
+
+ggarrange(aigr, a3, common.legend = T, ncol = 1, nrow = 2)
+
+plot_grid(aigr, a3, nrow = 2)
+
 
 # Talk Figs ####
 ## plot

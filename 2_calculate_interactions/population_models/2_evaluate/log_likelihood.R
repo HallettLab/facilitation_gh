@@ -11,20 +11,21 @@ rstan_options(auto_write = TRUE)
 
 set.seed(25)
 
-date = 20250401
+date = 20260107
 
 # Run LOO ####
 ## BRHO ####
 ### Static ####
 rain = c(1, 0.75, 0.6)
-date_stat = 20250401
+date_stat = 20260107
 
 stat.loo = list()
 
 for(i in rain){
 
     ## load models
-    load(paste0("data_analysis/models/output/static/", date, "/brho_nb_static_w", i, "_", date_stat, "_final.rdata"))
+    load(paste0("../outputs/posteriors/", date,
+                "/brho_static_m1_w", i, "_", date_stat, ".rdata"))
     
     ## print model to keep track of progress during loop
     print(paste0("w", i))
@@ -38,19 +39,20 @@ for(i in rain){
     r_eff <- loo::relative_eff(log_lik, cores = 3) 
     # preferably use more than 2 cores (as many cores as possible)
     # will use value of 'mc.cores' option if cores is not specified
-    stat.loo[[paste0("brho_w", i, "_stat")]] <-  loo::loo(log_lik, threshold=0.7,r_eff = r_eff, cores = 3)
+    stat.loo[[paste0("brho_w", i, "_stat")]] <-  loo::loo(log_lik, threshold=0.7,
+                                                          r_eff = r_eff, cores = 3)
   
 }
 
 ### Sigmoidal ####
 rain = c(1, 0.75, 0.6)
-date = 20250401
+#date = 20250401
 sig.loo = list()
 
 for(i in rain){
 
     ## load models
-    load(paste0("data_analysis/models/output/sigmoidal/", date, "/brho_nb_sigmoidal_w", i, "_", date, "_final.rdata"))
+    load(paste0("../outputs/posteriors/", date, "/brho_sigmoidal_m1_w", i, "_", date, ".rdata"))
     
     ## print model to keep track of progress during loop
     print(paste0("w", i))
@@ -91,20 +93,19 @@ comp_loo_model2 <- comp_loo_model %>%
   select(model_type, model_date, water, elpd_diff, se_diff, elpd_loo, se_elpd_loo, p_loo, se_p_loo, looic, se_looic) %>% 
   mutate_if(is.numeric, round, digits = 3)
 
-write.csv(comp_loo_model2, "data_analysis/models/evaluate/log_likelihood_output/model_compare_stat_sig_20250225.csv")
+write.csv(comp_loo_model2, "../outputs/loo_model_compare_brho_stat_sig_20260708.csv", row.names = F)
 
 
 ## ACAM ####
 ### Static ####
 rain = c(1, 0.75, 0.6)
-date_stat = 20250401
-
 stat.loo = list()
 
 for(i in rain){
   
   ## load models
-  load(paste0("data_analysis/models/output/static/", date_stat, "/acam_nb_static_w", i, "_", date_stat, "_final.rdata"))
+  load(paste0("../outputs/posteriors/", date,
+              "/acam_static_m1_w", i, "_", date_stat, ".rdata"))
   
   ## print model to keep track of progress during loop
   print(paste0("w", i))
@@ -125,8 +126,6 @@ for(i in rain){
 ## check pareto k
 test = stat.loo[["acam_w1_stat"]]$diagnostics$pareto_k
 test>0.7
-## one high pareto-k value
-
 test2 = stat.loo[["acam_w0.75_stat"]]$diagnostics$pareto_k
 test2>0.7
 test3 = stat.loo[["acam_w0.6_stat"]]$diagnostics$pareto_k
@@ -135,13 +134,13 @@ test3>0.7
 
 ### Sigmoidal ####
 rain = c(1, 0.75, 0.6)
-date = 20250401
 sig.loo = list()
 
 for(i in rain){
   
   ## load models
-  load(paste0("data_analysis/models/output/sigmoidal/", date, "/acam_nb_sigmoidal_w", i, "_", date, "_final.rdata"))
+  load(paste0("../outputs/posteriors/", date,
+              "/acam_sigmoidal_m1_w", i, "_", date_stat, ".rdata"))
   
   ## print model to keep track of progress during loop
   print(paste0("w", i))
@@ -162,7 +161,6 @@ for(i in rain){
 ## check pareto-k
 testsg = sig.loo[["acam_w1"]]$diagnostics$pareto_k
 testsg>0.7
-## one high pareto-k value
 testsg2 = sig.loo[["acam_w0.75"]]$diagnostics$pareto_k
 testsg2>0.7
 testsg3 = sig.loo[["acam_w0.6"]]$diagnostics$pareto_k
@@ -192,4 +190,4 @@ comp_loo_model_acam2 <- comp_loo_model_acam %>%
   select(model_type, model_date, water, elpd_diff, se_diff, elpd_loo, se_elpd_loo, p_loo, se_p_loo, looic, se_looic) %>% 
   mutate_if(is.numeric, round, digits = 3)
 
-write.csv(comp_loo_model_acam2, "data_analysis/models/evaluate/log_likelihood_output/acam_model_compare_stat_sig_20250401.csv")
+write.csv(comp_loo_model_acam2, "../outputs/loo_model_compare_acam_stat_sig_20260708.csv", row.names = F)

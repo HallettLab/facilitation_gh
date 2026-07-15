@@ -26,13 +26,16 @@ library(reticulate)
 library(tidyverse)
 library(HDInterval) ## to take hdi's of posteriors
 
+py_require("scipy") ## needed for scipy import to work below
 np <- import("numpy",convert=F)
+sp <- import("scipy", convert = F)
 
+#py_eval("pip install scipy")
 # loads the relevant python code
 # use python code 
 #source("/Users/lisabuche/Documents/Projects/Spaak/numerical_NFD.py")
 
-source_python("data_analysis/NFD/NFD_definitions-master/numerical_NFD.py")
+source_python("3_data_analysis/archive/NFD/NFD_definitions-master/numerical_NFD.py")
 
 ## germination data
 germ = read.csv("data/germination_data.csv")
@@ -41,18 +44,23 @@ germ = read.csv("data/germination_data.csv")
 seedsurv = read.csv("data/seed_survival_sumdat.csv")
 
 ## parameter values
-sigposts = read.csv("data/model_posteriors/sig_posts_20250401.csv")
-statposts = read.csv("data/model_posteriors/stat_posts_20250401.csv")
+#sigposts = read.csv("data/model_posteriors/sig_posts_20250401.csv")
+#statposts = read.csv("data/model_posteriors/stat_posts_20250401.csv")
 
 ## post draw numbers
-    ## get these from sigmoidal equilibrium vals 
+source("3_data_analysis/1_calc_equilibrium_static.R")
+
+m0statposts80
+m1statposts80
+
+ ## get these from sigmoidal equilibrium vals 
     ## these will give same posterior draws used in invasion growth rate calcs, etc. 
-equil_sig = read.csv("data_analysis/MCT/output/equil_sig.csv")
-equil_stat = read.csv("data_analysis/MCT/output/equil_stat.csv")
+#equil_sig = read.csv("data_analysis/MCT/output/equil_sig.csv")
+#equil_stat = read.csv("data_analysis/MCT/output/equil_stat.csv")
 
 # create the differential equation system
 n_spec = 2 # number of species in the system, must be an integer
-set.seed(0) # set random seed for reproduce ability
+set.seed(0) # set random seed for reproducability
 
 # Define models ####
 ## plain ricker ####
@@ -94,47 +102,47 @@ ricker_sigmoid_f = function(N, s, g, lam, a_init, c, a_slope, N0, a_intra){
 # Prep Data ####
 ## Sig ####
 ### Calc 80% HDI ####
-sigposts80 = sigposts %>%
-  select(-disp) %>%
-  group_by(focal, water) %>%
-  filter(lambda >= hdi(lambda, credMass = 0.8)["lower"],
-         lambda <= hdi(lambda, credMass = 0.8)["upper"],
-         N_opt >= hdi(N_opt, credMass = 0.8)["lower"],
-         N_opt <= hdi(N_opt, credMass = 0.8)["upper"],
-         c >= hdi(c, credMass = 0.8)["lower"],
-         c <= hdi(c, credMass = 0.8)["upper"],
-         alpha_slope >= hdi(alpha_slope, credMass = 0.8)["lower"],
-         alpha_slope <= hdi(alpha_slope, credMass = 0.8)["upper"],
-         alpha_initial >= hdi(alpha_initial, credMass = 0.8)["lower"],
-         alpha_initial <= hdi(alpha_initial, credMass = 0.8)["upper"],
-         alpha_intra >= hdi(alpha_intra, credMass = 0.8)["lower"],
-         alpha_intra <= hdi(alpha_intra, credMass = 0.8)["upper"])
+#sigposts80 = sigposts %>%
+ # select(-disp) %>%
+  #group_by(focal, water) %>%
+#  filter(lambda >= hdi(lambda, credMass = 0.8)["lower"],
+ #        lambda <= hdi(lambda, credMass = 0.8)["upper"],
+  #       N_opt >= hdi(N_opt, credMass = 0.8)["lower"],
+   #      N_opt <= hdi(N_opt, credMass = 0.8)["upper"],
+    #     c >= hdi(c, credMass = 0.8)["lower"],
+     #    c <= hdi(c, credMass = 0.8)["upper"],
+      #   alpha_slope >= hdi(alpha_slope, credMass = 0.8)["lower"],
+       #  alpha_slope <= hdi(alpha_slope, credMass = 0.8)["upper"],
+        # alpha_initial >= hdi(alpha_initial, credMass = 0.8)["lower"],
+         #alpha_initial <= hdi(alpha_initial, credMass = 0.8)["upper"],
+  #       alpha_intra >= hdi(alpha_intra, credMass = 0.8)["lower"],
+   #      alpha_intra <= hdi(alpha_intra, credMass = 0.8)["upper"])
 
 ## Stat ####
-acam = statposts %>%
-  filter(focal == "ACAM") %>%
-  mutate(alpha_intra = alpha_acam,
-         alpha_inter = alpha_brho) %>%
-  select(-alpha_acam, -alpha_brho)
+#acam = statposts %>%
+#  filter(focal == "ACAM") %>%
+ # mutate(alpha_intra = alpha_acam,
+  #       alpha_inter = alpha_brho) %>%
+#  select(-alpha_acam, -alpha_brho)
 
-brho = statposts %>%
-  filter(focal == "BRHO") %>%
-  mutate(alpha_intra = alpha_brho,
-         alpha_inter = alpha_acam) %>%
-  select(-alpha_acam, -alpha_brho)
+#brho = statposts %>%
+ # filter(focal == "BRHO") %>%
+  #mutate(alpha_intra = alpha_brho,
+   #      alpha_inter = alpha_acam) %>%
+#  select(-alpha_acam, -alpha_brho)
 
-stat2 = rbind(acam, brho)
+# stat2 = rbind(acam, brho)
 
 ### Calc 80% HDI ####
-statposts80 = stat2 %>%
-  select(-disp) %>%
-  group_by(focal, water) %>%
-  filter(lambda >= hdi(lambda, credMass = 0.8)["lower"],
-         lambda <= hdi(lambda, credMass = 0.8)["upper"],
-         alpha_intra >= hdi(alpha_intra, credMass = 0.8)["lower"],
-         alpha_intra <= hdi(alpha_intra, credMass = 0.8)["upper"],
-         alpha_inter >= hdi(alpha_inter, credMass = 0.8)["lower"],
-         alpha_inter <= hdi(alpha_inter, credMass = 0.8)["upper"])
+#statposts80 = stat2 %>%
+ # select(-disp) %>%
+  #group_by(focal, water) %>%
+  #filter(lambda >= hdi(lambda, credMass = 0.8)["lower"],
+   #      lambda <= hdi(lambda, credMass = 0.8)["upper"],
+    #     alpha_intra >= hdi(alpha_intra, credMass = 0.8)["lower"],
+     #    alpha_intra <= hdi(alpha_intra, credMass = 0.8)["upper"],
+      #   alpha_inter >= hdi(alpha_inter, credMass = 0.8)["lower"],
+       #  alpha_inter <= hdi(alpha_inter, credMass = 0.8)["upper"])
 
 # Calc NFD ####
 ## Sigmoidal ####
@@ -156,32 +164,38 @@ for(i in 1:length(water)){
     trt = "C"
   }
   
-  wdat = sigposts80[sigposts80$water == w,]
+ ## wdat = sigposts80[sigposts80$water == w,]
   
+  wdat = m0equil[m0equil$water == w,] %>%
+    mutate(new_post_id = rep(1:400, 2))
+
   ## filter data to get only certain posterior draw numbers
   ##have to do this in a convoluted way 
   ## filtered posteriors for 80% CI for each param; this means that not all
   ## models have every post num any more, so can't just select 400 random draws 
-  ## and expect that each of this will have a row - ea spxwater trt has a unique 
+  ## and expect that each of this will have a row - ea sp x water trt has a unique 
   ## but overlapping set of post nums
   ## since we need the params for both species at once we need 400 specific
   ## numbers from each model that will def work; we can get these from equil sig
   ## calculations
-  posts = equil_sig %>%
-    filter(water == w) %>%
-    mutate(focal = species) %>%
-    select(focal, post_num)
   
-  wdat_filt = left_join(posts, wdat, by = c("focal", "post_num")) %>%
-    mutate(new_post_id = rep(1:400, 2))
+  ##posts = equil_sig %>%
+   # filter(water == w) %>%
+    #mutate(focal = species) %>%
+    #select(focal, post_num)
   
-  posts2 = unique(wdat_filt$new_post_id)
+  #wdat_filt = left_join(posts, wdat, by = c("focal", "post_num")) %>%
+   # mutate(new_post_id = rep(1:400, 2))
   
-  for(j in 1:length(posts2)) {
+  posts = as.numeric(wdat$new_post_id)
+  ## selecting using unique led to losing data as between species some post nums
+  ## were repeated
+  
+  for(j in 1:length(posts)) {
     
-    p = posts2[j]
+    p = posts[j]
     
-    dat = wdat_filt %>%
+    dat = wdat %>%
       filter(new_post_id == p)
     
     ## viable seedt

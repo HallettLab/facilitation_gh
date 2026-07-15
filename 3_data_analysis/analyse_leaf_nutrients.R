@@ -17,12 +17,12 @@ CN_final2 = CN_final %>%
                                "Low")),
          microbe = ifelse(microbe == 1, "Live", "Sterilized"))
 
-test = left_join(brho_AII, CN_final2, by = c("unique.ID", "block", "water", 
+CN_AII = left_join(brho_AII, CN_final2, by = c("unique.ID", "block", "water", 
                                             "microbe", "rep"))
 
 
 ## water stress predict interactions?
-ggplot(test, aes(x=delta13C, y=NIntA)) +
+ggplot(CN_AII, aes(x=delta13C, y=NIntA)) +
   geom_point(aes(color = water)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   stat_smooth(method = "lm", color = "black") +
@@ -31,15 +31,14 @@ ggplot(test, aes(x=delta13C, y=NIntA)) +
   xlab("Delta 13C") +
   labs(color = "Water") +
   theme(text = element_text(size=15))
-ggsave("../outputs/d13c_ints.png", width = 5, height = 3)  
+## ggsave("../outputs/d13c_ints.png", width = 5, height = 3)  
 
-m1 = lm(NIntA ~ delta13C + num.bg.indiv + water + microbe, data = test)
+m1 = lm(NIntA ~ delta13C + num.bg.indiv + water + microbe, data = CN_AII)
 summary(m1)
 Anova(m1)
 
-
 ## treatments predict water stress?
-ggplot(test, aes(x=num.bg.indiv, y = delta13C)) +
+ggplot(CN_AII, aes(x=num.bg.indiv, y = delta13C)) +
   geom_point(aes(color = water)) +
   #  geom_hline(yintercept = 0, linetype = "dashed") +
   stat_smooth(method = "lm", color = "black") +
@@ -51,16 +50,12 @@ ggplot(test, aes(x=num.bg.indiv, y = delta13C)) +
   coord_cartesian(xlim = c(0,45))
 
 
-m2 = lm(delta13C ~ num.bg.indiv + water + microbe, data = test)
-
-
-
+m2 = lm(delta13C ~ num.bg.indiv + water + microbe, data = CN_AII)
 
 summary(m2)
 Anova(m2)
 
-
-ggplot(test, aes(x=delta13C, y=NIntA, color = WtN)) +
+ggplot(CN_AII, aes(x=delta13C, y=NIntA, color = WtN)) +
   geom_point() +
   geom_hline(yintercept = 0, linetype = "dashed") +
   stat_smooth(method = "lm", color = "black") +
@@ -71,10 +66,7 @@ ggplot(test, aes(x=delta13C, y=NIntA, color = WtN)) +
   theme(text = element_text(size=15))
 
 
-  
-
-
-ggplot(test, aes(x=WtN, y=NIntA)) +
+ggplot(CN_AII, aes(x=WtN, y=NIntA)) +
   geom_point(aes(color = water)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   stat_smooth(method = "lm", color = "black") +
@@ -83,9 +75,9 @@ ggplot(test, aes(x=WtN, y=NIntA)) +
   xlab("Leaf % N") +
   labs(color = "Water") +
   theme(text = element_text(size=15))
-ggsave("../outputs/percN_ints.png", width = 5, height = 3)  
+## ggsave("../outputs/percN_ints.png", width = 5, height = 3)  
 
-ggplot(test, aes(x=num.bg.indiv, y=WtN)) +
+ggplot(CN_AII, aes(x=num.bg.indiv, y=WtN)) +
   geom_point(aes(color = water)) +
   stat_smooth(method = "lm", color = "black") +
   scale_color_manual(values = c("#70a494",  "#f3d0ae", "#de8a5a")) +
@@ -96,8 +88,10 @@ ggplot(test, aes(x=num.bg.indiv, y=WtN)) +
   coord_cartesian(xlim = c(0,45))
 
 
-ggplot(test, aes(x=WtN, y=delta13C)) +
+ggplot(CN_AII, aes(x=WtN, y=delta13C)) +
   geom_point() +
   stat_smooth(method = "lm")
 
 
+# Clean Env ####
+rm(m1, m2, CN_clean, CN_final, CN_final2, test)

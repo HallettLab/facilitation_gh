@@ -71,7 +71,7 @@ def NFD_model(f, n_spec = 2, args = (), monotone_f = True, pars = None,
         other. 
     ``ND`` : ndarray (shape = n_spec)
         Niche difference of the species to the other species
-        ND = (r_i - eta)/(\mu -eta)
+        ND = (r_i - eta)/(mu -eta)
     ``NO`` : ndarray (shape = n_spec)
         Niche overlapp of the species (NO = 1-ND)
     ``FD`` : ndarray (shape = n_spec)
@@ -80,9 +80,9 @@ def NFD_model(f, n_spec = 2, args = (), monotone_f = True, pars = None,
     ``f0``: ndarray (shape = n_spec)
         no-competition growth rate, f(0)
     ``fc``: ndarray (shape = n_spec)
-        no-niche growth rate f(\sum c_j^i N_j^(-i),0)
+        no-niche growth rate f(sum c_j^i N_j^(-i),0)
     ``eta``: ndarray (shape = n_spec)
-        no-niche growth rate f(\sum c_j^i N_j^(-i),0)
+        no-niche growth rate f(sum c_j^i N_j^(-i),0)
         eta and fc are identical, but both are maintained for compatibility
     ``mu``: ndarray (shape = n_spec)
         intrinsic growth rate f(0,0)

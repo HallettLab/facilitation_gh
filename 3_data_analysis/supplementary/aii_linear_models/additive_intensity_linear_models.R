@@ -9,7 +9,7 @@
 
 # Set up ####
 ## read in data
-source("1_data_cleaning/calc_additive_intensity_index.R")
+source("2_calculate_interactions/additive_intensity_index/calc_additive_intensity_index.R")
 
 ## load packages
 library(lmerTest)
@@ -20,9 +20,9 @@ library(car)
 
 
 # BRHO ####
-hist(brho_RII$NIntA)
+hist(brho_AII$NIntA)
 
-mod = brho_RII %>%
+mod = brho_AII %>%
   filter(ACAM != 0)
 
 ## model all together
@@ -31,7 +31,7 @@ mod = brho_RII %>%
 
 ## don't use this model, no signif interactions, so no sense keeping them in the model
 
-m2 = lm(NIntA ~ num.bg.indiv + water + microbe, data = brho_RII)
+m2 = lm(NIntA ~ num.bg.indiv + water + microbe, data = brho_AII)
 summary(m2)
 
 as.data.frame(m2$coefficients)

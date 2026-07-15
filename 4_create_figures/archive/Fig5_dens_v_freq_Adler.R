@@ -1,15 +1,20 @@
 
-# Set Up ####
-## Read in Data ####
-## read in models
-source("data_analysis/MCT/calc_equilibrium_sigmoidal.R")
 
+
+
+# Set Up ####
+## load packages
 library(cowplot)
 library(ggpubr)
-## reading in this script as it will give posteriors already with 80% hdi calcualted.
-## germ adn seed surv data also come along with it.
 
-## sigposts 80 is the df we need
+
+## read in data
+### model params with 80% hdi calculated
+source("3_data_analysis/create_sigmoidal_alphas_df.R")
+### germination data
+germ = read.csv("data/germination_data.csv")
+### seed survival data
+seedsurv = read.csv("data/seed_survival_sumdat.csv")
 
 ## start off with just the means
 postmeans = sigposts80 %>%
