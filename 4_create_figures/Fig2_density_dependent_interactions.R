@@ -12,6 +12,7 @@
 
 # Set Up ####
 ## load packages
+library(tidyverse)
 library(ggpubr)
 library(cowplot)
 
@@ -24,8 +25,9 @@ source("2_calculate_interactions/additive_intensity_index/calc_additive_intensit
 ## read in leaf nutrient data
 source("3_data_analysis/analyse_leaf_nutrients.R")
 
+# Figure 2 ####
 ## panel a: sigmoidal interaction coefficient
-## plot brho
+## brho ####
 b_sig = alpha_sig %>%
   filter(focal == "BRHO") %>%
   mutate(water.text = ifelse(water == 1, "High",
@@ -67,35 +69,7 @@ b_AII = brho_AII %>%
   theme(text = element_text(size = 13)) +
   theme(legend.position = "bottom")
 
-## panels c/d: leaf nutrient 'explanatory variables'
-bC = ggplot(CN_AII, aes(x=delta13C, y=NIntA)) +
-  geom_point(aes(color = water)) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  stat_smooth(method = "lm", color = "black") +
-  scale_color_manual(values = c("#70a494",  "#f3d0ae", "#de8a5a")) +
-  ylab("AII") +
-  xlab("Delta 13C") +
-  labs(color = "Water") +
-  theme(text = element_text(size=12))
-
-bN = ggplot(CN_AII, aes(x=WtN, y=NIntA)) +
-  geom_point(aes(color = water)) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  stat_smooth(method = "lm", color = "black") +
-  scale_color_manual(values = c("#70a494",  "#f3d0ae", "#de8a5a")) +
-  ylab("AII") +
-  xlab("Leaf % N") +
-  labs(color = "Water") +
-  theme(text = element_text(size=12))
-
-a = ggarrange(b_sig, b_AII, common.legend = TRUE, legend = "bottom", labels = c("a", "b"))
-b = ggarrange(bC, bN, legend = F, nrow = 2, ncol = 1, labels = c("c", "d"))
-
-plot_grid(a, b, rel_widths = c(2.5,1))
-
-## ggsave("../outputs/figures/Fig2_dens_dep_interactions.png", width = 8, height = 3.5, bg = "white")
-
-# acam ####
+## acam ####
 a_sig = alpha_sig %>%
   filter(focal == "ACAM") %>%
   mutate(water.text = ifelse(water == 1, "High",
@@ -137,8 +111,31 @@ a_AII = acam_AII %>%
   theme(text = element_text(size = 13)) +
   theme(legend.position = "bottom")
 
+## join ####
+ggarrange(b_sig, b_AII, a_sig, a_AII, common.legend = T, legend = "bottom", labels = "auto", align = "hv")
 
-ggarrange(a_sig, a_AII, common.legend = T, legend = "bottom", labels = c("e", "f"))
-ggsave("../outputs/figures/Fig2_dens_dep_interactions_acam.png", width = 5.68, height = 3.5, bg = "white")
+ggsave("../outputs/figures/Autumn_2026/Fig2_dens_env_interactions.png", width = 10, height = 6, bg = "white")
 #2.5/3.5
+
+# Figure 5 ####
+## panels c/d: leaf nutrient 'explanatory variables'
+bC = ggplot(CN_AII, aes(x=delta13C, y=NIntA)) +
+  geom_point(aes(color = water)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  stat_smooth(method = "lm", color = "black") +
+  scale_color_manual(values = c("#70a494",  "#f3d0ae", "#de8a5a")) +
+  ylab("AII") +
+  xlab("Delta 13C") +
+  labs(color = "Water") +
+  theme(text = element_text(size=12))
+
+bN = ggplot(CN_AII, aes(x=WtN, y=NIntA)) +
+  geom_point(aes(color = water)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  stat_smooth(method = "lm", color = "black") +
+  scale_color_manual(values = c("#70a494",  "#f3d0ae", "#de8a5a")) +
+  ylab("AII") +
+  xlab("Leaf % N") +
+  labs(color = "Water") +
+  theme(text = element_text(size=12))
 

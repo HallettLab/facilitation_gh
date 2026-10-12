@@ -1,13 +1,15 @@
 
 
 # Set up ####
+## load packages
 library(tidyverse)
 library(HDInterval)
 
 theme_set(theme_classic())
 
 ## read in models
-sigposts = read.csv("data/model_posteriors/sig_posts_20250401.csv")
+acam = read.csv("../outputs/posteriors/acam_sig_posts_LO_20260107.csv")
+brho = read.csv("../outputs/posteriors/brho_sig_posts_LO_20260107.csv")
 
 ## germination data
 germ = read.csv("data/germination_data.csv")
@@ -15,6 +17,45 @@ germ = read.csv("data/germination_data.csv")
 ## seed survival data
 seedsurv = read.csv("data/seed_survival_sumdat.csv")
 
+# Prep data ####
+aposts = acam %>%
+  mutate(alpha_intra = alpha_acam,
+         focal = "ACAM") %>%
+  select(-alpha_acam, -X, -disp)
+
+bposts = brho %>%
+  mutate(alpha_intra = alpha_brho,
+         focal = "BRHO") %>%
+  select(-alpha_brho, -X, -disp)
+
+## join focal species together
+stat2 = rbind(aposts, bposts) %>%
+  group_by(focal, water) %>%
+  mutate(post_num = c(1:n()))
+
+## Calc 80% HDI ####
+sigposts80 = stat2 %>%
+  group_by(focal, water) %>%
+  filter(lambda >= hdi(lambda, credMass = 0.8)["lower"],
+         lambda <= hdi(lambda, credMass = 0.8)["upper"],
+         alpha_intra >= hdi(alpha_intra, credMass = 0.8)["lower"],
+         alpha_intra <= hdi(alpha_intra, credMass = 0.8)["upper"],
+         N_opt >= hdi(N_opt, credMass = 0.8)["lower"],
+         N_opt <= hdi(N_opt, credMass = 0.8)["upper"],
+         c >= hdi(c, credMass = 0.8)["lower"],
+         c <= hdi(c, credMass = 0.8)["upper"],
+         alpha_slope >= hdi(alpha_slope, credMass = 0.8)["lower"],
+         alpha_slope <= hdi(alpha_slope, credMass = 0.8)["upper"],
+         alpha_initial >= hdi(alpha_initial, credMass = 0.8)["lower"],
+         alpha_initial <= hdi(alpha_initial, credMass = 0.8)["upper"])
+
+ggplot(sigposts80, aes(x=lambda)) +
+  geom_density() +
+  facet_grid(water~focal, scales = "free")
+
+ggplot(sigposts80, aes(x=alpha_intra)) +
+  geom_density() +
+  facet_grid(focal~water)
 
 ## NOTE!
 
@@ -24,30 +65,6 @@ seedsurv = read.csv("data/seed_survival_sumdat.csv")
 ##keep this as a separate script just for ease of using diff posterior data sets.
 
 ##the invasion growth rate will need the full sigmoidal model as the low density invader will experience interspecific competition.
-
-# Calc 80% HDI ####
-sigposts80 = sigposts %>%
-  select(-disp) %>%
-  group_by(focal, water) %>%
-  filter(lambda >= hdi(lambda, credMass = 0.8)["lower"],
-         lambda <= hdi(lambda, credMass = 0.8)["upper"],
-         N_opt >= hdi(N_opt, credMass = 0.8)["lower"],
-         N_opt <= hdi(N_opt, credMass = 0.8)["upper"],
-         c >= hdi(c, credMass = 0.8)["lower"],
-         c <= hdi(c, credMass = 0.8)["upper"],
-         alpha_slope >= hdi(alpha_slope, credMass = 0.8)["lower"],
-         alpha_slope <= hdi(alpha_slope, credMass = 0.8)["upper"],
-         alpha_initial >= hdi(alpha_initial, credMass = 0.8)["lower"],
-         alpha_initial <= hdi(alpha_initial, credMass = 0.8)["upper"],
-         alpha_intra >= hdi(alpha_intra, credMass = 0.8)["lower"],
-         alpha_intra <= hdi(alpha_intra, credMass = 0.8)["upper"])
-
-## this method does not produce even numbers of runs per group, but it should be okay?
-## these are also slightly low rep numbers - 700 - 800, which seems odd; things were filtered a lot to get to the 80% hdi!
-## continue for now, could consider bumping up the number of iterations in models to have more samples? 
-#sigposts80_test = sigposts80 %>%
-#  group_by(focal, water) %>%
-#  summarise(nreps = n())
 
 # Find Equilibrium ####
 set.seed(0)

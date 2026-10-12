@@ -13,6 +13,8 @@
 acam = read.csv("../outputs/posteriors/acam_sig_posts_LO_20260107.csv")
 brho = read.csv("../outputs/posteriors/brho_sig_posts_LO_20260107.csv")
 
+library(HDInterval)
+
 ## create functions
 calcSE<-function(x){
   x2<-na.omit(x)
@@ -70,7 +72,7 @@ sigposts80 = sigposts %>%
 ## Calculate alpha over density ####
 ## create an empty df
 alpha_sig = data.frame(focal = NA, water = NA, post_num = NA, 
-                       alpha_inter = NA, dens = NA)
+                       alpha_inter = NA, dens = NA, lambda = NA)
 
 ## create vectors to loop over
 species = c("ACAM", "BRHO")
@@ -115,7 +117,7 @@ for(i in 1:length(species)) {
       
       ## fill in data
       tmp = data.frame(focal = sp, water = r, post_num = p, 
-                             alpha_inter = a_tmp, dens = dens)
+                             alpha_inter = a_tmp, dens = dens, lambda = lambda_i)
       
       ## append
       alpha_sig = rbind(alpha_sig, tmp)
