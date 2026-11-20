@@ -36,54 +36,48 @@ CN_AII = left_join(
 
 # models ---------------
 ##' Under water stress: interaction should be more competitive when 
-##' there is greater water stress evident in leaves – this could be 
+##' there is greater water stress evident in leaves 
+##' 
+##' 
+##' – this could be 
 ##' an overall relationship or an interaction between water treatment 
 ##' and water stress? – i.e. we may only see this relationship in low
 ##' water environment
+##' 
+##' DON'T use AIC for hypothesis testing
+##' could instead use anova() to test hypotheses between models?
 
+## check assumptions ---------
+
+
+## run models ----------------
 m1 = lm(
-  NIntA ~ delta13C*water + num.bg.indiv + microbe, 
-  data = CN_AII
-  )
-summary(m1)
-Anova(m1, type = 3)
-AIC(m1)
-
-m1.2 = lm(
   NIntA ~ delta13C + water + num.bg.indiv + microbe, 
   data = CN_AII
 )
-summary(m1.2)
-Anova(m1.2, type = 3)
-AIC(m1.2)
+summary(m1)
+Anova(m1, type = 2)
 
-anova(m1, m1.2)
-
-
-m1.3 = lm(
-  delta13C ~ num.bg.indiv + water  + microbe, 
-  data = CN_AII
-)
-
-summary(m1.3)
 ## what to plot? 
 ## relationship between delta13C and interaction coeff
 ## relationship between water treatment and interaction coeff
 ## relationship between density and interaction coeff
 
 m2 = lm(
-  NIntA ~ WtN*water + num.bg.indiv, 
-  data = CN_AII[CN_AII$microbe == "Live",]
+  NIntA ~ WtN*water + microbe + num.bg.indiv, 
+  data = CN_AII
 )
 summary(m2)
 Anova(m2, type = 3)
 
 
 m3 = lm(
-  NIntA ~ WtN + delta13C + water + num.bg.indiv + microbe,
+  WtN ~ water*microbe + num.bg.indiv,
   data = CN_AII
 )
+
 summary(m3)
+Anova(m3, type = 2)
 
 # plots -----------------------
 ## panel a ------
@@ -112,7 +106,7 @@ b = ggplot(CN_AII, aes(x=delta13C, y=NIntA)) +
 c = ggplot(CN_AII, aes(x=WtN, y=NIntA)) +
   geom_point(aes(color = water)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  stat_smooth(method = "lm", color = "black") +
+  #stat_smooth(method = "lm", color = "black") +
   scale_color_manual(values = c("#70a494",  "#f3d0ae", "#de8a5a")) +
   ylab("Interaction Index") +
   xlab("Leaf % N") +
@@ -130,6 +124,7 @@ d = ggplot(CN_AII, aes(x=water, y=WtN)) +
   xlab("Water Treatment") +
   labs(color = "Water") +
   theme(text = element_text(size=13))
+## Don't separate by microbe because this is not significant.
 
 ggarrange(
   a, b, c, d, 
@@ -143,31 +138,6 @@ ggsave("../outputs/figures/Autumn_2026/Fig6_leaf_nutrient_AII.png",
        height = 6, 
        bg = "white"
        )
-
-
-
-ggplot(CN_AII, aes(x=ACAM.x, y=WtN)) +
-  geom_point(aes(color = water)) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  stat_smooth(method = "lm", color = "black") +
-  scale_color_manual(values = c("#70a494",  "#f3d0ae", "#de8a5a")) +
-  ylab("Leaf % N") +
-  xlab("Legume Density") +
-  labs(color = "Water") +
-  theme(text = element_text(size=13))
-
-ggplot(CN_AII, aes(x=ACAM.x, y=delta13C)) +
-  geom_point(aes(color = water)) +
-  #geom_hline(yintercept = 0, linetype = "dashed") +
-  stat_smooth(method = "lm", color = "black") +
-  scale_color_manual(values = c("#70a494",  "#f3d0ae", "#de8a5a")) +
-  ylab("Leaf Delta 13C") +
-  xlab("Legume Density") +
-  labs(color = "Water") +
-  theme(text = element_text(size=13))
-
-
-
 
 # Clean Env ####
 rm(m1, m2, CN_clean, CN_final, CN_final2, test)
